@@ -1787,41 +1787,40 @@ while True:
     # ======================================================================
     # Step 6: To create a new Currency column
     # ======================================================================
-    print("\n\n🔍 Step 6: Creating or Overwriting the 'Currency' column in the 'Opportunity_product' sheet...")
-
-    opportunity_product_df = pd.read_excel(file_path, sheet_name="Opportunity_product")
-    opportunity_df = pd.read_excel(file_path, sheet_name="Opportunity")
+    print("\n\n🔍 Step 6: Creating or Overwriting the 'opportunity currency' column in the 'Opportunity_product' sheet...")
 
     try:
-        # Perform VLOOKUP operation (merge data)
-        # print(f"\n    🔄 Merging data to create or overwrite the 'opportunity currency' column...")
-        merged_df = pd.merge(opportunity_product_df, opportunity_df,
-                            left_on="opportunityid", right_on="opportunity_legacy_id__c",
-                            how="left")
+        # Read the relevant sheets from the Excel file
+        opportunity_product_df = pd.read_excel(file_path, sheet_name="Opportunity_product")
+        opportunity_df = pd.read_excel(file_path, sheet_name="Opportunity")
 
-        # Overwrite or add the "opportunity currency" column
-        opportunity_product_df["opportunity currency"] = merged_df["CurrencyIsoCode"]
+        # Create a mapping of opportunity_legacy_id__c to CurrencyIsoCode
+        currency_mapping = opportunity_df.set_index("opportunity_legacy_id__c")["CurrencyIsoCode"]
+
+        # Assign the currency values using the mapping
+        opportunity_product_df["opportunity currency"] = opportunity_product_df["opportunityid"].map(currency_mapping).fillna("Not Found")
 
         # Save the modified DataFrame back to Excel
         with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
             opportunity_product_df.to_excel(writer, sheet_name="Opportunity_product", index=False)
 
         # Success message
-        print(f"\n    ✅ Process completed. The 'opportunity currency' column has been successfully created in the 'Opportunity_product' sheet.")
+        print("\n    ✅ Process completed. The 'opportunity currency' column has been successfully created in the 'Opportunity_product' sheet.")
 
     except FileNotFoundError:
         # Handle file not found error
-        print(f"\n    ❌ Error: File '{file_path}' not found. ")
-        sys.exit()
-    except KeyError as e:
-        # Handle missing column error
-        print(f"\n    ❌ Error: The required column '{e.args[0]}' is missing. ")
-        sys.exit()
-    except Exception as e:
-        # Handle any other unexpected errors
-        print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ")
+        print(f"\n    ❌ Error: File '{file_path}' not found.")
         sys.exit()
 
+    except KeyError as e:
+        # Handle missing column error
+        print(f"\n    ❌ Error: The required column '{e.args[0]}' is missing.")
+        sys.exit()
+
+    except Exception as e:
+        # Handle any other unexpected errors
+        print(f"\n    ❌ Error: An unexpected error occurred. Details: {e}")
+        sys.exit()
 
     # ======================================================================
     # Step 7: To delete unwanted columns from the sheet
@@ -3935,7 +3934,7 @@ while True:
 
             print("\n\n🔍 Step 14: Processing CSV File and Adding Filtered Data to Excel...")
 
-            # Define the file path for the CSV file
+            # Define the file path for the Exported csv file
             csv_file_path = "/Users/avirajmore/Downloads/tags.csv"
 
             # Loop until the file is found or the user decides to exit
@@ -3992,7 +3991,7 @@ while True:
             # Step 15:- Processing CSV File and Adding Filtered Data to Excel
             print("\n\n🔍 Step 15: Processing CSV File and Adding Filtered Data to Excel...")
 
-            # Define the file path for the CSV file
+            # Define the file path for the Exported csv file
             csv_file_path = "/Users/avirajmore/Downloads/tags.csv"
 
             # Loop until the file is found or the user decides to exit
@@ -4185,6 +4184,48 @@ while True:
             # Example usage:
             # file_path = 'your_file_path.xlsx'
             vlookup_tags(file_path, tags_sheet_name, tags_copy_sheet_name)
+            
+            
+            # ===================================================
+            
+            # Code to create List of tags 
+            output_for_tags = "/Users/avirajmore/Downloads/Tag_to_be_inserted.csv"  # Change to your desired output file path
+
+
+            def process_excel(file_path, output_for_tags):
+                # Read the Excel file
+                xls = pd.ExcelFile(file_path)
+                
+                # Iterate over all sheets to find the relevant one
+                sheet_name = "Tags" 
+                df = pd.read_excel(xls, sheet_name)
+                
+                # Check if required columns exist
+                required_columns = {'opportunityid', 'tag', 'existing', 'concattags', 'Strategy_tag_Id'}
+                if required_columns.issubset(df.columns):
+                    
+                    # Filter rows where Strategy_tag_Id has 'Not found'
+                    filtered_df = df[df['Strategy_tag_Id'] == 'Not found']
+                    
+                    # Create the output DataFrame
+                    output_df = pd.DataFrame({
+                        'Name': filtered_df['tag'],
+                        'Strategy_Full_Name__c': '',
+                        'RecordTypeId': '0123h000000kqchAAA',
+                        'Record_Type_Name__c': 'Tags',
+                        'IsDeleted': False,
+                        'Active__c': True
+                    })
+                    
+                    # Save to new Excel file
+                    output_df.to_csv(output_for_tags, index=False)
+                    print(f"Output file saved as {output_for_tags}")
+                    return
+                
+                print("No valid sheet found with the required columns.")
+
+            # Example usage
+            process_excel(file_path, output_for_tags)
 
 
 
@@ -5196,3 +5237,4 @@ while True:
     
     if continue_processing == 'no':
         break  # Exit the outer loop if the user selects 'no'
+
