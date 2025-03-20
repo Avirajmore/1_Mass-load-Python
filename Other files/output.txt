@@ -1,7 +1,5 @@
-006Sc000009xcyz
-006Sc000009xNl6
-006Sc000009xyhL
-006Sc000009yQ5j
-006Sc00000AzH3I
+danilo.aguiar@ibm.com,
+gospina@ibm.com,
+wolf.bocanett@ibm.com,
 
-'006Sc000009xcyz', '006Sc000009xNl6', '006Sc000009xyhL', '006Sc000009yQ5j', '006Sc00000AzH3I'
+'danilo.aguiar@ibm.com', 'gospina@ibm.com', 'wolf.bocanett@ibm.com'
