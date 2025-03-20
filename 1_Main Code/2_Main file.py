@@ -1,12 +1,12 @@
 # Importing all the necessary Libraries
 
 import os
-
 import re
 import sys
 import time
 import shutil
 import openpyxl
+import pyperclip
 import pandas as pd
 from tkinter import *
 from tabulate import tabulate
@@ -1010,9 +1010,32 @@ while True:
 
     accounts_csv = "/Users/avirajmore/Downloads/accounts.csv"  # Specify the accounts CSV file path
     userid_csv = "/Users/avirajmore/Downloads/userid.csv"  # Specify the userid CSV file path
+    directory = "/Users/avirajmore/Downloads"
+    
+    def rename_bulkquery_file(new_name):
+        """Search for a file with 'bulkQuery' in its name and rename it to the provided new name."""
+        for filename in os.listdir(directory):
+            if "bulkQuery" in filename and filename.endswith(".csv"):
+                old_path = os.path.join(directory, filename)
+                new_path = os.path.join(directory, new_name)
+                os.rename(old_path, new_path)
+                return True  # Indicate that renaming was successful
+        return False  # No matching file found
 
     # Check if the CSV files exist, and prompt to retry if not
     while not os.path.exists(accounts_csv):
+        # Try renaming a bulkQuery file first
+        if rename_bulkquery_file('accounts.csv'):
+            continue  # If renaming was successful, check again if the file exists
+
+        # Read account IDs from text file
+        with open("Delete/1_account_ids.txt", "r", encoding="utf-8") as file:
+            cliptext = file.read()
+
+        # Copy SQL query to clipboard
+        account_query = f'Select AccountNumber,id from Account where AccountNumber in ({cliptext})'
+        pyperclip.copy(account_query)
+
         print(f"\n    ❌ Error: File 'accounts.csv' does not exist. Did you query the accounts?")
         try_again = input("\n        🔸 Do you want to try again? (yes/no): ").strip().lower()
         while try_again not in ['yes', 'no']:
@@ -1023,6 +1046,18 @@ while True:
             sys.exit()
 
     while not os.path.exists(userid_csv):
+        # Try renaming a bulkQuery file first
+        if rename_bulkquery_file('userid.csv'):
+            continue  # If renaming was successful, check again if the file exists
+        
+        # Read the contents of the text file to Clipboard
+        with open("Delete/2_userid.txt", "r", encoding="utf-8") as file:
+            cliptext = file.read()  # Read all lines as a single string
+
+        # Copy to clipboard
+        user_query = f"select email,id,Profile.Name,isactive from user where email in ({cliptext}) and Profile.Name != 'IBM Partner Community Login User' and IsActive = true "
+        pyperclip.copy(user_query)
+        
         print(f"\n    ❌ Error: File 'userid.csv' does not exist. Did you query the Userid?")
         try_again = input("\n        🔸 Do you want to try again? (yes/no): ").strip().lower()
         while try_again not in ['yes', 'no']:
@@ -2184,6 +2219,17 @@ while True:
     
     remove_last_char_from_last_line('Delete/4_currency.txt')
     
+    # ========================================================================  
+
+    with open("Delete/3_product_code.txt", "r", encoding="utf-8") as file:
+        product_code_txt = file.read()  # Read all lines as a single string
+
+    with open("Delete/4_currency.txt", "r", encoding="utf-8") as file:
+        currency_txt = file.read()  # Read all lines as a single string
+
+    pricebook_query = f'select  Product2.Product_Code_Family__c,CurrencyIsoCode,id,isactive from PricebookEntry where Product2.Product_Code_Family__c in ({product_code_txt}) and CurrencyIsoCode in ({currency_txt})'
+    # Copy to clipboard
+    pyperclip.copy(pricebook_query)
     # ======================================================================
     # Step 13:- To copy the data from CSV file
     # ======================================================================
@@ -2195,6 +2241,10 @@ while True:
 
     # Check if the CSV file exists, and prompt to retry if not
     while not os.path.exists(csv_file_path):
+
+        if rename_bulkquery_file('productfamily.csv'):
+            continue  # If renaming was successful, check again if the file exists
+
         print(f"\n    ❌ Error: The CSV file at path '{csv_file_path}' does not exist.")
         try_again = input("\n        🔹 Do you want to try again? (yes/no): ").strip().lower()
         while try_again not in ['yes', 'no']:
@@ -2522,6 +2572,7 @@ while True:
         choice = input("\n    🔹 Do you want to execute the Team member Sheet ? (yes/no): ").strip().lower()
         
         if choice == "yes":
+            team_member_choice = 'yes'
             print(f"\n        ⏳ Executing the Sheet: Teammember sheet ")
             
             # ======================================================================
@@ -2848,6 +2899,16 @@ while True:
                 print("Column 'accountid' not found in the sheet.")
             # ==================================================================================================================
             remove_last_char_from_last_line('Delete/5_teammember.txt')
+
+            # ========================================================================  
+
+            with open("Delete/5_teammember.txt", "r", encoding="utf-8") as file:
+                cliptext = file.read()  # Read all lines as a single string
+
+            # Copy to clipboard
+            team_query = f"select email,id,Profile.Name,isactive from user where email in ({cliptext}) and Profile.Name != 'IBM Partner Community Login User' and IsActive = true"
+            pyperclip.copy(team_query)
+
             # ======================================================================
             # 🔍 Step 7: Copying Data from CSV File
             # ======================================================================
@@ -2861,6 +2922,10 @@ while True:
             # Loop until the file is found or the user decides to exit
 
             while not os.path.exists(csv_file_path):
+
+                if rename_bulkquery_file('teammember.csv'):
+                    continue  # If renaming was successful, check again if the file exists
+
                 print(f"\n    ❌ The file '{csv_file_path}' is not present. Did you Query the Team member?")
 
                 try_again = input("\n        🔹 Do you want to try again? (yes/no): ").strip().lower()
@@ -3138,6 +3203,7 @@ while True:
             break
 
         elif choice == "no":
+            team_member_choice = 'no'
             print("\n        🚫 Team Member sheet execution skipped!")
             print("\n")
             print("=" * 100)
@@ -3172,6 +3238,8 @@ while True:
         choice = input("\n    🔹 Do you want to execute the Strategy Sheet ? (yes/no): ").strip().lower()
         
         if choice == "yes":
+
+            strategy_choice = 'yes'
             print(f"\n        ⏳ Executing the Sheet: Strategy sheet ")
 
             print("\n")
@@ -3928,6 +3996,15 @@ while True:
 
             remove_last_char_from_last_line('Delete/6_strategy.txt')
 
+            # ========================================================================  
+
+            with open("Delete/6_strategy.txt", "r", encoding="utf-8") as file:
+                cliptext = file.read()  # Read all lines as a single string
+
+            # Copy to clipboard
+            tags_query = f'Select id,name,Record_Type_Name__c from Strategy__c where name in ({cliptext})'
+            pyperclip.copy(tags_query)
+
             # ========================================================================
             # Step 14:- Processing CSV File and Adding Filtered Data to Excel
             # ========================================================================
@@ -3939,6 +4016,10 @@ while True:
 
             # Loop until the file is found or the user decides to exit
             while not os.path.exists(csv_file_path):
+
+                if rename_bulkquery_file('tags.csv'):
+                    continue  # If renaming was successful, check again if the file exists
+                
                 print(f"\n    ❌ Error: The file '{csv_file_path}' does not exist.")
                 try_again = input("\n        🔹 Do you want to try again? (yes/no): ").strip().lower()
 
@@ -3996,6 +4077,10 @@ while True:
 
             # Loop until the file is found or the user decides to exit
             while not os.path.exists(csv_file_path):
+
+                if rename_bulkquery_file('tags.csv'):
+                    continue  # If renaming was successful, check again if the file exists
+
                 print(f"\n    ❌ Error: The file '{csv_file_path}' is not found.")
                 try_again = input("\n        🔹 Do you want to try again? (yes/no): ").strip().lower()
 
@@ -4218,7 +4303,8 @@ while True:
                     })
                     
                     # Save to new Excel file
-                    output_df.to_csv(output_for_tags, index=False)
+                    if not output_df.empty:
+                        output_df.to_csv(output_for_tags, index=False)
                     print(f"Output file saved as {output_for_tags}")
                     return
                 
@@ -4319,6 +4405,7 @@ while True:
             break
         
         elif choice == "no":
+            strategy_choice = 'no'
             print("\n        🚫 Strategy Sheet execution skipped!")
 
             break  # Just breaking without running Block 2
@@ -4703,7 +4790,10 @@ while True:
 
     while True:
         print("\n================================================================================")
-        user_input = input("\n📄 Do you want to run the Opportunity Team Member Sheet? (yes/no): ").strip().lower()
+        
+        print(f'\n📄 Do you want to run the team member Sheet? (yes/no): {team_member_choice}')
+        user_input = team_member_choice # Automatically taking the user input from the above question from file processing
+        
         if user_input == "yes":
             print("\n    ⏳ Running Opportunity Team Member Sheet...")
             print("\n================================================================================")
@@ -4843,7 +4933,8 @@ while True:
 
     while True:
         print("\n================================================================================")
-        user_input = input("\n📄 Do you want to run the Reporting codes Sheet? (yes/no): ").strip().lower()
+        print(f"\n📄 Do you want to run the Reporting codes Sheet? (yes/no)?: {strategy_choice}")
+        user_input = strategy_choice
         if user_input == "yes":
             print("\n    ⏳ Running Reporting codes Sheet...")
             print("\n================================================================================")
@@ -4977,7 +5068,11 @@ while True:
 
     while True:
         print("\n================================================================================")
-        user_input = input("\n📄 Do you want to run the Tags Sheet? (yes/no): ").strip().lower()
+        
+        print(f"\n📄 Do you want to run the Tags Sheet? (yes/no)?: {strategy_choice}")
+        
+        user_input = strategy_choice
+        
         if user_input == "yes":
             print("\n    ⏳ Running Tags Sheet...")
             print("\n================================================================================")
