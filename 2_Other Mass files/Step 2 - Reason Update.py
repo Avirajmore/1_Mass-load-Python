@@ -1,6 +1,6 @@
 
 '''
-Step 2:- To add a Reason column after the masss load is done
+To add a Reason column after the masss load is done
 '''
 
 
