@@ -264,11 +264,11 @@ def main():
             for i, reason in enumerate(LOST_REASON_MAP.keys(), start=1):
                 print(f"{i}. {reason}")
 
-            reason_choice = input("Enter the option number: ").strip()
+            reason_choice = input("\nEnter the option number: ").strip()
             lost_reason = list(LOST_REASON_MAP.keys())[int(reason_choice) - 1]
             lost_reason_api = LOST_REASON_MAP[lost_reason]
 
-            approval = input("Who gave the approval?")
+            approval = input("\nWho gave the approval?")
             notes = f'DST Update:-\nThe given Opportunities has been closed as Lost  based on the request and approval provided.\nCurrent OO is inactive\n\nOpportunities:- \n\nLost Category:-{lost_category} \nLost Reason:-{lost_reason}\nApproved By:-{approval} \n\nThank you!'
             csv_file = "/Users/avirajmore/Downloads/Oppty_closed_lost.csv"
             close_opportunity(txt_file, csv_file, excel_file,notes,lost_reason_api,lost_category_api)

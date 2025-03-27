@@ -786,7 +786,7 @@ while True:
     print('\n\n🔍 Step 11: Creating new column with Trimmed Account_id and Email_id...\n')
 
     sheet_name = 'Opportunity'  # Replace with the actual sheet name
-    columns_to_trim = ['accountid', 'ownerid']  # Replace with the actual column names to trim
+    columns_to_trim = ['accountid', 'ownerid','created_by']  # Replace with the actual column names to trim
 
     try:
         # Load the specific sheet into a DataFrame
@@ -856,36 +856,36 @@ while True:
     #   • Add apostrophes and commas to account IDs and emails to format them for Salesforce query use.
     # ======================================================================
 
-    print("\n\n🔍 Step 13: Concatenating the Values...\n")
+    # print("\n\n🔍 Step 13: Concatenating the Values...\n")
 
-    sheet_name = 'Opportunity'  # Replace with the actual sheet name
-    columns_to_concatenate = ['AccountNumber', 'Trimmed_ownerid', 'created_by']  # Replace with the actual column names to concatenate
-    new_column_names = ['Concatenatedaccountid', 'Concatenatedownerid', 'concatenatedcreatedby']  # Names for the new columns with concatenated values
+    # sheet_name = 'Opportunity'  # Replace with the actual sheet name
+    # columns_to_concatenate = ['AccountNumber', 'Trimmed_ownerid', 'created_by']  # Replace with the actual column names to concatenate
+    # new_column_names = ['Concatenatedaccountid', 'Concatenatedownerid', 'concatenatedcreatedby']  # Names for the new columns with concatenated values
 
-    # Load the specific sheet into a DataFrame
-    df = pd.read_excel(file_path, sheet_name=sheet_name)
+    # # Load the specific sheet into a DataFrame
+    # df = pd.read_excel(file_path, sheet_name=sheet_name)
 
-    # Check if the specified columns exist and prompt the user if not found
-    missing_columns = [col for col in columns_to_concatenate if col not in df.columns]
-    if missing_columns:
-        print(f"    ❗️ The following columns are missing: {', '.join(missing_columns)}")
-        user_input = input("    📝 Do you want to continue? (yes/no): ").lower()
-        if user_input != 'yes':
-            print("    ❌ Operation aborted.")
-            exit()
+    # # Check if the specified columns exist and prompt the user if not found
+    # missing_columns = [col for col in columns_to_concatenate if col not in df.columns]
+    # if missing_columns:
+    #     print(f"    ❗️ The following columns are missing: {', '.join(missing_columns)}")
+    #     user_input = input("    📝 Do you want to continue? (yes/no): ").lower()
+    #     if user_input != 'yes':
+    #         print("    ❌ Operation aborted.")
+    #         exit()
 
-    # Concatenate the values of the desired columns with inverted commas and a comma
-    for i, column in enumerate(columns_to_concatenate):
-        if column in df.columns:
-            # Convert the column to string, handle NaNs by filling with empty strings
-            df[column] = df[column].astype(str).fillna('')
-            df[new_column_names[i]] = "'" + df[column] + "',"
+    # # Concatenate the values of the desired columns with inverted commas and a comma
+    # for i, column in enumerate(columns_to_concatenate):
+    #     if column in df.columns:
+    #         # Convert the column to string, handle NaNs by filling with empty strings
+    #         df[column] = df[column].astype(str).fillna('')
+    #         df[new_column_names[i]] = "'" + df[column] + "',"
 
-    # Save the updated DataFrame back to the Excel file
-    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-        df.to_excel(writer, sheet_name=sheet_name, index=False)
+    # # Save the updated DataFrame back to the Excel file
+    # with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+    #     df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-    print("    ✅ Columns concatenated and new columns with concatenated values added successfully.")
+    # print("    ✅ Columns concatenated and new columns with concatenated values added successfully.")
 
 
     # ======================================================================
@@ -894,527 +894,527 @@ while True:
     # ======================================================================
 
 
-    print("\n\n🔍 Step 14: Extracting Concatenated values...\n")
-    os.makedirs('Extracts', exist_ok=True)
-    sheet_name = "Opportunity"  # Specify the sheet name
+    # print("\n\n🔍 Step 14: Extracting Concatenated values...\n")
+    # os.makedirs('Extracts', exist_ok=True)
+    # sheet_name = "Opportunity"  # Specify the sheet name
 
-    required_columns = ["Concatenatedaccountid", "Concatenatedownerid", "concatenatedcreatedby"]
+    # required_columns = ["Concatenatedaccountid", "Concatenatedownerid", "concatenatedcreatedby"]
 
-    # Check if the input file exists
-    if not os.path.exists(file_path):
-        print(f"    ❌ The input file '{file_path}' does not exist.")
-        df = pd.DataFrame(columns=required_columns)
-    else:
-        # Read the Excel file
-        df = pd.read_excel(file_path, sheet_name=sheet_name)
+    # # Check if the input file exists
+    # if not os.path.exists(file_path):
+    #     print(f"    ❌ The input file '{file_path}' does not exist.")
+    #     df = pd.DataFrame(columns=required_columns)
+    # else:
+    #     # Read the Excel file
+    #     df = pd.read_excel(file_path, sheet_name=sheet_name)
 
-    # Initialize an empty DataFrame for the output
-    output_df = pd.DataFrame()
+    # # Initialize an empty DataFrame for the output
+    # output_df = pd.DataFrame()
 
-    # Process each required column
-    for column in required_columns:
-        if column in df.columns:
-            # Remove blank and duplicate values
-            cleaned_data = df[column].dropna().drop_duplicates().reset_index(drop=True)
-            # Add cleaned data to the output DataFrame
-            output_df[column.replace("Concatenated", "")] = cleaned_data
-        else:
-            print(f"    ❌ Column '{column}' is missing in the input file.")
+    # # Process each required column
+    # for column in required_columns:
+    #     if column in df.columns:
+    #         # Remove blank and duplicate values
+    #         cleaned_data = df[column].dropna().drop_duplicates().reset_index(drop=True)
+    #         # Add cleaned data to the output DataFrame
+    #         output_df[column.replace("Concatenated", "")] = cleaned_data
+    #     else:
+    #         print(f"    ❌ Column '{column}' is missing in the input file.")
 
-    # Write the processed data to a new Excel file if there's any data to write
-    if not output_df.empty:
-        output_file = "Extracts/Account_and_Ownerid_extract.xlsx"
-        output_df.to_excel(output_file, index=False)
-        print(f"    ✅ Processed data has been written to Account_and_Ownerid_extract.xlsx")
-    else:
-        print("    ❌ No columns were processed due to missing columns.")
+    # # Write the processed data to a new Excel file if there's any data to write
+    # if not output_df.empty:
+    #     output_file = "Extracts/Account_and_Ownerid_extract.xlsx"
+    #     output_df.to_excel(output_file, index=False)
+    #     print(f"    ✅ Processed data has been written to Account_and_Ownerid_extract.xlsx")
+    # else:
+    #     print("    ❌ No columns were processed due to missing columns.")
 
-    # ====================================================
-    # To extract account id to text file 
-    # ====================================================
+    # # ====================================================
+    # # To extract account id to text file 
+    # # ====================================================
 
 
-    # Load the Excel file
-    extract_file_path = "Extracts/Account_and_Ownerid_extract.xlsx"  # Change this to your actual file path
-    df = pd.read_excel(extract_file_path)
-    os.makedirs('Delete', exist_ok=True)
-    # Extract the "accountid" column values
-    if "accountid" in df.columns:
-        account_ids = df["accountid"].dropna().astype(str)  # Drop NaN values and convert to string
+    # # Load the Excel file
+    # extract_file_path = "Extracts/Account_and_Ownerid_extract.xlsx"  # Change this to your actual file path
+    # df = pd.read_excel(extract_file_path)
+    # os.makedirs('Delete', exist_ok=True)
+    # # Extract the "accountid" column values
+    # if "accountid" in df.columns:
+    #     account_ids = df["accountid"].dropna().astype(str)  # Drop NaN values and convert to string
 
-        # Save to a text file
-        with open("Delete/1_account_ids.txt", "w") as f:
-            f.write("\n".join(account_ids))
+    #     # Save to a text file
+    #     with open("Delete/1_account_ids.txt", "w") as f:
+    #         f.write("\n".join(account_ids))
 
-    else:
-        print("Column 'accountid' not found in the sheet.")
+    # else:
+    #     print("Column 'accountid' not found in the sheet.")
     
-    # ====================================================
-    # To extract user id to text file 
-    # ====================================================
+    # # ====================================================
+    # # To extract user id to text file 
+    # # ====================================================
 
-    # Load the Excel file
-    extract_file_path = "Extracts/Account_and_Ownerid_extract.xlsx"  # Change this to your actual file path
+    # # Load the Excel file
+    # extract_file_path = "Extracts/Account_and_Ownerid_extract.xlsx"  # Change this to your actual file path
 
-    df = pd.read_excel(extract_file_path)
+    # df = pd.read_excel(extract_file_path)
 
-    # Extract values from 'ownerid' and 'concatenatedcreatedby' (even if their lengths differ)
-    ownerid_values = df["ownerid"].dropna().astype(str).tolist() if "ownerid" in df.columns else []
-    createdby_values = df["concatenatedcreatedby"].dropna().astype(str).tolist() if "concatenatedcreatedby" in df.columns else []
+    # # Extract values from 'ownerid' and 'concatenatedcreatedby' (even if their lengths differ)
+    # ownerid_values = df["ownerid"].dropna().astype(str).tolist() if "ownerid" in df.columns else []
+    # createdby_values = df["concatenatedcreatedby"].dropna().astype(str).tolist() if "concatenatedcreatedby" in df.columns else []
 
-    # Combine both lists while maintaining all values
-    all_values = ownerid_values + createdby_values  # Concatenating both lists
+    # # Combine both lists while maintaining all values
+    # all_values = ownerid_values + createdby_values  # Concatenating both lists
 
-    # Save to a text file
-    with open("Delete/2_userid.txt", "w") as f:
-        f.write("\n".join(all_values))
+    # # Save to a text file
+    # with open("Delete/2_userid.txt", "w") as f:
+    #     f.write("\n".join(all_values))
 
 
-    def remove_last_char_from_last_line(extract_file):
-        try:
-            # Read all lines from the file
-            with open(extract_file, 'r') as file:
-                lines = file.readlines()
+    # def remove_last_char_from_last_line(extract_file):
+    #     try:
+    #         # Read all lines from the file
+    #         with open(extract_file, 'r') as file:
+    #             lines = file.readlines()
 
-            # Check if the file is not empty
-            if lines:
-                # Remove the last character from the last line
-                lines[-1] = lines[-1][:-1]
+    #         # Check if the file is not empty
+    #         if lines:
+    #             # Remove the last character from the last line
+    #             lines[-1] = lines[-1][:-1]
 
-                # Write the modified content back to the file
-                with open(extract_file, 'w') as file:
-                    file.writelines(lines)
+    #             # Write the modified content back to the file
+    #             with open(extract_file, 'w') as file:
+    #                 file.writelines(lines)
 
-            # print("Last character from the last line has been removed.")
+    #         # print("Last character from the last line has been removed.")
         
-        except Exception as e:
-            print(f"Error: {e}")
+    #     except Exception as e:
+    #         print(f"Error: {e}")
     
-    # ========================================================================  
+    # # ========================================================================  
     
-    # Code to remove comma from the text file
+    # # Code to remove comma from the text file
     
-    remove_last_char_from_last_line('Delete/1_account_ids.txt')
+    # remove_last_char_from_last_line('Delete/1_account_ids.txt')
     
-    remove_last_char_from_last_line('Delete/2_userid.txt')
+    # remove_last_char_from_last_line('Delete/2_userid.txt')
     
     
-    # ======================================================================
-    # Step 15: To copy the extracted data to main file
-    #   • Copy data from downloaded CSV files into the rough sheets of the main file for vlookups.
-    #   • If the files are missing, the script repeatedly asks whether to retry or stop.
-    # ======================================================================
+    # # ======================================================================
+    # # Step 15: To copy the extracted data to main file
+    # #   • Copy data from downloaded CSV files into the rough sheets of the main file for vlookups.
+    # #   • If the files are missing, the script repeatedly asks whether to retry or stop.
+    # # ======================================================================
 
 
-    print("\n\n🔍 Step 15: Copying extracted data to main file...")
+    # print("\n\n🔍 Step 15: Copying extracted data to main file...")
 
-    accounts_csv = "/Users/avirajmore/Downloads/accounts.csv"  # Specify the accounts CSV file path
-    userid_csv = "/Users/avirajmore/Downloads/userid.csv"  # Specify the userid CSV file path
-    directory = "/Users/avirajmore/Downloads"
+    # accounts_csv = "/Users/avirajmore/Downloads/accounts.csv"  # Specify the accounts CSV file path
+    # userid_csv = "/Users/avirajmore/Downloads/userid.csv"  # Specify the userid CSV file path
+    # directory = "/Users/avirajmore/Downloads"
     
-    def rename_bulkquery_file(new_name):
-        """Search for a file with 'bulkQuery' in its name and rename it to the provided new name."""
-        for filename in os.listdir(directory):
-            if "bulkQuery" in filename and filename.endswith(".csv"):
-                old_path = os.path.join(directory, filename)
-                new_path = os.path.join(directory, new_name)
-                os.rename(old_path, new_path)
-                return True  # Indicate that renaming was successful
-        return False  # No matching file found
+    # def rename_bulkquery_file(new_name):
+    #     """Search for a file with 'bulkQuery' in its name and rename it to the provided new name."""
+    #     for filename in os.listdir(directory):
+    #         if "bulkQuery" in filename and filename.endswith(".csv"):
+    #             old_path = os.path.join(directory, filename)
+    #             new_path = os.path.join(directory, new_name)
+    #             os.rename(old_path, new_path)
+    #             return True  # Indicate that renaming was successful
+    #     return False  # No matching file found
 
-    # Check if the CSV files exist, and prompt to retry if not
-    while not os.path.exists(accounts_csv):
-        # Try renaming a bulkQuery file first
-        if rename_bulkquery_file('accounts.csv'):
-            continue  # If renaming was successful, check again if the file exists
+    # # Check if the CSV files exist, and prompt to retry if not
+    # while not os.path.exists(accounts_csv):
+    #     # Try renaming a bulkQuery file first
+    #     if rename_bulkquery_file('accounts.csv'):
+    #         continue  # If renaming was successful, check again if the file exists
 
-        # Read account IDs from text file
-        with open("Delete/1_account_ids.txt", "r", encoding="utf-8") as file:
-            cliptext = file.read()
+    #     # Read account IDs from text file
+    #     with open("Delete/1_account_ids.txt", "r", encoding="utf-8") as file:
+    #         cliptext = file.read()
 
-        # Copy SQL query to clipboard
-        account_query = f'Select AccountNumber,id from Account where AccountNumber in ({cliptext})'
-        pyperclip.copy(account_query)
+    #     # Copy SQL query to clipboard
+    #     account_query = f'Select AccountNumber,id from Account where AccountNumber in ({cliptext})'
+    #     pyperclip.copy(account_query)
 
-        print(f"\n    ❌ Error: File 'accounts.csv' does not exist. Did you query the accounts?")
-        try_again = input("\n        🔸 Do you want to try again? (yes/no): ").strip().lower()
-        while try_again not in ['yes', 'no']:
-            print("\n          ❗️ Invalid input. Please enter 'yes' or 'no'.")
-            try_again = input("\n        🔸 Do you want to try again? (yes/no): ").strip().lower()
-        if try_again != 'yes':
-            print("\n          🚫 Exiting the program.")
-            sys.exit()
+    #     print(f"\n    ❌ Error: File 'accounts.csv' does not exist. Did you query the accounts?")
+    #     try_again = input("\n        🔸 Do you want to try again? (yes/no): ").strip().lower()
+    #     while try_again not in ['yes', 'no']:
+    #         print("\n          ❗️ Invalid input. Please enter 'yes' or 'no'.")
+    #         try_again = input("\n        🔸 Do you want to try again? (yes/no): ").strip().lower()
+    #     if try_again != 'yes':
+    #         print("\n          🚫 Exiting the program.")
+    #         sys.exit()
 
-    while not os.path.exists(userid_csv):
-        # Try renaming a bulkQuery file first
-        if rename_bulkquery_file('userid.csv'):
-            continue  # If renaming was successful, check again if the file exists
+    # while not os.path.exists(userid_csv):
+    #     # Try renaming a bulkQuery file first
+    #     if rename_bulkquery_file('userid.csv'):
+    #         continue  # If renaming was successful, check again if the file exists
         
-        # Read the contents of the text file to Clipboard
-        with open("Delete/2_userid.txt", "r", encoding="utf-8") as file:
-            cliptext = file.read()  # Read all lines as a single string
+    #     # Read the contents of the text file to Clipboard
+    #     with open("Delete/2_userid.txt", "r", encoding="utf-8") as file:
+    #         cliptext = file.read()  # Read all lines as a single string
 
-        # Copy to clipboard
-        user_query = f"select email,id,Profile.Name,isactive from user where email in ({cliptext}) and Profile.Name != 'IBM Partner Community Login User' and IsActive = true "
-        pyperclip.copy(user_query)
+    #     # Copy to clipboard
+    #     user_query = f"select email,id,Profile.Name,isactive from user where email in ({cliptext}) and Profile.Name != 'IBM Partner Community Login User' and IsActive = true "
+    #     pyperclip.copy(user_query)
         
-        print(f"\n    ❌ Error: File 'userid.csv' does not exist. Did you query the Userid?")
-        try_again = input("\n        🔸 Do you want to try again? (yes/no): ").strip().lower()
-        while try_again not in ['yes', 'no']:
-            print("\n         ❗️ Invalid input. Please enter 'yes' or 'no'.")
-            try_again = input("\n        🔸 Do you want to try again? (yes/no): ").strip().lower()
-        if try_again != 'yes':
-            print("\n          🚫 Exiting the program.")
-            sys.exit()
+    #     print(f"\n    ❌ Error: File 'userid.csv' does not exist. Did you query the Userid?")
+    #     try_again = input("\n        🔸 Do you want to try again? (yes/no): ").strip().lower()
+    #     while try_again not in ['yes', 'no']:
+    #         print("\n         ❗️ Invalid input. Please enter 'yes' or 'no'.")
+    #         try_again = input("\n        🔸 Do you want to try again? (yes/no): ").strip().lower()
+    #     if try_again != 'yes':
+    #         print("\n          🚫 Exiting the program.")
+    #         sys.exit()
 
-    # Read the CSV files
-    accounts_df = pd.read_csv(accounts_csv, usecols=[0, 1])  # Read first two columns
-    userid_df = pd.read_csv(userid_csv, usecols=[0, 1, 2, 3])  # Read first four columns
+    # # Read the CSV files
+    # accounts_df = pd.read_csv(accounts_csv, usecols=[0, 1])  # Read first two columns
+    # userid_df = pd.read_csv(userid_csv, usecols=[0, 1, 2, 3])  # Read first four columns
 
-    # Load the Excel file or create a new one if it doesn't exist
-    if os.path.exists(file_path):
-        book = openpyxl.load_workbook(file_path)
-        if "Opportunity_Copy" not in book.sheetnames:
-            sheet = book.create_sheet(title="Opportunity_Copy")
-        else:
-            sheet = book["Opportunity_Copy"]
-    else:
-        book = openpyxl.Workbook()
-        sheet = book.active
-        sheet.title = "Opportunity_Copy"
+    # # Load the Excel file or create a new one if it doesn't exist
+    # if os.path.exists(file_path):
+    #     book = openpyxl.load_workbook(file_path)
+    #     if "Opportunity_Copy" not in book.sheetnames:
+    #         sheet = book.create_sheet(title="Opportunity_Copy")
+    #     else:
+    #         sheet = book["Opportunity_Copy"]
+    # else:
+    #     book = openpyxl.Workbook()
+    #     sheet = book.active
+    #     sheet.title = "Opportunity_Copy"
 
-    # Write the headers to the "Opportunity_Copy" sheet
-    for col_index, header in enumerate(accounts_df.columns, start=1):
-        sheet.cell(row=1, column=col_index, value=header)
-    for col_index, header in enumerate(userid_df.columns, start=4):  # Change start index to 4
-        sheet.cell(row=1, column=col_index, value=header)
+    # # Write the headers to the "Opportunity_Copy" sheet
+    # for col_index, header in enumerate(accounts_df.columns, start=1):
+    #     sheet.cell(row=1, column=col_index, value=header)
+    # for col_index, header in enumerate(userid_df.columns, start=4):  # Change start index to 4
+    #     sheet.cell(row=1, column=col_index, value=header)
 
-    # Write the data to the "Opportunity_Copy" sheet
-    max_length = max(len(accounts_df), len(userid_df))
+    # # Write the data to the "Opportunity_Copy" sheet
+    # max_length = max(len(accounts_df), len(userid_df))
 
-    for row_index in range(max_length):
-        if row_index < len(accounts_df):
-            sheet.cell(row=row_index + 2, column=1, value=accounts_df.iloc[row_index, 0])
-            sheet.cell(row=row_index + 2, column=2, value=accounts_df.iloc[row_index, 1])
-        if row_index < len(userid_df):
-            sheet.cell(row=row_index + 2, column=4, value=userid_df.iloc[row_index, 0])  # Change column to 4
-            sheet.cell(row=row_index + 2, column=5, value=userid_df.iloc[row_index, 1])  # Change column to 5
-            sheet.cell(row=row_index + 2, column=6, value=userid_df.iloc[row_index, 2])  # Change column to 6
-            sheet.cell(row=row_index + 2, column=7, value=userid_df.iloc[row_index, 3])  # Change column to 7
+    # for row_index in range(max_length):
+    #     if row_index < len(accounts_df):
+    #         sheet.cell(row=row_index + 2, column=1, value=accounts_df.iloc[row_index, 0])
+    #         sheet.cell(row=row_index + 2, column=2, value=accounts_df.iloc[row_index, 1])
+    #     if row_index < len(userid_df):
+    #         sheet.cell(row=row_index + 2, column=4, value=userid_df.iloc[row_index, 0])  # Change column to 4
+    #         sheet.cell(row=row_index + 2, column=5, value=userid_df.iloc[row_index, 1])  # Change column to 5
+    #         sheet.cell(row=row_index + 2, column=6, value=userid_df.iloc[row_index, 2])  # Change column to 6
+    #         sheet.cell(row=row_index + 2, column=7, value=userid_df.iloc[row_index, 3])  # Change column to 7
 
-    # Save the changes
-    book.save(file_path)
-    print(f"\n    ✅ 'Accounts' and 'Userid' Data has been successfully copied '{file_path.split('/')[-1]}'.")
-
-
-    # ======================================================================
-    # Step 16: Check how many Accounts are present in ISC
-    #   • Perform vlookup on the 'Accountid' column using the rough sheet to fetch Salesforce IDs.
-    #   • Handle duplicate Salesforce IDs by prompting you to select one.
-    #   • Populate unmatched accounts with "Not present in ISC" and display the count of such accounts.
-    # ======================================================================
+    # # Save the changes
+    # book.save(file_path)
+    # print(f"\n    ✅ 'Accounts' and 'Userid' Data has been successfully copied '{file_path.split('/')[-1]}'.")
 
 
-    print("\n\n🔍 Step 16: Checking how many Accounts are present in ISC...")
+    # # ======================================================================
+    # # Step 16: Check how many Accounts are present in ISC
+    # #   • Perform vlookup on the 'Accountid' column using the rough sheet to fetch Salesforce IDs.
+    # #   • Handle duplicate Salesforce IDs by prompting you to select one.
+    # #   • Populate unmatched accounts with "Not present in ISC" and display the count of such accounts.
+    # # ======================================================================
 
-    # file_path = 'path_to_your_excel_file.xlsx'  # Replace with your actual file path
-    opportunity_sheet_name = 'Opportunity'
-    opportunity_copy_sheet_name = 'Opportunity_Copy'
 
-    try:
-        # Read data from Excel sheets
-        opportunity_df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
-        opportunity_copy_df = pd.read_excel(file_path, sheet_name=opportunity_copy_sheet_name)
+    # print("\n\n🔍 Step 16: Checking how many Accounts are present in ISC...")
+
+    # # file_path = 'path_to_your_excel_file.xlsx'  # Replace with your actual file path
+    # opportunity_sheet_name = 'Opportunity'
+    # opportunity_copy_sheet_name = 'Opportunity_Copy'
+
+    # try:
+    #     # Read data from Excel sheets
+    #     opportunity_df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
+    #     opportunity_copy_df = pd.read_excel(file_path, sheet_name=opportunity_copy_sheet_name)
         
-        # Filter out rows where 'Id' is NaN
-        opportunity_copy_df_no_nan = opportunity_copy_df.dropna(subset=['Id'])
+    #     # Filter out rows where 'Id' is NaN
+    #     opportunity_copy_df_no_nan = opportunity_copy_df.dropna(subset=['Id'])
         
-        # Check for duplicate AccountNumbers with different Id values
-        duplicate_accounts = opportunity_copy_df_no_nan[
-            opportunity_copy_df_no_nan.duplicated(subset=['AccountNumber'], keep=False)
-        ]
+    #     # Check for duplicate AccountNumbers with different Id values
+    #     duplicate_accounts = opportunity_copy_df_no_nan[
+    #         opportunity_copy_df_no_nan.duplicated(subset=['AccountNumber'], keep=False)
+    #     ]
         
-        if not duplicate_accounts.empty:
-            print("\n    ❗️ Duplicate AccountNumbers found with multiple Id values:")
+    #     if not duplicate_accounts.empty:
+    #         print("\n    ❗️ Duplicate AccountNumbers found with multiple Id values:")
             
-            # Group by AccountNumber and prompt user for resolution
-            for account_number, group in duplicate_accounts.groupby('AccountNumber'):
-                print(f"\n        🔹 AccountNumber: {account_number}")
+    #         # Group by AccountNumber and prompt user for resolution
+    #         for account_number, group in duplicate_accounts.groupby('AccountNumber'):
+    #             print(f"\n        🔹 AccountNumber: {account_number}")
                 
-                # Display the 'Id' and corresponding Excel row number
-                for idx, row in group.iterrows():
-                    excel_row_number = idx + 2  # Adjust for Excel row numbering
-                    print(f"\n           🔸 Id: {row['Id']} (Excel Row {excel_row_number})")
+    #             # Display the 'Id' and corresponding Excel row number
+    #             for idx, row in group.iterrows():
+    #                 excel_row_number = idx + 2  # Adjust for Excel row numbering
+    #                 print(f"\n           🔸 Id: {row['Id']} (Excel Row {excel_row_number})")
                 
-                # Prompt user to choose the Id to keep
-                valid_ids = group['Id'].tolist()
-                while True:
-                    chosen_id = input(f"\n        🔹 Select id for AccountNumber {account_number} from above Ids: ").strip()
-                    if chosen_id in valid_ids:
-                        break
-                    else:
-                        print(f"\n           ❌ Invalid input. Please choose a valid Id from {valid_ids}. ")
+    #             # Prompt user to choose the Id to keep
+    #             valid_ids = group['Id'].tolist()
+    #             while True:
+    #                 chosen_id = input(f"\n        🔹 Select id for AccountNumber {account_number} from above Ids: ").strip()
+    #                 if chosen_id in valid_ids:
+    #                     break
+    #                 else:
+    #                     print(f"\n           ❌ Invalid input. Please choose a valid Id from {valid_ids}. ")
                 
-                # Filter DataFrame to keep only the chosen Id for the AccountNumber
-                opportunity_copy_df = opportunity_copy_df[
-                    ~((opportunity_copy_df['AccountNumber'] == account_number) & 
-                    (opportunity_copy_df['Id'] != chosen_id))
-                ]
+    #             # Filter DataFrame to keep only the chosen Id for the AccountNumber
+    #             opportunity_copy_df = opportunity_copy_df[
+    #                 ~((opportunity_copy_df['AccountNumber'] == account_number) & 
+    #                 (opportunity_copy_df['Id'] != chosen_id))
+    #             ]
         
-        # Merge DataFrames
-        merged_df = pd.merge(opportunity_df, opportunity_copy_df[['AccountNumber', 'Id']],
-                            on='AccountNumber', how='left')
+    #     # Merge DataFrames
+    #     merged_df = pd.merge(opportunity_df, opportunity_copy_df[['AccountNumber', 'Id']],
+    #                         on='AccountNumber', how='left')
         
-        # Count of missing Accounts
-        not_in_isc_count = merged_df["Id"].isna().sum()
+    #     # Count of missing Accounts
+    #     not_in_isc_count = merged_df["Id"].isna().sum()
 
-        # Handle NaN values
-        merged_df['Id'] = merged_df['Id'].fillna('Not in ISC')
-        # merged_df['Id'] = merged_df['Id'].combine_first(opportunity_df['AccountNumber'])  #To fill it as Account number instead of "Not in ISC'
+    #     # Handle NaN values
+    #     merged_df['Id'] = merged_df['Id'].fillna('Not in ISC')
+    #     # merged_df['Id'] = merged_df['Id'].combine_first(opportunity_df['AccountNumber'])  #To fill it as Account number instead of "Not in ISC'
         
-        # Rename columns
-        merged_df.rename(columns={'Id': 'In ISC or Not'}, inplace=True)
+    #     # Rename columns
+    #     merged_df.rename(columns={'Id': 'In ISC or Not'}, inplace=True)
         
-        # Save updated DataFrame to Excel
-        with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
-            merged_df.to_excel(writer, sheet_name=opportunity_sheet_name, index=False)
+    #     # Save updated DataFrame to Excel
+    #     with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
+    #         merged_df.to_excel(writer, sheet_name=opportunity_sheet_name, index=False)
         
-        # Print count
-        print(f"\n    ❗️ Count of accounts Not in ISC: {not_in_isc_count}")
+    #     # Print count
+    #     print(f"\n    ❗️ Count of accounts Not in ISC: {not_in_isc_count}")
 
-    except FileNotFoundError:
-        print("\n    ❌ Error: The specified file was not found. Please check the file path.")
-    except ValueError as e:
-        print(f"\n    ❌ Error: {e}")
-    except Exception as e:
-        print(f"\n    ❌ An unexpected error occurred: {e}")
-
-
-    # ======================================================================
-    # Step 17: Rename 'Id' to 'userid' in Opportunity_Copy sheet
-    #   • Rename the duplicate 'Id' column (from the Userid file) to 'Userid' for clarity after Step 15 merges CSV data into rough sheets.
-    # ======================================================================
+    # except FileNotFoundError:
+    #     print("\n    ❌ Error: The specified file was not found. Please check the file path.")
+    # except ValueError as e:
+    #     print(f"\n    ❌ Error: {e}")
+    # except Exception as e:
+    #     print(f"\n    ❌ An unexpected error occurred: {e}")
 
 
-    # Define constants
-    DEFAULT_USERID = '0053h000000sdCVAAY'
-    # file_path = 'your_file_path.xlsx'
-    print("\n\nStep 17: Renaming 'Id' to 'userid' in Opportunity_Copy sheet")
-
-    try:
-        # Load the Excel workbook
-        wb = load_workbook(file_path)
-        sheet_name = 'Opportunity_Copy'
-
-        # Check if sheet exists
-        if sheet_name in wb.sheetnames:
-            sheet = wb[sheet_name]
-            sheet['E1'] = 'userid'
-            wb.save(file_path)
-            print("\n    ✅ Success: Renamed 'Id' to 'userid' in Opportunity_Copy sheet.")
-        else:
-            print(f"\n    ❗️Warning: Sheet '{sheet_name}' not found in the workbook.")
-
-    except FileNotFoundError:
-        print(f"\n    ❌ Error: File not found at path: {file_path}. Please check the file path and try again.")
-
-    except Exception as e:
-        print(f"\n    ❌ Error: An unexpected error occurred - {e}")
+    # # ======================================================================
+    # # Step 17: Rename 'Id' to 'userid' in Opportunity_Copy sheet
+    # #   • Rename the duplicate 'Id' column (from the Userid file) to 'Userid' for clarity after Step 15 merges CSV data into rough sheets.
+    # # ======================================================================
 
 
-    # ======================================================================
-    # Step 18: Get the IDs of the Opportunity Owner
-    #   • Perform vlookup on 'Ownerid' to retrieve Salesforce IDs.
-    #   • Handle duplicate IDs by prompting selection.
-    #   • Populate unmatched emails with the "Datamigration" Salesforce ID and display their count.
-    # ======================================================================
+    # # Define constants
+    # DEFAULT_USERID = '0053h000000sdCVAAY'
+    # # file_path = 'your_file_path.xlsx'
+    # print("\n\nStep 17: Renaming 'Id' to 'userid' in Opportunity_Copy sheet")
+
+    # try:
+    #     # Load the Excel workbook
+    #     wb = load_workbook(file_path)
+    #     sheet_name = 'Opportunity_Copy'
+
+    #     # Check if sheet exists
+    #     if sheet_name in wb.sheetnames:
+    #         sheet = wb[sheet_name]
+    #         sheet['E1'] = 'userid'
+    #         wb.save(file_path)
+    #         print("\n    ✅ Success: Renamed 'Id' to 'userid' in Opportunity_Copy sheet.")
+    #     else:
+    #         print(f"\n    ❗️Warning: Sheet '{sheet_name}' not found in the workbook.")
+
+    # except FileNotFoundError:
+    #     print(f"\n    ❌ Error: File not found at path: {file_path}. Please check the file path and try again.")
+
+    # except Exception as e:
+    #     print(f"\n    ❌ Error: An unexpected error occurred - {e}")
 
 
-    print("\n\n🔍 Step 18: Fetching IDs of Opportunity Owners...")
+    # # ======================================================================
+    # # Step 18: Get the IDs of the Opportunity Owner
+    # #   • Perform vlookup on 'Ownerid' to retrieve Salesforce IDs.
+    # #   • Handle duplicate IDs by prompting selection.
+    # #   • Populate unmatched emails with the "Datamigration" Salesforce ID and display their count.
+    # # ======================================================================
 
-    try:
-        # Sheet names
-        opportunity_sheet_name = 'Opportunity'
-        opportunity_copy_sheet_name = 'Opportunity_Copy'
 
-        # Load data from sheets
-        opportunity_df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
-        opportunity_copy_df = pd.read_excel(file_path, sheet_name=opportunity_copy_sheet_name)
+    # print("\n\n🔍 Step 18: Fetching IDs of Opportunity Owners...")
 
-        # Clean 'Trimmed_ownerid' and 'Email' columns
-        if 'Trimmed_ownerid' in opportunity_df.columns:
-            opportunity_df['Trimmed_ownerid'] = opportunity_df['Trimmed_ownerid'].str.strip().str.lower()
-            # print("\n    ✅ 'Trimmed_ownerid' column cleaned.")
-        else:
-            print("\n    ❌ Error: Column 'Trimmed_ownerid' not found in the Opportunity sheet.")
-            sys.exit()
+    # try:
+    #     # Sheet names
+    #     opportunity_sheet_name = 'Opportunity'
+    #     opportunity_copy_sheet_name = 'Opportunity_Copy'
 
-        if 'Email' in opportunity_copy_df.columns:
-            opportunity_copy_df['Email'] = opportunity_copy_df['Email'].str.strip().str.lower()
-            # print("\n    ✅ 'Email' column cleaned.")
-        else:
-            print("\n    ❌ Error: Column 'Email' not found in the Opportunity_Copy sheet.")
-            sys.exit()
+    #     # Load data from sheets
+    #     opportunity_df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
+    #     opportunity_copy_df = pd.read_excel(file_path, sheet_name=opportunity_copy_sheet_name)
 
-        # Handle duplicates and NaN in 'userid'
-        opportunity_copy_df_no_nan = opportunity_copy_df.dropna(subset=['userid'])
-        duplicate_emails = opportunity_copy_df_no_nan[
-            opportunity_copy_df_no_nan.duplicated(subset=['Email'], keep=False)
-        ]
+    #     # Clean 'Trimmed_ownerid' and 'Email' columns
+    #     if 'Trimmed_ownerid' in opportunity_df.columns:
+    #         opportunity_df['Trimmed_ownerid'] = opportunity_df['Trimmed_ownerid'].str.strip().str.lower()
+    #         # print("\n    ✅ 'Trimmed_ownerid' column cleaned.")
+    #     else:
+    #         print("\n    ❌ Error: Column 'Trimmed_ownerid' not found in the Opportunity sheet.")
+    #         sys.exit()
 
-        if not duplicate_emails.empty:
-            print("\n    ❗️ Duplicate Email IDs with multiple UserIDs found:")
-            for email, group in duplicate_emails.groupby('Email'):
-                print(f"\n        📧 Email: {email}")
-                for idx, row in group.iterrows():
-                    excel_row = idx + 2  # Adjust row number for Excel
-                    print(f"\n           🔸 UserID: {row['userid']} (Row {excel_row})")
+    #     if 'Email' in opportunity_copy_df.columns:
+    #         opportunity_copy_df['Email'] = opportunity_copy_df['Email'].str.strip().str.lower()
+    #         # print("\n    ✅ 'Email' column cleaned.")
+    #     else:
+    #         print("\n    ❌ Error: Column 'Email' not found in the Opportunity_Copy sheet.")
+    #         sys.exit()
+
+    #     # Handle duplicates and NaN in 'userid'
+    #     opportunity_copy_df_no_nan = opportunity_copy_df.dropna(subset=['userid'])
+    #     duplicate_emails = opportunity_copy_df_no_nan[
+    #         opportunity_copy_df_no_nan.duplicated(subset=['Email'], keep=False)
+    #     ]
+
+    #     if not duplicate_emails.empty:
+    #         print("\n    ❗️ Duplicate Email IDs with multiple UserIDs found:")
+    #         for email, group in duplicate_emails.groupby('Email'):
+    #             print(f"\n        📧 Email: {email}")
+    #             for idx, row in group.iterrows():
+    #                 excel_row = idx + 2  # Adjust row number for Excel
+    #                 print(f"\n           🔸 UserID: {row['userid']} (Row {excel_row})")
                 
-                # Collect valid UserIDs for this Email
-                valid_userids = group['userid'].tolist()
+    #             # Collect valid UserIDs for this Email
+    #             valid_userids = group['userid'].tolist()
                 
-                # Ask user to select a valid UserID
-                while True:
-                    chosen_userid = input(f"\n        🔹 Select id for UserId '{email}' from above Ids: ").strip()
-                    if chosen_userid in valid_userids:
-                        break
-                    else:
-                        print(f"\n           ❌ Invalid input. Please choose a valid Id . ")
+    #             # Ask user to select a valid UserID
+    #             while True:
+    #                 chosen_userid = input(f"\n        🔹 Select id for UserId '{email}' from above Ids: ").strip()
+    #                 if chosen_userid in valid_userids:
+    #                     break
+    #                 else:
+    #                     print(f"\n           ❌ Invalid input. Please choose a valid Id . ")
                 
-                # Filter DataFrame to keep only the chosen UserID for the Email
-                opportunity_copy_df = opportunity_copy_df[
-                    ~((opportunity_copy_df['Email'] == email) & (opportunity_copy_df['userid'] != chosen_userid))
-                ]
-            print("\n    ✅ Duplicate emails handled successfully.")
+    #             # Filter DataFrame to keep only the chosen UserID for the Email
+    #             opportunity_copy_df = opportunity_copy_df[
+    #                 ~((opportunity_copy_df['Email'] == email) & (opportunity_copy_df['userid'] != chosen_userid))
+    #             ]
+    #         print("\n    ✅ Duplicate emails handled successfully.")
 
-        # Perform left join to map 'userid' to 'Trimmed_ownerid'
-        result_df = pd.merge(
-            opportunity_df,
-            opportunity_copy_df[['Email', 'userid']],
-            left_on='Trimmed_ownerid',
-            right_on='Email',
-            how='left'
-        )
-        # print("\n    ✅ Merged 'Opportunity' and 'Opportunity_Copy' sheets.")
+    #     # Perform left join to map 'userid' to 'Trimmed_ownerid'
+    #     result_df = pd.merge(
+    #         opportunity_df,
+    #         opportunity_copy_df[['Email', 'userid']],
+    #         left_on='Trimmed_ownerid',
+    #         right_on='Email',
+    #         how='left'
+    #     )
+    #     # print("\n    ✅ Merged 'Opportunity' and 'Opportunity_Copy' sheets.")
 
-        # Handle NaN values in 'userid'
-        nan_before = result_df['userid'].isna().sum()
-        result_df['userid'] = result_df['userid'].fillna(DEFAULT_USERID)
-        nan_after = result_df['userid'].isna().sum()
+    #     # Handle NaN values in 'userid'
+    #     nan_before = result_df['userid'].isna().sum()
+    #     result_df['userid'] = result_df['userid'].fillna(DEFAULT_USERID)
+    #     nan_after = result_df['userid'].isna().sum()
 
-        # Drop redundant columns and rename 'userid' to 'OwnerId'
-        result_df.drop(columns=['Email'], inplace=True)
-        result_df.rename(columns={'userid': 'OwnerId'}, inplace=True)
+    #     # Drop redundant columns and rename 'userid' to 'OwnerId'
+    #     result_df.drop(columns=['Email'], inplace=True)
+    #     result_df.rename(columns={'userid': 'OwnerId'}, inplace=True)
 
-        # Save the updated data back to the Excel file
-        with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-            result_df.to_excel(writer, sheet_name=opportunity_sheet_name, index=False)
+    #     # Save the updated data back to the Excel file
+    #     with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+    #         result_df.to_excel(writer, sheet_name=opportunity_sheet_name, index=False)
 
-        print("\n    ✅ Success: IDs for Opportunity Owners updated successfully.")
-        print(f"\n    ❗️ Number of invalid 'userid' values replaced with Data Migration Id: {nan_before}")
+    #     print("\n    ✅ Success: IDs for Opportunity Owners updated successfully.")
+    #     print(f"\n    ❗️ Number of invalid 'userid' values replaced with Data Migration Id: {nan_before}")
 
-    except FileNotFoundError:
-        print(f"\n    ❌ Error: File not found at path: {file_path}. Please check the file path and try again.")
+    # except FileNotFoundError:
+    #     print(f"\n    ❌ Error: File not found at path: {file_path}. Please check the file path and try again.")
 
-    except KeyError as e:
-        print(f"\n    ❌ Error: Column '{e}' not found. Please check the column names in your sheets.")
+    # except KeyError as e:
+    #     print(f"\n    ❌ Error: Column '{e}' not found. Please check the column names in your sheets.")
 
-    except Exception as e:
-        print(f"\n    ❌ Error: An unexpected error occurred - {e}")
-
-
-    # ======================================================================
-    # Step 19: To get IDs of the Created By
-    #   • Same as Step 18, but applied to the 'Created By' column.
-    # ======================================================================
+    # except Exception as e:
+    #     print(f"\n    ❌ Error: An unexpected error occurred - {e}")
 
 
-    print("\n\n🔍 Step 19: Fetching IDs of 'Created By'...")
+    # # ======================================================================
+    # # Step 19: To get IDs of the Created By
+    # #   • Same as Step 18, but applied to the 'Created By' column.
+    # # ======================================================================
 
-    # Name of the sheets to target
-    opportunity_sheet_name = 'Opportunity'
-    opportunity_copy_sheet_name = 'Opportunity_Copy'
 
-    try:
-        # Read the Excel files into DataFrames
-        opportunity_df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
-        opportunity_copy_df = pd.read_excel(file_path, sheet_name=opportunity_copy_sheet_name)
+    # print("\n\n🔍 Step 19: Fetching IDs of 'Created By'...")
 
-        # Check if 'created_by' column exists and has non-blank values
-        if 'created_by' not in opportunity_df.columns or opportunity_df['created_by'].dropna().empty:
-            if 'created_by' not in opportunity_df.columns:
-                print("    ❌ Skipping VLOOKUP-like operation. Reason: 'created_by' column does not exist in 'Opportunity' sheet.")
-            elif opportunity_df['created_by'].dropna().empty:
-                print("    ❌ Skipping VLOOKUP-like operation. Reason: 'created_by' column is empty in 'Opportunity' sheet.")
-        else:
-            # Filter out rows where 'Email' or 'userid' are NaN
-            opportunity_copy_df_no_nan = opportunity_copy_df.dropna(subset=['Email', 'userid'])
+    # # Name of the sheets to target
+    # opportunity_sheet_name = 'Opportunity'
+    # opportunity_copy_sheet_name = 'Opportunity_Copy'
 
-            # Check for duplicate emails with multiple userids
-            duplicate_emails = opportunity_copy_df_no_nan[opportunity_copy_df_no_nan.duplicated(subset=['Email'], keep=False)]
+    # try:
+    #     # Read the Excel files into DataFrames
+    #     opportunity_df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
+    #     opportunity_copy_df = pd.read_excel(file_path, sheet_name=opportunity_copy_sheet_name)
 
-            if not duplicate_emails.empty:
-                print("\n    ❗️ Duplicate Email IDs found with multiple UserIDs:")
-                for email, group in duplicate_emails.groupby('Email'):
-                    print(f"\n        📧 Email: {email}")
+    #     # Check if 'created_by' column exists and has non-blank values
+    #     if 'created_by' not in opportunity_df.columns or opportunity_df['created_by'].dropna().empty:
+    #         if 'created_by' not in opportunity_df.columns:
+    #             print("    ❌ Skipping VLOOKUP-like operation. Reason: 'created_by' column does not exist in 'Opportunity' sheet.")
+    #         elif opportunity_df['created_by'].dropna().empty:
+    #             print("    ❌ Skipping VLOOKUP-like operation. Reason: 'created_by' column is empty in 'Opportunity' sheet.")
+    #     else:
+    #         # Filter out rows where 'Email' or 'userid' are NaN
+    #         opportunity_copy_df_no_nan = opportunity_copy_df.dropna(subset=['Email', 'userid'])
+
+    #         # Check for duplicate emails with multiple userids
+    #         duplicate_emails = opportunity_copy_df_no_nan[opportunity_copy_df_no_nan.duplicated(subset=['Email'], keep=False)]
+
+    #         if not duplicate_emails.empty:
+    #             print("\n    ❗️ Duplicate Email IDs found with multiple UserIDs:")
+    #             for email, group in duplicate_emails.groupby('Email'):
+    #                 print(f"\n        📧 Email: {email}")
                     
-                    # Display the 'userid' and corresponding Excel row number
-                    for idx, row in group.iterrows():
-                        excel_row_number = idx + 2  # Adjust for 0-based index and Excel rows starting from 2
-                        print(f"\n           🔸 UserID: {row['userid']} (Excel Row {excel_row_number})")
+    #                 # Display the 'userid' and corresponding Excel row number
+    #                 for idx, row in group.iterrows():
+    #                     excel_row_number = idx + 2  # Adjust for 0-based index and Excel rows starting from 2
+    #                     print(f"\n           🔸 UserID: {row['userid']} (Excel Row {excel_row_number})")
 
-                    # Prompt the user to choose the userid to keep
-                    valid_userids = group['userid'].tolist()
-                    while True:
-                        chosen_userid = input(f"\n        🔹 Enter the UserID to keep for Email '{email}' from the above options: ").strip()
-                        if chosen_userid in valid_userids:
-                            break
-                        else:
-                            print("\n           ❌ Invalid input. Please choose a valid UserID from the options above.")
+    #                 # Prompt the user to choose the userid to keep
+    #                 valid_userids = group['userid'].tolist()
+    #                 while True:
+    #                     chosen_userid = input(f"\n        🔹 Enter the UserID to keep for Email '{email}' from the above options: ").strip()
+    #                     if chosen_userid in valid_userids:
+    #                         break
+    #                     else:
+    #                         print("\n           ❌ Invalid input. Please choose a valid UserID from the options above.")
 
-                    # Filter DataFrame to keep only the chosen UserID for the Email
-                    opportunity_copy_df = opportunity_copy_df[
-                        ~((opportunity_copy_df['Email'] == email) & (opportunity_copy_df['userid'] != chosen_userid))
-                    ]
-                print("\n    ✅ Duplicate emails handled successfully.")
+    #                 # Filter DataFrame to keep only the chosen UserID for the Email
+    #                 opportunity_copy_df = opportunity_copy_df[
+    #                     ~((opportunity_copy_df['Email'] == email) & (opportunity_copy_df['userid'] != chosen_userid))
+    #                 ]
+    #             print("\n    ✅ Duplicate emails handled successfully.")
 
-            # Perform VLOOKUP operation using 'created_by' and 'Email'
-            merged_df = pd.merge(
-                opportunity_df,
-                opportunity_copy_df[['Email', 'userid']],
-                left_on='created_by',
-                right_on='Email',
-                how='left'
-            )
+    #         # Perform VLOOKUP operation using 'created_by' and 'Email'
+    #         merged_df = pd.merge(
+    #             opportunity_df,
+    #             opportunity_copy_df[['Email', 'userid']],
+    #             left_on='created_by',
+    #             right_on='Email',
+    #             how='left'
+    #         )
 
-            # Rename the 'userid' column to 'createdbyid'
-            merged_df.rename(columns={'userid': 'createdbyid'}, inplace=True)
+    #         # Rename the 'userid' column to 'createdbyid'
+    #         merged_df.rename(columns={'userid': 'createdbyid'}, inplace=True)
 
-            # Count NaN values in 'createdbyid' column before filling
-            nan_before = merged_df['createdbyid'].isna().sum()
+    #         # Count NaN values in 'createdbyid' column before filling
+    #         nan_before = merged_df['createdbyid'].isna().sum()
 
-            # Replace NaN values in 'createdbyid' column with the specified default value
-            default_userid = '0053h000000sdCVAAY'
-            merged_df['createdbyid'] = merged_df['createdbyid'].fillna(default_userid)
+    #         # Replace NaN values in 'createdbyid' column with the specified default value
+    #         default_userid = '0053h000000sdCVAAY'
+    #         merged_df['createdbyid'] = merged_df['createdbyid'].fillna(default_userid)
 
-            # Count NaN values in 'createdbyid' column after filling
-            nan_after = merged_df['createdbyid'].isna().sum()
+    #         # Count NaN values in 'createdbyid' column after filling
+    #         nan_after = merged_df['createdbyid'].isna().sum()
 
-            # Update the 'Opportunity' sheet with the new column
-            with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
-                merged_df.to_excel(writer, sheet_name=opportunity_sheet_name, index=False)
+    #         # Update the 'Opportunity' sheet with the new column
+    #         with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
+    #             merged_df.to_excel(writer, sheet_name=opportunity_sheet_name, index=False)
 
-            print("\n    ✅ Successfully fetched and updated 'Created By' IDs.")
-            print(f"\n    ❗️ Number of invalid user values replaced with Data Migration Id: {nan_before}")
+    #         print("\n    ✅ Successfully fetched and updated 'Created By' IDs.")
+    #         print(f"\n    ❗️ Number of invalid user values replaced with Data Migration Id: {nan_before}")
 
-    except FileNotFoundError:
-        print(f"\n    ❌ Error: File '{file_path}' not found. Please check the file path and try again.")
+    # except FileNotFoundError:
+    #     print(f"\n    ❌ Error: File '{file_path}' not found. Please check the file path and try again.")
 
-    except KeyError as e:
-        print(f"\n    ❌ Error: Column '{e}' not found. Please check the column names in your sheets.")
+    # except KeyError as e:
+    #     print(f"\n    ❌ Error: Column '{e}' not found. Please check the column names in your sheets.")
 
-    except Exception as e:
-        print(f"\n    ❌ Error: An unexpected error occurred - {e}")
+    # except Exception as e:
+    #     print(f"\n    ❌ Error: An unexpected error occurred - {e}")
 
 
     # ======================================================================
@@ -1433,7 +1433,8 @@ while True:
     column_rename_mapping = {
         'opportunity_legacy_id_c': 'opportunity_legacy_id__c',
         'legacy_opportunity_split_id_c': 'Legacy_Opportunity_Split_Id__c',
-        'In ISC or Not': 'AccountId',
+        'accountid':'raw accountid',
+        'AccountNumber': 'AccountId',
         'sales_stage': 'StageName',
         'won reason': 'Won_Reason__c',
         'lost category': 'Lost_Category__c',
@@ -1443,6 +1444,8 @@ while True:
         'oi_source': 'OI_Group__c',
         'expected_close_date': 'CloseDate',
         'ownerid': 'Email',
+        'Trimmed_ownerid':'OwnerId',
+        'Trimmed_created_by':'createdbyid'
     }
 
     try:
@@ -1498,7 +1501,6 @@ while True:
         'opportunity_legacy_id__c',
         'Legacy_Opportunity_Split_Id__c',
         'name',
-        'AccountNumber',
         'AccountId',
         'StageName',
         'Won_Reason__c',
@@ -1506,11 +1508,9 @@ while True:
         'Lost_Reason__c',
         'CloseDate',
         'CurrencyIsoCode',
-        'Email',
         'OwnerId',
         'NextStep',
         'OI_Group__c',
-        'created_by',
         'createdbyid',
         'Pricebook2Id',
         'RecordTypeId',
@@ -1594,8 +1594,7 @@ while True:
         print(f"\n    ❌ An unexpected error occurred: {e}")
         sys.exit(1)
 
-
-    # =========================================================================================================================================
+# =========================================================================================================================================
     #                                                PRODCUT SHEET EXECUTION
     # =========================================================================================================================================
 
@@ -2213,6 +2212,25 @@ while True:
     # ========================================================================  
     
     # Code to remove comma from the text file
+    def remove_last_char_from_last_line(extract_file):
+        try:
+            # Read all lines from the file
+            with open(extract_file, 'r') as file:
+                lines = file.readlines()
+
+            # Check if the file is not empty
+            if lines:
+                # Remove the last character from the last line
+                lines[-1] = lines[-1][:-1]
+
+                # Write the modified content back to the file
+                with open(extract_file, 'w') as file:
+                    file.writelines(lines)
+
+            # print("Last character from the last line has been removed.")
+        
+        except Exception as e:
+            print(f"Error: {e}")
     
     remove_last_char_from_last_line('Delete/3_product_code.txt')
     
@@ -2237,7 +2255,17 @@ while True:
 
     # Define the CSV file path
     csv_file_path = "/Users/avirajmore/Downloads/productfamily.csv"
-
+    directory = "/Users/avirajmore/Downloads"
+    def rename_bulkquery_file(new_name):
+        """Search for a file with 'bulkQuery' in its name and rename it to the provided new name."""
+        for filename in os.listdir(directory):
+            if "bulkQuery" in filename and filename.endswith(".csv"):
+                old_path = os.path.join(directory, filename)
+                new_path = os.path.join(directory, new_name)
+                os.rename(old_path, new_path)
+                return True  # Indicate that renaming was successful
+        return False  # No matching file found
+    
     # Check if the CSV file exists, and prompt to retry if not
     while not os.path.exists(csv_file_path):
 
@@ -2732,63 +2760,63 @@ while True:
             print(f"\n        🔸 Rows skipped due to blank values in 'opportunityid' or 'email': {skipped_blank_count}")
 
 
-            # ======================================================================
-            # Step 4: Concatenating Email Values
-            # ======================================================================
+            # # ======================================================================
+            # # Step 4: Concatenating Email Values
+            # # ======================================================================
 
-            print("\n\n🔍 Step 4: Concatenating Email Values...")
+            # print("\n\n🔍 Step 4: Concatenating Email Values...")
 
-            # Load the workbook
-            wb = openpyxl.load_workbook(file_path)
+            # # Load the workbook
+            # wb = openpyxl.load_workbook(file_path)
 
-            # Select the sheet
-            sheet = wb['Opportunity_team']
+            # # Select the sheet
+            # sheet = wb['Opportunity_team']
 
-            # Find the column index of 'email'
-            email_column_index = None
-            for col in sheet.iter_cols(min_row=1, max_row=1):
-                for cell in col:
-                    if cell.value == 'email':
-                        email_column_index = cell.column
-                        break
-                if email_column_index is not None:
-                    break
+            # # Find the column index of 'email'
+            # email_column_index = None
+            # for col in sheet.iter_cols(min_row=1, max_row=1):
+            #     for cell in col:
+            #         if cell.value == 'email':
+            #             email_column_index = cell.column
+            #             break
+            #     if email_column_index is not None:
+            #         break
 
-            if email_column_index is None:
-                print("\n    ❌ ERROR: Column 'email' not found in the 'Opportunity_team' sheet.")
-                raise ValueError("Column 'email' not found.")
+            # if email_column_index is None:
+            #     print("\n    ❌ ERROR: Column 'email' not found in the 'Opportunity_team' sheet.")
+            #     raise ValueError("Column 'email' not found.")
 
-            # Define the column header for the new column
-            Concat_T_M_column_header = 'Concat_T_M'
+            # # Define the column header for the new column
+            # Concat_T_M_column_header = 'Concat_T_M'
 
-            # Calculate the max row in the email column
-            max_row = sheet.max_row
+            # # Calculate the max row in the email column
+            # max_row = sheet.max_row
 
-            # Process each row starting from the second row (assuming the first row is the header)
-            rows_processed = 0  # Counter for processed rows
-            for row in range(2, max_row + 1):
-                # Get the value from the email column
-                email_value = sheet.cell(row=row, column=email_column_index).value
+            # # Process each row starting from the second row (assuming the first row is the header)
+            # rows_processed = 0  # Counter for processed rows
+            # for row in range(2, max_row + 1):
+            #     # Get the value from the email column
+            #     email_value = sheet.cell(row=row, column=email_column_index).value
 
-                # Check if the email_value is not None
-                if email_value is not None:
-                    # Concatenate with inverted commas and comma
-                    concatenated_value = f"'{email_value}',"
+            #     # Check if the email_value is not None
+            #     if email_value is not None:
+            #         # Concatenate with inverted commas and comma
+            #         concatenated_value = f"'{email_value}',"
 
-                    # Write the concatenated value to the new column
-                    Concat_T_M_cell = sheet.cell(row=row, column=email_column_index + 1)
-                    Concat_T_M_cell.value = concatenated_value
+            #         # Write the concatenated value to the new column
+            #         Concat_T_M_cell = sheet.cell(row=row, column=email_column_index + 1)
+            #         Concat_T_M_cell.value = concatenated_value
 
-                    rows_processed += 1
+            #         rows_processed += 1
 
-            # Add the header for the new column
-            sheet.cell(row=1, column=email_column_index + 1, value=Concat_T_M_column_header)
+            # # Add the header for the new column
+            # sheet.cell(row=1, column=email_column_index + 1, value=Concat_T_M_column_header)
 
-            # Save the workbook
-            wb.save(file_path)
+            # # Save the workbook
+            # wb.save(file_path)
 
-            # Print completion message
-            print(f"\n    ✅ Concatenated email values.")
+            # # Print completion message
+            # print(f"\n    ✅ Concatenated email values.")
 
 
             # ======================================================================
@@ -2834,192 +2862,192 @@ while True:
             except Exception as e:
                 print(f"\n    ❌ An unexpected error occurred: {str(e)}")
 
-            # ======================================================================
-            # Step 6 :- Extracting Concatenated Values
-            # ======================================================================
+            # # ======================================================================
+            # # Step 6 :- Extracting Concatenated Values
+            # # ======================================================================
 
-            print("\n\n🔍 Step 6: Extracting Concatenated Values...")
+            # print("\n\n🔍 Step 6: Extracting Concatenated Values...")
 
-            # Define the input Excel file path and sheet name
-            # file_path = "file_path.xlsx"  # Replace with your input file path
-            sheet_name = "Opportunity_team"
+            # # Define the input Excel file path and sheet name
+            # # file_path = "file_path.xlsx"  # Replace with your input file path
+            # sheet_name = "Opportunity_team"
 
-            # Check if the input file exists
-            if not os.path.exists(file_path):
-                print(f"\n    ❌ ERROR: The input file '{file_path}' does not exist. Please check the file path and try again.")
-                exit()
+            # # Check if the input file exists
+            # if not os.path.exists(file_path):
+            #     print(f"\n    ❌ ERROR: The input file '{file_path}' does not exist. Please check the file path and try again.")
+            #     exit()
 
-            try:
-                # Read the Excel file
-                df = pd.read_excel(file_path, sheet_name=sheet_name)
+            # try:
+            #     # Read the Excel file
+            #     df = pd.read_excel(file_path, sheet_name=sheet_name)
 
-                # Specify the column to extract concatenated values from
-                column_name = "Concat_T_M"
+            #     # Specify the column to extract concatenated values from
+            #     column_name = "Concat_T_M"
 
-                # Check if the column exists in the dataframe
-                if column_name not in df.columns:
-                    print(f"\n    ❌ ERROR: Column '{column_name}' is missing in the sheet '{sheet_name}' of the input file.")
-                    exit()
+            #     # Check if the column exists in the dataframe
+            #     if column_name not in df.columns:
+            #         print(f"\n    ❌ ERROR: Column '{column_name}' is missing in the sheet '{sheet_name}' of the input file.")
+            #         exit()
 
-                # Remove blank values and drop duplicates
-                cleaned_data = df[column_name].dropna().drop_duplicates().reset_index(drop=True)
+            #     # Remove blank values and drop duplicates
+            #     cleaned_data = df[column_name].dropna().drop_duplicates().reset_index(drop=True)
 
-                # Create a new DataFrame for the output
-                output_df = pd.DataFrame({column_name: cleaned_data})
+            #     # Create a new DataFrame for the output
+            #     output_df = pd.DataFrame({column_name: cleaned_data})
 
-                # Define the output file path and name
-                output_file_path = "Extracts/Team_Member_extract.xlsx"
+            #     # Define the output file path and name
+            #     output_file_path = "Extracts/Team_Member_extract.xlsx"
 
-                # Write the processed data to a new Excel file
-                output_df.to_excel(output_file_path, index=False)
+            #     # Write the processed data to a new Excel file
+            #     output_df.to_excel(output_file_path, index=False)
 
-                # Success message
-                print(f"\n    ✅ Created 'Team_Member_extract' file and saved in Downloads")
-
-
-            except Exception as e:
-                print(f"\n    ❌ ERROR: An unexpected error occurred: {str(e)}")
+            #     # Success message
+            #     print(f"\n    ✅ Created 'Team_Member_extract' file and saved in Downloads")
 
 
+            # except Exception as e:
+            #     print(f"\n    ❌ ERROR: An unexpected error occurred: {str(e)}")
+
+
+            # # ==================================================================================================================
+            # # Load the Excel file
+            # extract_file_path = "Extracts/Team_Member_extract.xlsx"  # Change this to your actual file path
+            # df = pd.read_excel(extract_file_path)
+
+            # # Extract the "accountid" column values
+            # if "Concat_T_M" in df.columns:
+            #     account_ids = df["Concat_T_M"].dropna().astype(str)  # Drop NaN values and convert to string
+
+            #     # Save to a text file
+            #     with open("Delete/5_teammember.txt", "w") as f:
+            #         f.write("\n".join(account_ids))
+
+            # else:
+            #     print("Column 'accountid' not found in the sheet.")
             # ==================================================================================================================
-            # Load the Excel file
-            extract_file_path = "Extracts/Team_Member_extract.xlsx"  # Change this to your actual file path
-            df = pd.read_excel(extract_file_path)
-
-            # Extract the "accountid" column values
-            if "Concat_T_M" in df.columns:
-                account_ids = df["Concat_T_M"].dropna().astype(str)  # Drop NaN values and convert to string
-
-                # Save to a text file
-                with open("Delete/5_teammember.txt", "w") as f:
-                    f.write("\n".join(account_ids))
-
-            else:
-                print("Column 'accountid' not found in the sheet.")
-            # ==================================================================================================================
-            remove_last_char_from_last_line('Delete/5_teammember.txt')
+            # remove_last_char_from_last_line('Delete/5_teammember.txt')
 
             # ========================================================================  
 
-            with open("Delete/5_teammember.txt", "r", encoding="utf-8") as file:
-                cliptext = file.read()  # Read all lines as a single string
+            # with open("Delete/5_teammember.txt", "r", encoding="utf-8") as file:
+            #     cliptext = file.read()  # Read all lines as a single string
 
-            # Copy to clipboard
-            team_query = f"select email,id,Profile.Name,isactive from user where email in ({cliptext}) and Profile.Name != 'IBM Partner Community Login User' and IsActive = true"
-            pyperclip.copy(team_query)
+            # # Copy to clipboard
+            # team_query = f"select email,id,Profile.Name,isactive from user where email in ({cliptext}) and Profile.Name != 'IBM Partner Community Login User' and IsActive = true"
+            # pyperclip.copy(team_query)
 
-            # ======================================================================
-            # 🔍 Step 7: Copying Data from CSV File
-            # ======================================================================
+            # # ======================================================================
+            # # 🔍 Step 7: Copying Data from CSV File
+            # # ======================================================================
 
-            print("\n\n🔍 Step 7: Copying Data from CSV File...")
+            # print("\n\n🔍 Step 7: Copying Data from CSV File...")
 
 
-            # Define the file path for the CSV file
-            csv_file_path = "/Users/avirajmore/Downloads/teammember.csv"
+            # # Define the file path for the CSV file
+            # csv_file_path = "/Users/avirajmore/Downloads/teammember.csv"
 
-            # Loop until the file is found or the user decides to exit
+            # # Loop until the file is found or the user decides to exit
 
-            while not os.path.exists(csv_file_path):
+            # while not os.path.exists(csv_file_path):
 
-                if rename_bulkquery_file('teammember.csv'):
-                    continue  # If renaming was successful, check again if the file exists
+            #     if rename_bulkquery_file('teammember.csv'):
+            #         continue  # If renaming was successful, check again if the file exists
 
-                print(f"\n    ❌ The file '{csv_file_path}' is not present. Did you Query the Team member?")
+            #     print(f"\n    ❌ The file '{csv_file_path}' is not present. Did you Query the Team member?")
 
-                try_again = input("\n        🔹 Do you want to try again? (yes/no): ").strip().lower()
+            #     try_again = input("\n        🔹 Do you want to try again? (yes/no): ").strip().lower()
                 
-                while try_again not in ['yes', 'no']:
-                    print("\n          ❗️ Invalid input. Please enter 'yes' or 'no'.")
-                    try_again = input("\n        🔹 Do you want to try again? (yes/no): ").strip().lower()
-                if try_again != 'yes':
-                    print("\n          🚫 Exiting the program.")
-                    sys.exit()
+            #     while try_again not in ['yes', 'no']:
+            #         print("\n          ❗️ Invalid input. Please enter 'yes' or 'no'.")
+            #         try_again = input("\n        🔹 Do you want to try again? (yes/no): ").strip().lower()
+            #     if try_again != 'yes':
+            #         print("\n          🚫 Exiting the program.")
+            #         sys.exit()
 
-            # Process the file if it exists
-            if os.path.exists(csv_file_path):
-                try:
-                    # Read data from the CSV file
-                    df = pd.read_csv(csv_file_path)
+            # # Process the file if it exists
+            # if os.path.exists(csv_file_path):
+            #     try:
+            #         # Read data from the CSV file
+            #         df = pd.read_csv(csv_file_path)
 
-                    # Specify the Excel file path and sheet name
-                    sheet_name = "Opportunity_team_Copy"
+            #         # Specify the Excel file path and sheet name
+            #         sheet_name = "Opportunity_team_Copy"
 
-                    # Write data to the specified sheet in the Excel file
-                    with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
-                        df.to_excel(writer, sheet_name=sheet_name, index=False)
+            #         # Write data to the specified sheet in the Excel file
+            #         with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
+            #             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-                    # Success message
-                    print(f"\n    ✅ Data from the CSV file has been successfully copied to the '{sheet_name}' sheet in the Excel file:")
+            #         # Success message
+            #         print(f"\n    ✅ Data from the CSV file has been successfully copied to the '{sheet_name}' sheet in the Excel file:")
 
-                except FileNotFoundError:
-                    print(f"\n    ❌ Error: Excel file '{file_path}' not found.")
-                except Exception as e:
-                    print(f"\n    ❌ Error: An unexpected error occurred: {e}")
+            #     except FileNotFoundError:
+            #         print(f"\n    ❌ Error: Excel file '{file_path}' not found.")
+            #     except Exception as e:
+            #         print(f"\n    ❌ Error: An unexpected error occurred: {e}")
 
 
 
-            # ======================================================================
-            # 🔍 Step 8: Fetching User IDs of Team Members...
-            # ======================================================================
+            # # ======================================================================
+            # # 🔍 Step 8: Fetching User IDs of Team Members...
+            # # ======================================================================
 
-            print ('\n\n🔍 Step 8: Fetching User IDs of Team Members...')
+            # print ('\n\n🔍 Step 8: Fetching User IDs of Team Members...')
 
-            # Define the sheet names
-            opportunity_team_sheet_name = "Opportunity_team"
-            opportunity_team_copy_sheet_name = "Opportunity_team_Copy"
+            # # Define the sheet names
+            # opportunity_team_sheet_name = "Opportunity_team"
+            # opportunity_team_copy_sheet_name = "Opportunity_team_Copy"
 
-            try:
-                # Load data from the specified sheets
-                opportunity_team_df = pd.read_excel(file_path, sheet_name=opportunity_team_sheet_name)
-                opportunity_team_copy_df = pd.read_excel(file_path, sheet_name=opportunity_team_copy_sheet_name)
+            # try:
+            #     # Load data from the specified sheets
+            #     opportunity_team_df = pd.read_excel(file_path, sheet_name=opportunity_team_sheet_name)
+            #     opportunity_team_copy_df = pd.read_excel(file_path, sheet_name=opportunity_team_copy_sheet_name)
 
-                # Clean and normalize the 'email' columns for consistency
-                opportunity_team_df["email"] = opportunity_team_df["email"].str.strip().str.lower()
-                opportunity_team_copy_df["Email"] = opportunity_team_copy_df["Email"].str.strip().str.lower()
+            #     # Clean and normalize the 'email' columns for consistency
+            #     opportunity_team_df["email"] = opportunity_team_df["email"].str.strip().str.lower()
+            #     opportunity_team_copy_df["Email"] = opportunity_team_copy_df["Email"].str.strip().str.lower()
 
-                # Perform a left join to match emails and retrieve IDs
-                result_df = pd.merge(
-                    opportunity_team_df,
-                    opportunity_team_copy_df[["Email", "Id"]],
-                    left_on="email",
-                    right_on="Email",
-                    how="left"
-                )
+            #     # Perform a left join to match emails and retrieve IDs
+            #     result_df = pd.merge(
+            #         opportunity_team_df,
+            #         opportunity_team_copy_df[["Email", "Id"]],
+            #         left_on="email",
+            #         right_on="Email",
+            #         how="left"
+            #     )
 
-                # Count NaN values in the 'Id' column before filling
-                nan_before = result_df["Id"].isna().sum()
+            #     # Count NaN values in the 'Id' column before filling
+            #     nan_before = result_df["Id"].isna().sum()
 
-                # Replace NaN values with "Inactive"
-                result_df["Id"] = result_df["Id"].fillna("Inactive")
+            #     # Replace NaN values with "Inactive"
+            #     result_df["Id"] = result_df["Id"].fillna("Inactive")
 
-                # Count NaN values after filling (should be 0)
-                nan_after = result_df["Id"].isna().sum()
+            #     # Count NaN values after filling (should be 0)
+            #     nan_after = result_df["Id"].isna().sum()
 
-                # Calculate the number of NaN values replaced
-                nan_replaced = nan_before - nan_after
+            #     # Calculate the number of NaN values replaced
+            #     nan_replaced = nan_before - nan_after
 
-                # Drop the redundant 'Email' column from the result DataFrame
-                result_df.drop(columns=["Email"], inplace=True)
+            #     # Drop the redundant 'Email' column from the result DataFrame
+            #     result_df.drop(columns=["Email"], inplace=True)
 
-                # Rename the 'Id' column to 'OwnerId'
-                result_df.rename(columns={"Id": "OwnerId"}, inplace=True)
+            #     # Rename the 'Id' column to 'OwnerId'
+            #     result_df.rename(columns={"Id": "OwnerId"}, inplace=True)
 
-                # Save the updated data back to the 'Opportunity_team' sheet
-                with pd.ExcelWriter(file_path, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
-                    result_df.to_excel(writer, sheet_name=opportunity_team_sheet_name, index=False)
+            #     # Save the updated data back to the 'Opportunity_team' sheet
+            #     with pd.ExcelWriter(file_path, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
+            #         result_df.to_excel(writer, sheet_name=opportunity_team_sheet_name, index=False)
 
-                # Output success message
-                print(f"\n    ❗️ Number of 'Inactive' values : {nan_replaced}")
+            #     # Output success message
+            #     print(f"\n    ❗️ Number of 'Inactive' values : {nan_replaced}")
 
-            except FileNotFoundError:
-                print(f"\n    ❌ File not found at path: {file_path}.")
+            # except FileNotFoundError:
+            #     print(f"\n    ❌ File not found at path: {file_path}.")
 
-            except KeyError as e:
-                print(f"\n    ❌ KeyError: Column '{e}' not found. Please check the column names in your Excel sheets.")
+            # except KeyError as e:
+            #     print(f"\n    ❌ KeyError: Column '{e}' not found. Please check the column names in your Excel sheets.")
 
-            except Exception as e:
-                print(f"\n    ❌ An unexpected error occurred: {e}")
+            # except Exception as e:
+            #     print(f"\n    ❌ An unexpected error occurred: {e}")
 
 
             # ======================================================================
@@ -3039,8 +3067,6 @@ while True:
                 "opportunityaccesslevel",
                 "teammemberrole",
                 "email",
-                "OwnerId",
-                "Concat_T_M"
             ]
 
             try:
@@ -3101,7 +3127,7 @@ while True:
                 'opportunityid': 'OpportunityId',
                 'teammemberrole': 'TeamMemberRole',
                 'opportunityaccesslevel': 'OpportunityAccessLevel',
-                'OwnerId': 'UserId',
+                'email': 'UserId',
             }
 
             # file_path = "your_excel_file.xlsx"  # Specify the path to your Excel file
@@ -5331,4 +5357,5 @@ while True:
     
     if continue_processing == 'no':
         break  # Exit the outer loop if the user selects 'no'
+
 
