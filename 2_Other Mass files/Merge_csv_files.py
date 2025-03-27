@@ -1,6 +1,7 @@
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
+import os
 
 # Function to select a CSV file
 def select_file(title):
@@ -21,7 +22,7 @@ def select_file(title):
 
 file1 = select_file("Select the First CSV file")
 file2 = select_file("Select the Second CSV file")
-output_file = '/Users/avirajmore/Downloads/Merged_file.csv'
+output_file = os.path.expanduser("~/Downloads/Merged_file.csv")
 
 def merge_csv_files(file1, file2, output_file):
     # Read both CSV files

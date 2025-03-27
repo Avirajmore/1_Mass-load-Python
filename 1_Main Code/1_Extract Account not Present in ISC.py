@@ -1,6 +1,11 @@
 import os
+import pyperclip
+import pandas as pd
+import openpyxl
+import sys
 
-folder_path = '/Users/avirajmore/Downloads'
+
+folder_path = os.path.expanduser("~/Downloads")
 
 file_paths = []
 
@@ -11,15 +16,6 @@ if os.path.isdir(folder_path):
             file_paths.append(file_path)
 else:
     print("Invalid folder path.")
-
-
-import os
-import pandas as pd
-import openpyxl
-import sys
-import tkinter as tk
-from tkinter import filedialog
-
 
 
 print(f"\n{'='*120}\n{' ' * 30} 📝  Checking for Accounts not present in ISC 📝 {' ' * 30}\n{'='*120}\n")
@@ -342,10 +338,33 @@ for file_path in file_paths:
 
     print("\n\n🔍 Step 15: Copying extracted data to main file...")
 
-    accounts_csv = "/Users/avirajmore/Downloads/accounts.csv"  # Specify the accounts CSV file path
-
+    accounts_csv = os.path.expanduser("~/Downloads/accounts.csv")  # Specify the accounts CSV file path
+    directory = os.path.expanduser("~/Downloads")
+    def rename_bulkquery_file(new_name):
+        """Search for a file with 'bulkQuery' in its name and rename it to the provided new name."""
+        for filename in os.listdir(directory):
+            if "bulkQuery" in filename and filename.endswith(".csv"):
+                old_path = os.path.join(directory, filename)
+                new_path = os.path.join(directory, new_name)
+                os.rename(old_path, new_path)
+                return True  # Indicate that renaming was successful
+        return False  # No matching file found
+    
     # Check if the accounts CSV file exists, and prompt to retry if not
     while not os.path.exists(accounts_csv):
+        
+        # Try renaming a bulkQuery file first
+        if rename_bulkquery_file('accounts.csv'):
+            continue  # If renaming was successful, check again if the file exists
+
+        # Read account IDs from text file
+        with open("Delete/Account_ids.txt", "r", encoding="utf-8") as file:
+            cliptext = file.read()
+
+        # Copy SQL query to clipboard
+        account_query = f'Select AccountNumber,id from Account where AccountNumber in ({cliptext})'
+        pyperclip.copy(account_query)
+       
         print(f"\n    ❌ Error: File 'accounts.csv' does not exist. Did you query the accounts?")
         try_again = input("\n        🔸 Do you want to try again? (yes/no): ").strip().lower()
         while try_again not in ['yes', 'no']:
@@ -487,7 +506,7 @@ for file_path in file_paths:
     filtered_df.drop_duplicates(inplace=True)
 
     # Path to the output Excel file
-    output_file_path = '/Users/avirajmore/Downloads/Accounts_to_be_imported.xlsx'
+    output_file_path = os.path.expanduser("~/Downloads/Accounts_to_be_imported.xlsx")
 
     # Check if the output Excel file exists
     try:
@@ -523,7 +542,7 @@ for file_path in file_paths:
     import os
 
     # Load the Excel file
-    extract_file_path = "/Users/avirajmore/Downloads/Accounts_to_be_imported.xlsx"  # Change this to your actual file path
+    extract_file_path = os.path.expanduser("~/Downloads/Accounts_to_be_imported.xlsx")  # Change this to your actual file path
     df = pd.read_excel(extract_file_path, header=None)  # Load without headers
 
     # Check if the DataFrame is empty
@@ -553,7 +572,7 @@ for file_path in file_paths:
     # ================================================
 
     # Hardcoded directory
-    directory = "/Users/avirajmore/Downloads"
+    directory = os.path.expanduser("~/Downloads")
     
     files_deleted = 0
     # Get list of files in the directory

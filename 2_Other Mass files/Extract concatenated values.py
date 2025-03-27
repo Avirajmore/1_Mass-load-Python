@@ -87,7 +87,7 @@ def process_file(file_path):
     except Exception as e:
         print(f"Error trimming first line: {e}")
 
-folder_path = '/Users/avirajmore/Downloads'
+folder_path = os.path.expanduser("~/Downloads")
 file_paths = [os.path.join(folder_path, file) for file in os.listdir(folder_path) if file.endswith(('.xlsx', '.xls'))]
 if not file_paths:
     print("No Excel files found in the folder.")

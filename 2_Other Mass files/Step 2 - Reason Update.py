@@ -7,7 +7,7 @@ To add a Reason column after the masss load is done
 import pandas as pd
 
 # Specify the file path of your CSV file
-file_path = '/Users/avirajmore/Downloads/reason.csv'  # Replace with the path to your CSV file
+file_path = os.path.expanduser("~/Downloads/reason.csv")  # Replace with the path to your CSV file
 
 # Load the CSV file into a pandas DataFrame
 try:

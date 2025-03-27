@@ -17,7 +17,7 @@ from tkinter import messagebox, filedialog
 print("\n\n🔍 Step 1: Select the file to Process")
 
 # Set the directory to search for Excel files
-directory = "/Users/avirajmore/Downloads"
+directory = os.path.expanduser("~/Downloads")
 
 # Create a hidden root window (used for file dialog)
 root = tk.Tk()
@@ -158,7 +158,7 @@ try:
 
     # Step 10: Define the output CSV file path (updated with new values)
     # output_file = output + "/" + opportunity_product  # Path for the processed CSV
-    output_file = '/Users/avirajmore/Downloads/SAG Product Load file.csv'  # Path for the processed CSV
+    output_file = os.path.expanduser("~/Downloads/SAG Product Load file.csv")  # Path for the processed CSV
 
     # Step 11: Check if the directory exists before saving
     output_dir = os.path.dirname(output_file)

@@ -24,16 +24,9 @@ from openpyxl.utils.exceptions import SheetTitleException
 # =========================================================
 
 # Base directory path (fixed part)
-base_dir = "/Users/avirajmore/Documents/Office Docs/Massload Files/2025" 
+base_dir = os.path.expanduser("~/Documents/Office Docs/Massload Files/2025") #Change it to where you want to store the file
 
-# =========================================================
-# Define Function To avoid invalid name of the main folder and sub folder which will be used later
-# =========================================================
-
-# Function to validate folder names
-def is_valid_folder_name(name):
-    invalid_chars = set('\\/:*?\"<>|')
-    return name and not any(char in invalid_chars for char in name)
+#in my case the above os.path.expanduser is dynamically taken as '/Users/avirajmore' as i am using it
 
 # =========================================================
 # Folder Creation starts
@@ -45,26 +38,35 @@ print(" " * 33 + "📂 FOLDER CREATION & FILE MOVEMENT 📂")
 print("=" * 100)
 
 # =========================================================
+# Define Function To avoid invalid name of the main folder and sub folder which will be used later
+# =========================================================
+
+# Function to validate folder names
+def is_valid_folder_name(name):
+    invalid_chars = set('\\/:*?\"<>|')
+    return name and not any(char in invalid_chars for char in name)
+
+# =========================================================
 # Step 1: Create the main Sprint folder
 # =========================================================
 
-print("\n🔍 Step 1: Creating Sprint folder")
-while True:
-    Sprint_Number = input("\n    📂 Enter the Sprint number: ").strip()
-    if is_valid_folder_name(Sprint_Number):
-        break
-    else:
-        print("\n        ❗️ Error: Invalid folder name. Please avoid using invalid characters like \\ / : * ? \" < > |.")
+# print("\n🔍 Step 1: Creating Sprint folder")
+# while True:
+#     Sprint_Number = input("\n    📂 Enter the Sprint number: ").strip()
+#     if is_valid_folder_name(Sprint_Number):
+#         break
+#     else:
+#         print("\n        ❗️ Error: Invalid folder name. Please avoid using invalid characters like \\ / : * ? \" < > |.")
 
-main_folder_path = os.path.join(base_dir, Sprint_Number)
-os.makedirs(main_folder_path, exist_ok=True)
-print(f"\n        ✅ Folder '{Sprint_Number}' created successfully")
+# main_folder_path = os.path.join(base_dir, Sprint_Number)
+# os.makedirs(main_folder_path, exist_ok=True)
+# print(f"\n        ✅ Folder '{Sprint_Number}' created successfully")
 
 # =========================================================
 # Step 2: Create subfolders for Different Week and "Copy File" and "Final iteration file" folders
 # =========================================================
 
-print("\n\n🔍 Step 2: Creating subfolders")
+print("\n\n🔍 Step 1: Creating Main Folder")
 while True:
     subfolder_name = input("\n    📂 Enter the name of the subfolder: ").strip()
     if is_valid_folder_name(subfolder_name):
@@ -72,7 +74,7 @@ while True:
     else:
         print("\n        ❗️ Error: Invalid folder name. Please avoid using invalid characters like \\ / : * ? \" < > |.")
 
-subfolder_path = os.path.join(main_folder_path, subfolder_name)
+subfolder_path = os.path.join(base_dir, subfolder_name)
 os.makedirs(subfolder_path, exist_ok=True)
 
 copy_file_path = os.path.join(subfolder_path, "Copy files")
@@ -88,13 +90,13 @@ print(f"\n        ✅ Subfolders 'Copy files' and 'Final iteration files' create
 # =========================================================
 
 
-downloads_dir = "/Users/avirajmore/Downloads"
+downloads_dir = os.path.expanduser("~/Downloads")
 
 excel_extensions = ('.xls', '.xlsx', '.xlsm', '.xlsb', '.xltx', '.xltm')
 
 files_moved = []
 
-print(f"\n\n🔍 Step 3: Moving Excel files")
+print(f"\n\n🔍 Step 2: Moving Excel files")
 
 # Initialize excel_files as an empty list
 excel_files = []
@@ -124,7 +126,7 @@ else:
 # Step 4: Copy files independently to the "Copy files" folder
 # =========================================================
 
-print("\n\n🔍 Step 4: Copying files")
+print("\n\n🔍 Step 3: Copying files")
 files_copied = []
 
 # Now, excel_files contains all the Excel files (moved or existing)
@@ -152,7 +154,7 @@ for index, (file_name, status) in enumerate(files_copied, start=1):
 # =========================================================
 
 
-print("\n\n🔍 Step 5: Creating folders in 'Final iteration files'")
+print("\n\n🔍 Step 4: Creating folders in 'Final iteration files'")
 folders_created = []
 
 # Now, excel_files contains all the Excel files (moved or existing)
@@ -160,7 +162,7 @@ for file_name in excel_files:
     folder_name = os.path.splitext(file_name)[0]
     folder_path = os.path.join(final_iteration_file_path, folder_name)
 
-    # Ensure the main folder exists (create if necessary)
+    # Ensure the main folder exists (creates if necessary)
     if not os.path.exists(folder_path):
         os.makedirs(folder_path, exist_ok=True)
         folder_status = "created"
@@ -196,7 +198,7 @@ for index, (folder_name, status) in enumerate(folders_created, start=1):
 
 # # Hardcoded Path for debugging if the below code does not work
 
-# file_path = "/Users/avirajmore/Downloads/Avi 3 copy.xlsx"  
+# file_path = os.path.expanduser("~/Downloads/Avi 3 copy.xlsx" )
 
 # ===============================================================
 
@@ -324,7 +326,7 @@ while True:
     }
 
     # Load the Excel file
-    # file_path = 'your_excel_file.xlsx'  # Replace with the actual file path
+
     wb = openpyxl.load_workbook(file_path)
 
     # Iterate through all sheets in the workbook
@@ -694,8 +696,8 @@ while True:
 
     print("\n\n🔍 Step 9: Formatting the Date column...")
 
-    sheet_name = 'Opportunity'  # Replace with the actual sheet name
-    date_column = 'expected_close_date'  # Replace with the actual column name containing the dates
+    sheet_name = 'Opportunity'  
+    date_column = 'expected_close_date'
 
     try:
         # Load the specific sheet into a DataFrame
@@ -744,7 +746,7 @@ while True:
     print("\n\n🔍 Step 10: Creating 'legacy_opportunity_split_id_c' column...")
 
     # Specify the sheet name where you want to add the new column and copy data
-    target_sheet_name = 'Opportunity'  # Replace 'Sheet1' with the name of your target sheet
+    target_sheet_name = 'Opportunity' 
 
     # Read the specific sheet into a DataFrame
     df = pd.read_excel(file_path, sheet_name=target_sheet_name)
@@ -785,8 +787,8 @@ while True:
 
     print('\n\n🔍 Step 11: Creating new column with Trimmed Account_id and Email_id...\n')
 
-    sheet_name = 'Opportunity'  # Replace with the actual sheet name
-    columns_to_trim = ['accountid', 'ownerid']  # Replace with the actual column names to trim
+    sheet_name = 'Opportunity'  
+    columns_to_trim = ['accountid', 'ownerid']  
 
     try:
         # Load the specific sheet into a DataFrame
@@ -828,9 +830,9 @@ while True:
 
     print("\n\n🔍 Step 12: Processing Accounts with correct format...\n")
 
-    sheet_name = 'Opportunity'  # Replace with the actual sheet name
-    accountid_column = 'Trimmed_accountid'  # Replace with the actual column name containing the account Ids
-    new_column_name = 'AccountNumber'  # Name for the new column
+    sheet_name = 'Opportunity'
+    accountid_column = 'Trimmed_accountid'
+    new_column_name = 'AccountNumber'  
 
     # Load the specific sheet into a DataFrame
     df = pd.read_excel(file_path, sheet_name=sheet_name)
@@ -858,8 +860,8 @@ while True:
 
     print("\n\n🔍 Step 13: Concatenating the Values...\n")
 
-    sheet_name = 'Opportunity'  # Replace with the actual sheet name
-    columns_to_concatenate = ['AccountNumber', 'Trimmed_ownerid', 'created_by']  # Replace with the actual column names to concatenate
+    sheet_name = 'Opportunity'  
+    columns_to_concatenate = ['AccountNumber', 'Trimmed_ownerid', 'created_by'] 
     new_column_names = ['Concatenatedaccountid', 'Concatenatedownerid', 'concatenatedcreatedby']  # Names for the new columns with concatenated values
 
     # Load the specific sheet into a DataFrame
@@ -1008,9 +1010,9 @@ while True:
 
     print("\n\n🔍 Step 15: Copying extracted data to main file...")
 
-    accounts_csv = "/Users/avirajmore/Downloads/accounts.csv"  # Specify the accounts CSV file path
-    userid_csv = "/Users/avirajmore/Downloads/userid.csv"  # Specify the userid CSV file path
-    directory = "/Users/avirajmore/Downloads"
+    accounts_csv = os.path.expanduser("~/Downloads/accounts.csv")  # Specify the accounts CSV file path
+    userid_csv = os.path.expanduser("~/Downloads/userid.csv")  # Specify the userid CSV file path
+    directory = os.path.expanduser("~/Downloads")
     
     def rename_bulkquery_file(new_name):
         """Search for a file with 'bulkQuery' in its name and rename it to the provided new name."""
@@ -1117,7 +1119,7 @@ while True:
 
     print("\n\n🔍 Step 16: Checking how many Accounts are present in ISC...")
 
-    # file_path = 'path_to_your_excel_file.xlsx'  # Replace with your actual file path
+    # file_path = 'path_to_your_excel_file.xlsx'
     opportunity_sheet_name = 'Opportunity'
     opportunity_copy_sheet_name = 'Opportunity_Copy'
 
@@ -1601,7 +1603,7 @@ while True:
 
 
     # ======================================================================
-    # file_path = "/Users/avirajmore/Downloads/Avi 3 copy 2.xlsx"
+    # file_path = os.path.expanduser("~/Downloads/Avi 3 copy 2.xlsx")
     # ======================================================================
     print("\n")
     print("=" * 100)
@@ -1717,8 +1719,8 @@ while True:
 
     print("\n\n🔍 Step 4: Formatting the date column in the 'Opportunity_product' sheet...")
 
-    product_sheet_name = 'Opportunity_product'  # Replace with the actual sheet name
-    date_column = 'expiration date'  # Replace with the actual column name containing the dates
+    product_sheet_name = 'Opportunity_product'
+    date_column = 'expiration date'  
 
     try:
         # Load the specific sheet into a DataFrame
@@ -1780,7 +1782,7 @@ while True:
     # Main step
     print("\n\n🔍 Step 5: Adding the 'Quantity' column in the 'Opportunity_product' sheet...")
 
-    product_sheet_name = 'Opportunity_product'  # Replace with the actual sheet name
+    product_sheet_name = 'Opportunity_product'  
     new_column_name = 'Quantity'  # Column name to be added
     default_value = 1  # Default value for the new column
 
@@ -2236,7 +2238,7 @@ while True:
     print("\n\n🔍 Step 13: Copying data from CSV file to Excel...")
 
     # Define the CSV file path
-    csv_file_path = "/Users/avirajmore/Downloads/productfamily.csv"
+    csv_file_path = os.path.expanduser("~/Downloads/productfamily.csv")
 
     # Check if the CSV file exists, and prompt to retry if not
     while not os.path.exists(csv_file_path):
@@ -2840,8 +2842,7 @@ while True:
 
             print("\n\n🔍 Step 6: Extracting Concatenated Values...")
 
-            # Define the input Excel file path and sheet name
-            # file_path = "file_path.xlsx"  # Replace with your input file path
+            # Define the sheet name
             sheet_name = "Opportunity_team"
 
             # Check if the input file exists
@@ -2916,7 +2917,7 @@ while True:
 
 
             # Define the file path for the CSV file
-            csv_file_path = "/Users/avirajmore/Downloads/teammember.csv"
+            csv_file_path = os.path.expanduser("~/Downloads/teammember.csv")
 
             # Loop until the file is found or the user decides to exit
 
@@ -3030,7 +3031,7 @@ while True:
             print("\n\n🔍 Step 9: Rearranging Columns in Sequence...")
 
             # Define the sheet name to target
-            sheet_name = "Opportunity_team"  # Replace with the name of your sheet
+            sheet_name = "Opportunity_team" 
 
             # Specify the desired order of columns
             desired_column_order = [
@@ -3286,7 +3287,6 @@ while True:
 
             print("\n\n🔍 Step 2: Renaming 'Tags' Sheet to 'Tags_2'...")
 
-            # file_path = 'example.xlsx'  # Replace with your Excel file path
 
             try:
                 # Try loading the workbook
@@ -3723,7 +3723,7 @@ while True:
             print("\n\n🔍 Step 9: Adding 'Existing' Column to 'Reporting_codes' Sheet...")
 
             # Specify the file path of the Excel file
-            # file_path = "/Users/avirajmore/Downloads/your_excel_file.xlsx"
+            # file_path = os.path.expanduser("~/Downloads/your_excel_file.xlsx")
 
             # Specify the sheet names
             opportunity_sheet_name = 'Opportunity'
@@ -3768,7 +3768,7 @@ while True:
 
 
             # Specify the file path of the Excel file
-            # file_path = "/Users/avirajmore/Downloads/your_excel_file.xlsx"
+            # file_path = os.path.expanduser("~/Downloads/your_excel_file.xlsx")
 
             # Specify the sheet names
             opportunity_sheet_name = 'Opportunity'
@@ -3810,9 +3810,6 @@ while True:
 
             print("\n\n🔍 Step 11: Concatenating Values in 'Reporting_codes' Sheet...")
 
-
-            # Replace 'your_file_path.xlsx' with the path to your Excel file
-            # file_path = 'your_file_path.xlsx'
             sheet_name = 'Reporting_codes'
 
             try:
@@ -4011,7 +4008,7 @@ while True:
             print("\n\n🔍 Step 14: Processing CSV File and Adding Filtered Data to Excel...")
 
             # Define the file path for the Exported csv file
-            csv_file_path = "/Users/avirajmore/Downloads/tags.csv"
+            csv_file_path = os.path.expanduser("~/Downloads/tags.csv")
 
             # Loop until the file is found or the user decides to exit
             while not os.path.exists(csv_file_path):
@@ -4072,7 +4069,7 @@ while True:
             print("\n\n🔍 Step 15: Processing CSV File and Adding Filtered Data to Excel...")
 
             # Define the file path for the Exported csv file
-            csv_file_path = "/Users/avirajmore/Downloads/tags.csv"
+            csv_file_path = os.path.expanduser("~/Downloads/tags.csv")
 
             # Loop until the file is found or the user decides to exit
             while not os.path.exists(csv_file_path):
@@ -4273,7 +4270,7 @@ while True:
             # ===================================================
             
             # Code to create List of tags 
-            output_for_tags = "/Users/avirajmore/Downloads/Tag_to_be_inserted.csv"  # Change to your desired output file path
+            output_for_tags = os.path.expanduser("~/Downloads/Tag_to_be_inserted.csv") # Change to your desired output file path
 
 
             def process_excel(file_path, output_for_tags):
@@ -4332,8 +4329,8 @@ while True:
             print("\n\n📄 Rearranging Sheets in Workbook...")
 
             # Define the file paths
-            # file_path = "/Users/avirajmore/Downloads/avi.xlsx"
-            new_file_path = "/Users/avirajmore/Downloads/Rearranged_file.xlsx"
+            # file_path = os.path.expanduser("~/Downloads/avi.xlsx")
+            new_file_path = os.path.expanduser("~/Downloads/Rearranged_file.xlsx")
 
             # Check if the input file exists
             if not os.path.exists(file_path):
@@ -4435,7 +4432,7 @@ while True:
 
     # Assume the file selected in Code 2 is stored in 'file_path'
     # Example:
-    # file_path = "/Users/avirajmore/Downloads/ProductFamily_and_Currency_extract.xlsx"
+    # file_path = os.path.expanduser("~/Downloads/ProductFamily_and_Currency_extract.xlsx")
 
     # Extract the selected file name from the file path
     selected_file_name = os.path.basename((file_path).split("/")[-1])
@@ -4444,8 +4441,7 @@ while True:
     folder_name = os.path.splitext(re.sub(r'_Copy', '', selected_file_name))[0]
 
     # Define the base path where the 'Final iteration files' folder exists (created by Code 1)
-    base_dir = "/Users/avirajmore/Documents/Office Docs/Massload Files/2025"
-    final_iteration_file_path = os.path.join(base_dir, Sprint_Number, subfolder_name, "Final iteration files")
+    final_iteration_file_path = os.path.join(base_dir, subfolder_name, "Final iteration files")
 
     # Construct the path to the corresponding folder
     output = os.path.join(final_iteration_file_path, folder_name)
@@ -4642,8 +4638,7 @@ while True:
 
 
     print("\n\n🔍 CREATING PRODUCT FILE")
-    # Step 1: Define the input Excel file path (commented out as requested)
-    # file_path = 'your_file_path_here.xlsx'  # Replace with your actual file path
+
     sheet_name = 'Opportunity_product'
 
     # Define the predefined columns to delete
@@ -5210,7 +5205,7 @@ while True:
     print("\n\n🔍 Copying the Summary File to the Selected Folder...")
 
     # Path to the reference file
-    reference_file_path = "/Users/avirajmore/Documents/Office Docs/Massload Files/Reference File/Reference_Summary_file.xlsx"
+    reference_file_path = os.path.expanduser("~/Documents/Office Docs/Massload Files/Reference File/Reference_Summary_file.xlsx")
 
     # Check if the reference file exists
     if not os.path.exists(reference_file_path):
@@ -5261,7 +5256,7 @@ while True:
     # Delete CSV Files
     # =====================================================
     # Hardcoded directory
-    directory = "/Users/avirajmore/Downloads"
+    directory = os.path.expanduser("~/Downloads")
 
     print("\n\n🔍 Delete the extract files")
 

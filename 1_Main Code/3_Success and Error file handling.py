@@ -23,7 +23,7 @@ root.attributes('-topmost', True)  # Bring dialog to front
 csv_files = root.tk.splitlist(filedialog.askopenfilenames(
     title="📂 Select CSV Files",
     filetypes=[("CSV Files", "*.csv")],
-    initialdir="/Users/avirajmore/Downloads"
+    initialdir=os.path.expanduser("~/Downloads")
 ))
 
 # Handle no files selected

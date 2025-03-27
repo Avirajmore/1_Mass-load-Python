@@ -1,5 +1,6 @@
 
 import openpyxl
+import os
 import pandas as pd
 import tkinter  as tk
 from tkinter import filedialog
@@ -17,7 +18,7 @@ print(f"\n{"="*100}")
 print("\n\n🔍 Step 1: Select a File to Process")
 
 # Set the directory to search for Excel files
-directory = "/Users/avirajmore/Downloads"
+directory = os.path.expanduser("~/Downloads")
 
 # Create a hidden root window (used for file dialog)
 root = tk.Tk()

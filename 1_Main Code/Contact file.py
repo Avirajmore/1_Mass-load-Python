@@ -22,7 +22,7 @@ from openpyxl.utils.exceptions import SheetTitleException
 
 print("\n🔍 Step 1: Selecting a Copy file...")
 # Set the directory to search for Excel files
-directory = "/Users/avirajmore/Downloads"
+directory = os.path.expanduser("~/Downloads")
 
 # Create a hidden root window (used for file dialog)
 root = tk.Tk()
@@ -116,11 +116,6 @@ except Exception as e:
 
 # =================================
 
-import pandas as pd
-
-# Define the file path
-# file_path = '/Users/avirajmore/Downloads/Mass_load_template_CHEVA - IAPP 2024 copy.xlsx'
-
 # Read the "Contact Roles" sheet from the Excel file
 df = pd.read_excel(file_path, sheet_name='Contact Roles')
 
@@ -144,13 +139,12 @@ print("\n🔍Step 4: Creating Final Contact file")
 
 predefined_columns_Reportingcode = ['existing']
 
-# File paths
-# file_path = 'your_file_path_path.xlsx'  # Uncomment and set your file path
 sheet_name = 'Contact Roles'
 name_of_file= "/"+filename.strip('_Copy.xlsx')
 destination_folder = "/".join(file_path.split('/')[0:9]) + "/Final iteration files/"+name_of_file
 output_file = destination_folder + name_of_file+'_Contact.csv' # Path for the processed CSV
 removed_rows_file = destination_folder +'/Removed Rows/Removed_Rows - Contact.csv' # Path for removed rows CSV
+
 # Initialize variables
 deleted_columns = []
 rows_dropped = 0

@@ -22,7 +22,7 @@ print("=" * 100)
 print("\n\n🔍 Step 1: Select the file to Process")
 
 # Set the directory to search for Excel files
-directory = "/Users/avirajmore/Downloads"
+directory = os.path.expanduser("~/Downloads")
 
 # Create a hidden root window (used for file dialog)
 root = tk.Tk()
@@ -184,7 +184,7 @@ print("\n\n🔍 Step 6: Extract legacy id to fetch currency...")
 
 
 # file_path = "your_file.xlsx"  # Change this to your actual file
-output_file = "/Users/avirajmore/Downloads/Currency_Extract.xlsx"
+output_file = os.path.expanduser("~/Downloads/Currency_Extract.xlsx")
 column_name = "legacy opportunityid"  # Column to process
 
 # Read the specific sheet and column
@@ -207,7 +207,7 @@ print(f"\n    ✅ Processed file saved as {output_file}")
 print("\n\n🔍 Step 7: Copy Currency data to main...")
 
 # Specify the CSV file path and the destination Excel file
-csv_file_path = "/Users/avirajmore/Downloads/currency.csv"
+csv_file_path = os.path.expanduser("~/Downloads/currency.csv")
 # file_path = "output.xlsx"  # Change this to your desired file path
 
 # Check if the CSV file exists, and prompt to retry if not
@@ -243,7 +243,7 @@ except Exception as e:
 print("\n\n🔍 Step 8: Create new Currency column in the sheet...")
 
 
-# file_path= "/Users/avirajmore/Downloads/ISC Price and type correction file 02042025 copy.xlsx"
+# file_path= os.path.expanduser("~/Downloads/ISC Price and type correction file 02042025 copy.xlsx")
 
 # Define the sheet names
 file_pathopportunity_product_sheet_name = "Opportunity_product"
@@ -705,7 +705,7 @@ def process_excel_file(file_path, sheet_name, required_columns, output_file):
 # Specify the input file path, sheet name, required columns, and output file path
 sheet_name = "Opportunity_product"  # Specify the sheet name
 required_columns = ["Concatenated Product Family", "Concatenated Currency"]
-output_file = "/Users/avirajmore/Downloads/ProductFamily_and_Currency_extract.xlsx"  # Specify the output file path
+output_file = os.path.expanduser("~/Downloads/ProductFamily_and_Currency_extract.xlsx")  # Specify the output file path
 
 # Process the Excel file
 process_excel_file(file_path, sheet_name, required_columns, output_file)
@@ -718,7 +718,7 @@ process_excel_file(file_path, sheet_name, required_columns, output_file)
 print("\n\n🔍 Step 17: Copying data from CSV file to Excel...")
 
 # Define the CSV file path
-csv_file_path = "/Users/avirajmore/Downloads/productfamily.csv"
+csv_file_path = os.path.expanduser("~/Downloads/productfamily.csv")
 
 # Check if the CSV file exists, and prompt to retry if not
 while not os.path.exists(csv_file_path):
