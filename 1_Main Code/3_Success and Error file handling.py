@@ -77,7 +77,8 @@ if not summary_file_path:
     exit()
 
 print(f"\n    ✅ Selected file:")
-print(f"\n         📂 {"/".join(summary_file_path.split("/")[-5:])}")
+shortened_path = "/".join(summary_file_path.split("/")[-5:])
+print(f"\n         📂 {shortened_path}")
 
 
 # Taking the file name automatically from Summary file name
@@ -384,7 +385,8 @@ if missing_sheets:
         print(f"\n        {i}. {sheet}")
 
 print(f"\n    ✅ Row counts and summations updated successfully in the 'Summary' sheet of :")
-print(f"\n         📂 {"/".join(summary_file_path.split('/')[-5:])}")
+shortened_path = "/".join(summary_file_path.split('/')[-5:])
+print(f"\n         📂 {shortened_path}")
 
 
 # ============================================================

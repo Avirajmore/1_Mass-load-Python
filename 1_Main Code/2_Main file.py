@@ -24,9 +24,9 @@ from openpyxl.utils.exceptions import SheetTitleException
 # =========================================================
 
 # Base directory path (fixed part)
+#in my case the below os.path.expanduser is dynamically taken as '/Users/avirajmore' as i am using it
 base_dir = os.path.expanduser("~/Documents/Office Docs/Massload Files/2025") #Change it to where you want to store the file
-
-#in my case the above os.path.expanduser is dynamically taken as '/Users/avirajmore' as i am using it
+reference_summary_path = os.path.expanduser("~/Documents/Office Docs/Massload Files/Reference File/Reference_Summary_file.xlsx")
 
 # =========================================================
 # Folder Creation starts
@@ -250,7 +250,8 @@ while True:
     # To rename the sheets
     # ================================================================================
 
-    print(f"\n{"="*100}")
+    symbol = "="
+    print(symbol*100)
 
     print("\n\n🔍 Check if all the Required Sheets are present or not")
  
@@ -4619,7 +4620,8 @@ while True:
     try:
         opportunity_df.to_csv(output_file, index=False)
         print("\n    ✅ Processed data saved to:")
-        print(f"\n        📂 {"/".join(output_file.split("/")[-5:])}")
+        shortened_output = {"/".join(output_file.split("/")[-5:])}
+        print(f"\n        📂 {shortened_output}")
     except Exception as e:
         print(f"\n    ❌ Error saving the processed file: {e}")
 
@@ -4628,7 +4630,8 @@ while True:
         try:
             removed_rows_df.to_csv(removed_rows_file, index=False)
             print(f"\n    ✅ Removed rows saved to:")
-            print(f"\n        📂 {"/".join(removed_rows_file.split("/")[-5:])}")
+            shortned_path = "/".join(removed_rows_file.split("/")[-5:])
+            print(f"\n        📂 {shortned_path}")
         except Exception as e:
             print(f"\n    ❌ Error saving the removed rows file: {e}")
 
@@ -4761,7 +4764,8 @@ while True:
         # Step 12: Save the processed DataFrame to the specified CSV file
         df.to_csv(output_file, index=False)
         print("\n    ✅ Processed data saved to")
-        print(f"\n        📂 {"/".join(output_file.split("/")[-5:])}")
+        shortened_output = "/".join(output_file.split("/")[-5:])
+        print(f"\n        📂 {shortened_output}")
 
         # Step 13: Save the removed rows (where 'existing' == False) to a separate CSV file
         removed_rows_file2 = output+'/Removed Rows/Removed_Rows - Product.csv'  # Path for the removed rows CSV
@@ -4769,7 +4773,8 @@ while True:
             removed_rows_df = removed_rows_df[removed_rows_df.columns.intersection(df.columns.tolist() + ['Reason'])]
             removed_rows_df.to_csv(removed_rows_file2, index=False)
             print("\n    ✅ Removed rows saved to:")
-            print(f"\n        📂 {"/".join(removed_rows_file2.split("/")[-5:])}")
+            shortned_path = "/".join(removed_rows_file2.split("/")[-5:])
+            print(f"\n        📂 {shortned_path}")
 
     except Exception as e:
         print(f"\n    ❌ An error occurred: {e}")
@@ -4905,10 +4910,12 @@ while True:
                 print(f"\n    ❗️ Total rows dropped where 'Existing' == False: {rows_dropped}")
                 if removed_rows_saved:
                     print("\n    ✅ Removed rows saved to:")
-                    print(f"\n        📂 {"/".join(removed_rows_file.split("/")[-5:])}")
+                    shortned_path = "/".join(removed_rows_file.split("/")[-5:])
+                    print(f"\n        📂 {shortned_path}")
 
                 print(f"\n    ✅ Processed data saved to: ")
-                print(f"\n        📂 {"/".join(output_file.split("/")[-5:])}")
+                shortned_path = "/".join(output_file.split("/")[-5:])
+                print(f"\n        📂 {shortned_path}")
 
             except Exception as e:
                 print(f"\n    ❌ An error occurred: {e}")
@@ -5038,10 +5045,12 @@ while True:
 
                 # Final summary messages
                 print("\n    ✅ Processed data saved to:")
-                print(f"\n        📂 {"/".join(output_file.split("/")[-5:])}")
+                shortened_output = "/".join(output_file.split("/")[-5:])
+                print(f"\n        📂 {shortened_output}")
                 if rows_dropped > 0:
                     print("\n    ✅ Removed rows saved to:")
-                    print(f"\n        📂 {"/".join(removed_rows_file.split("/")[-5:])}")
+                    shortned_path = "/".join(removed_rows_file.split("/")[-5:])
+                    print(f"\n        📂 {shortned_path}")
 
             except ValueError as ve:
                 print(f"\n    ❌ ValueError: {ve}")
@@ -5177,10 +5186,12 @@ while True:
 
                 # Final summary messages
                 print("\n    ✅ Processed data saved to:")
-                print(f"\n        📂 {"/".join(output_file.split("/")[-5:])}")
+                shortened_output = "/".join(output_file.split("/")[-5:])
+                print(f"\n        📂 {shortened_output}")
                 if rows_dropped > 0:
                     print("\n    ✅ Removed rows saved to:")
-                    print(f"\n        📂 {"/".join(removed_rows_file.split("/")[-5:])}")
+                    shortned_path = "/".join(removed_rows_file.split("/")[-5:])
+                    print(f"\n        📂 {shortned_path}")
 
             except ValueError as ve:
                 print(f"\n    ❌ ValueError: {ve}")
@@ -5205,12 +5216,12 @@ while True:
     print("\n\n🔍 Copying the Summary File to the Selected Folder...")
 
     # Path to the reference file
-    reference_file_path = os.path.expanduser("~/Documents/Office Docs/Massload Files/Reference File/Reference_Summary_file.xlsx")
+    reference_summary_path = os.path.expanduser("~/Documents/Office Docs/Massload Files/Reference File/Reference_Summary_file.xlsx")
 
     # Check if the reference file exists
-    if not os.path.exists(reference_file_path):
+    if not os.path.exists(reference_summary_path):
         print("\n    ❌ Error: Reference file does not exist at the specified path.")
-        print(f"\n       📂 Path: {reference_file_path}\n")
+        print(f"\n       📂 Path: {reference_summary_path}\n")
     else:
         try:
             # Get the folder name selected in Code 3
@@ -5220,7 +5231,7 @@ while True:
             destination_file_path = os.path.join(output, f"{selected_folder_name}_summary file.xlsx")
 
             # Copy and rename the reference file to the destination
-            shutil.copy(reference_file_path, destination_file_path)
+            shutil.copy(reference_summary_path, destination_file_path)
             print(f"\n    ✅ Reference file copied successfully to the folder: {selected_folder_name}")
 
             # Load the copied summary file using openpyxl

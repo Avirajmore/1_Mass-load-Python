@@ -589,7 +589,8 @@ for file_path in file_paths:
 
 print('\n✅ Files Processed')
 for index, file in enumerate(files_processed, start=1):
-    print(f'\n    {index}. {file.split('/')[-1]} ✅')
+    shortened_path = file.split('/')[-1]
+    print(f'\n    {index}. {shortened_path} ✅')
 
 with open('Delete/Accounts to be Imported.txt', 'r') as file:
     line_count = sum(1 for line in file)
