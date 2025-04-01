@@ -1,4 +1,5 @@
 import os
+import re
 import pyperclip
 import pandas as pd
 import openpyxl
@@ -20,12 +21,19 @@ else:
 
 print(f"\n{'='*120}\n{' ' * 30} 📝  Checking for Accounts not present in ISC 📝 {' ' * 30}\n{'='*120}\n")
 
+print("\n📝 Files To be Processed")
+for file in file_paths:
+    shortened_path = file.split("/")[-1]
+    print(f'\n    ✅ {shortened_path}')
+
 files_processed = []
+
 # ======================================================================
 # STEP 1:- Select a file to Process
 # ======================================================================
-print("\n🔍 Step 1: Selecting a file")
+
 for file_path in file_paths:
+    print("\n🔍 Step 1: Selecting a file")
     files_processed.append(file_path)
     # Print the selected file path
     if file_path:
@@ -535,38 +543,6 @@ for file_path in file_paths:
         filtered_df.to_excel(output_file_path, index=False, header=False)
         print(f"\n    ✅ Accounts to be imported file created with the filtered data.")
 
-    print(f"\n{'='*120}\n{' ' * 30} 📝  'Accounts to be Imported' file created 📝 {' ' * 30}\n{'='*120}\n")
-
-    # ===================================================================
-    import pandas as pd
-    import os
-
-    # Load the Excel file
-    extract_file_path = os.path.expanduser("~/Downloads/Accounts_to_be_imported.xlsx")  # Change this to your actual file path
-    df = pd.read_excel(extract_file_path, header=None)  # Load without headers
-
-    # Check if the DataFrame is empty
-    if df.empty or df.shape[1] == 0:
-        print("Error: The Excel file is empty or does not contain any columns.")
-    else:
-        # Extract values from the first column
-        first_column_values = df.iloc[:, 0].dropna().astype(str)  # Drop NaN values and convert to string
-
-        # Only proceed if there are values in the first column
-        if not first_column_values.empty:
-            # Ensure the output directory exists
-            os.makedirs('Delete', exist_ok=True)
-
-            # Save to a text file
-            with open("Delete/Accounts to be Imported.txt", "w") as f:
-                f.write("\n".join(first_column_values))
-
-            # print("First column values have been saved to Delete/1_account_ids.txt")
-        else:
-            print("Error: The first column is empty, so no file was created.")
-
-
-
     # ================================================
     # Delete CSV Files
     # ================================================
@@ -587,11 +563,88 @@ for file_path in file_paths:
     else:
         print(f"\n❌ No CSV files were found in '{directory}'.")
 
+    print(f"\n{'='*120}\n{' ' * 30} 📝  'Accounts to be Imported' file created 📝 {' ' * 30}\n{'='*120}\n")
+
+
+# Load the original Excel file
+file_path = os.path.expanduser("~/Downloads/Accounts_to_be_imported.xlsx")
+df = pd.read_excel(file_path)
+
+# Define a regular expression for country codes (e.g., "-US", "-KA", etc.)
+country_code_pattern = r'-[A-Za-z]{2,3}$'
+
+# Initialize lists to store valid and invalid values
+invalid_values = []
+valid_values = []
+
+# Check each value in the column (assuming the values are in the first column)
+for value in df.iloc[:, 0]:
+    value = str(value).strip()  # Ensure it's a string and remove leading/trailing spaces
+    if not (value.lower().startswith('db') or value.lower().startswith('dc')):
+        # If it doesn't start with DB or DC (case insensitive), it's invalid
+        invalid_values.append(value)
+    elif value.lower().startswith('db'):
+        # If it starts with DB or db, it should have a country code
+        if not re.search(country_code_pattern, value):
+            invalid_values.append(value)
+        else:
+            valid_values.append(value)  # Add to valid values list
+    else:
+        valid_values.append(value)  # Add to valid values list for DC or other valid entries
+
+# Count invalid values
+invalid_count = len(invalid_values)
+
+# If there are invalid values, write them to a new Excel file
+if invalid_count > 0:
+    invalid_df = pd.DataFrame(invalid_values, columns=['Invalid Accounts'])
+    invalid_df.to_excel(os.path.expanduser("~/Downloads/Invalid_Accounts.xlsx"), index=False)
+else:
+    print("No invalid values found.")
+
+# Update the original dataframe with only valid values
+valid_df = pd.DataFrame(valid_values, columns=['Accounts'])
+
+# Save the updated dataframe back to the original file
+valid_df.to_excel(file_path, index=False)
+
+
+# ============================================================
+# Code to write Valid accounts to txt file
+# ============================================================
+
+# Load the Excel file
+extract_file_path = os.path.expanduser("~/Downloads/Accounts_to_be_imported.xlsx")  # Change this to your actual file path
+df = pd.read_excel(extract_file_path, header=None)  # Load without headers
+
+# Check if the DataFrame is empty
+if df.empty or df.shape[1] == 0:
+    pass
+    # print("Error: The Excel file is empty or does not contain any columns.")
+else:
+    # Extract values from the first column
+    first_column_values = df.iloc[1:, 0].dropna().astype(str)  # # Skip the first row and Drop NaN values and convert to string
+
+    # Only proceed if there are values in the first column
+    # Ensure the output directory exists
+    os.makedirs('Delete', exist_ok=True)
+
+    # Save to a text file
+    with open("Delete/Accounts to be Imported.txt", "w") as f:
+        f.write("\n".join(first_column_values))
+
+    # print("First column values have been saved to Delete/1_account_ids.txt")
+
+# ============================================================
+# Code to give a Summary
+# ============================================================
+
 print('\n✅ Files Processed')
 for index, file in enumerate(files_processed, start=1):
     shortened_path = file.split('/')[-1]
     print(f'\n    {index}. {shortened_path} ✅')
 
+print (f"\n❗️ Invalid Accounts:- {invalid_count} ")
 with open('Delete/Accounts to be Imported.txt', 'r') as file:
     line_count = sum(1 for line in file)
 print(f'\n❗️ Total Accounts to Be Imported:- {line_count}')
@@ -599,8 +652,3 @@ print(f'\n❗️ Total Accounts to Be Imported:- {line_count}')
 print("\n👋 Exiting the script. Goodbye!")
 print(f"\n{'='*120}\n{' ' * 30} 📝  Script Completed 📝 {' ' * 30}\n{'='*120}\n")
 sys.exit()
-
-
-
-
-

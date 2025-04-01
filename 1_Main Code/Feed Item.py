@@ -1,5 +1,5 @@
 '''
-Use the below code to prepare the contact file from already Prepared Copy file
+Use the below code to prepare the FeedItem file from already Prepared Copy file
 
 Steps:- 
 
@@ -61,7 +61,7 @@ import sys
 print("\n🔍 Step 3: Verifying opportunities in the 'Opportunity' sheet...")
 
 opportunity_sheet_name = 'Opportunity'
-contact_sheet_name = 'Contact Roles'
+Feeditem_sheet_name = 'FeedItem'
 
 try:
     # Load the sheets into DataFrames
@@ -72,37 +72,37 @@ try:
     if opportunity_sheet_name.lower() not in sheet_names:
         print(f"\n    ❌ Sheet '{opportunity_sheet_name}' not found. ❌")
         sys.exit()
-    if contact_sheet_name.lower() not in sheet_names:
-        print(f"\n    ❌ Sheet '{contact_sheet_name}' not found. ❌")
+    if Feeditem_sheet_name.lower() not in sheet_names:
+        print(f"\n    ❌ Sheet '{Feeditem_sheet_name}' not found. ❌")
         sys.exit()
 
     # Load the relevant sheets into DataFrames (case-insensitive)
     opportunity_df = all_sheets[list(all_sheets.keys())[sheet_names.index(opportunity_sheet_name.lower())]]
-    contact_df = all_sheets[list(all_sheets.keys())[sheet_names.index(contact_sheet_name.lower())]]
+    FeedItem_df = all_sheets[list(all_sheets.keys())[sheet_names.index(Feeditem_sheet_name.lower())]]
 
     # Validate the required columns (case-insensitive)
     opportunity_columns = [col.lower() for col in opportunity_df.columns]
-    product_columns = [col.lower() for col in contact_df.columns]
+    product_columns = [col.lower() for col in FeedItem_df.columns]
 
     if 'opportunity_legacy_id__c'.lower() not in opportunity_columns:
         print(f"\n    ❌ Column 'opportunity_legacy_id__c' not found in the '{opportunity_sheet_name}' sheet. ❌")
         sys.exit()
-    elif 'opportunityid'.lower() not in product_columns:
-        print(f"\n    ❌ Column 'opportunityid' not found in the '{contact_sheet_name}' sheet. ❌")
+    elif 'parentid/opportunitylegacyid'.lower() not in product_columns:
+        print(f"\n    ❌ Column 'parentid/opportunitylegacyid' not found in the '{Feeditem_sheet_name}' sheet. ❌")
         sys.exit()
 
     # Perform the comparison
-    contact_df['Existing'] = contact_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
+    FeedItem_df['Existing'] = FeedItem_df['parentid/opportunitylegacyid'].isin(opportunity_df['opportunity_legacy_id__c'])
 
     # Calculate the number of false values
-    false_count = (~contact_df['Existing']).sum()
+    false_count = (~FeedItem_df['Existing']).sum()
 
     # Save the updated data back to the Excel file
     with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
-        contact_df.to_excel(writer, sheet_name=contact_sheet_name, index=False)
+        FeedItem_df.to_excel(writer, sheet_name=Feeditem_sheet_name, index=False)
 
     # Success message with false count
-    print(f"\n    ✅ Verification completed. 'Existing' column has been added to the '{contact_sheet_name}' sheet. ✅")
+    print(f"\n    ✅ Verification completed. 'Existing' column has been added to the '{Feeditem_sheet_name}' sheet. ✅")
     print(f"\n    ❗️ Number of False values in 'Existing' column: {false_count}")
 
 except FileNotFoundError:
@@ -116,35 +116,17 @@ except Exception as e:
 
 # =================================
 
-# Read the "Contact Roles" sheet from the Excel file
-df = pd.read_excel(file_path, sheet_name='Contact Roles')
 
-# Print out the column names to confirm the correct name
-# print(df.columns)
+print("\n🔍Step 4: Creating Final Feed Item file")
 
-# Assuming the correct column name is found, apply the transformation
-# Adjust 'contactid' to match the correct column name from the printout
-if 'contactid' in df.columns:
-    df['contactid'] = df['contactid'].apply(lambda x: str(int(x)))
-else:
-    print("Column 'contactid' not found!")
+predefined_columns_Reportingcode = ['existing','insertedby']
 
-# Use ExcelWriter to write the changes back to the same file, replacing the existing "Contact Roles" sheet
-with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-    df.to_excel(writer, sheet_name='Contact Roles', index=False)
-
-
-print("\n🔍Step 4: Creating Final Contact file")
-
-
-predefined_columns_Reportingcode = ['existing']
-
-sheet_name = 'Contact Roles'
-name_of_file= "/"+ filename.strip('_Copy.xlsx')
+sheet_name = 'FeedItem'
+name_of_file= "/"+filename.strip('_Copy.xlsx')
 shortened_file_path = "/".join(file_path.split('/')[0:8])
 destination_folder = shortened_file_path + "/Final iteration files"+name_of_file
-output_file = destination_folder + name_of_file+'_Contact.csv' # Path for the processed CSV
-removed_rows_file = destination_folder +'/Removed Rows/Removed_Rows - Contact.csv' # Path for removed rows CSV
+output_file = destination_folder + name_of_file+'_FeedItem.csv' # Path for the processed CSV
+removed_rows_file = destination_folder +'/Removed Rows/Removed_Rows - FeedItem.csv' # Path for removed rows CSV
 
 # Initialize variables
 deleted_columns = []

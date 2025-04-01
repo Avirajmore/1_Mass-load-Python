@@ -68,7 +68,7 @@ def is_valid_folder_name(name):
 
 print("\n\n🔍 Step 1: Creating Main Folder")
 while True:
-    subfolder_name = input("\n    📂 Enter the name of the subfolder: ").strip()
+    subfolder_name = input("\n    📂 Enter the name of the Folder: ").strip()
     if is_valid_folder_name(subfolder_name):
         break
     else:
@@ -4443,6 +4443,8 @@ while True:
 
     # Define the base path where the 'Final iteration files' folder exists (created by Code 1)
     final_iteration_file_path = os.path.join(base_dir, subfolder_name, "Final iteration files")
+    #  If you are using Sprint Folder
+    # final_iteration_file_path = os.path.join(base_dir, sprintNumber , subfolder_name, "Final iteration files") 
 
     # Construct the path to the corresponding folder
     output = os.path.join(final_iteration_file_path, folder_name)

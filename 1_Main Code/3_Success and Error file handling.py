@@ -21,7 +21,7 @@ root.attributes('-topmost', True)  # Bring dialog to front
 
 # Select CSV files
 csv_files = root.tk.splitlist(filedialog.askopenfilenames(
-    title="📂 Select CSV Files",
+    title="📂 Select CSV Files to Copy",
     filetypes=[("CSV Files", "*.csv")],
     initialdir=os.path.expanduser("~/Downloads")
 ))
@@ -32,7 +32,7 @@ if not csv_files:
 else:
     # Select destination folder
     destination_folder = filedialog.askdirectory(
-        title="📁 Select Destination Folder"
+        title="📁 Select Destination Folder to Paste Success/Error Files"
     )
 
     # Handle no destination folder selected
