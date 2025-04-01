@@ -26,6 +26,7 @@ for file in file_paths:
     shortened_path = file.split("/")[-1]
     print(f'\n    ✅ {shortened_path}')
 
+print(f"\n{'='*120}")
 files_processed = []
 
 # ======================================================================
@@ -566,31 +567,66 @@ for file_path in file_paths:
     print(f"\n{'='*120}\n{' ' * 30} 📝  'Accounts to be Imported' file created 📝 {' ' * 30}\n{'='*120}\n")
 
 
+# ====================================================================================
+# Add Header to the Column
+# ====================================================================================
+
+def insert_cell_and_shift(filepath, sheet_name):
+    """
+    Inserts 'Accounts' in the first row, first column and shifts all other values downward.
+    
+    :param filepath: Path to the Excel file
+    :param sheet_name: Name of the sheet to modify
+    """
+    wb = openpyxl.load_workbook(filepath)
+    sheet = wb[sheet_name]
+    
+    # Insert a new row at the top
+    sheet.insert_rows(1)
+    
+    # Write 'Accounts' in the first cell
+    sheet.cell(row=1, column=1, value='Accounts')
+    
+    # Save the workbook
+    wb.save(filepath)
+    wb.close()
+
+# Example usage
+file_path = os.path.expanduser("~/Downloads/Accounts_to_be_imported.xlsx")
+sheet_name = "Sheet1"
+insert_cell_and_shift(file_path, sheet_name)
+
+# ====================================================================================
+
+# ====================================================================================
+
 # Load the original Excel file
 file_path = os.path.expanduser("~/Downloads/Accounts_to_be_imported.xlsx")
 df = pd.read_excel(file_path)
-
-# Define a regular expression for country codes (e.g., "-US", "-KA", etc.)
-country_code_pattern = r'-[A-Za-z]{2,3}$'
-
 # Initialize lists to store valid and invalid values
 invalid_values = []
 valid_values = []
 
-# Check each value in the column (assuming the values are in the first column)
-for value in df.iloc[:, 0]:
-    value = str(value).strip()  # Ensure it's a string and remove leading/trailing spaces
-    if not (value.lower().startswith('db') or value.lower().startswith('dc')):
-        # If it doesn't start with DB or DC (case insensitive), it's invalid
-        invalid_values.append(value)
-    elif value.lower().startswith('db'):
-        # If it starts with DB or db, it should have a country code
-        if not re.search(country_code_pattern, value):
+if df.empty:
+    pass
+else:
+    # Define a regular expression for country codes (e.g., "-US", "-KA", etc.)
+    country_code_pattern = r'-[A-Za-z]{2,3}$'
+
+    # Check each value in the column (assuming the values are in the first column)
+    for value in df.iloc[:, 0]:
+        value = str(value).strip()  # Ensure it's a string and remove leading/trailing spaces
+        if not (value.lower().startswith('db') or value.lower().startswith('dc')):
+            # If it doesn't start with DB or DC (case insensitive), it's invalid
             invalid_values.append(value)
+        elif value.lower().startswith('db'):
+            # If it starts with DB or db, it should have a country code
+            if not re.search(country_code_pattern, value):
+                invalid_values.append(value)
+            else:
+                valid_values.append(value)  # Add to valid values list
         else:
-            valid_values.append(value)  # Add to valid values list
-    else:
-        valid_values.append(value)  # Add to valid values list for DC or other valid entries
+            valid_values.append(value)  # Add to valid values list for DC or other valid entries
 
 # Count invalid values
 invalid_count = len(invalid_values)
