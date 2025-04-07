@@ -112,7 +112,7 @@ else:
         sys.exit()
 
     # Identify rows where "ERRORS" column contains the specific substring
-    error_message_substring = "duplicate value found: Legacy_Opportunity_Split_Id__c duplicates value on record with id"
+    error_message_substring = "ERROR: duplicate value found: Legacy_Opportunity_Split_Id__c duplicates value on record with id"
     matching_rows = df_oppty[df_oppty["ERRORS"].str.contains(error_message_substring, na=False, case=True)]
 
     # Extract values from "Legacy_Opportunity_Split_Id__c" column

@@ -8,6 +8,8 @@ import sys
 
 folder_path = os.path.expanduser("~/Downloads")
 
+account_present = []
+
 file_paths = []
 
 if os.path.isdir(folder_path):
@@ -480,6 +482,8 @@ for file_path in file_paths:
         
         # Print count
         print(f"\n    ❗️ Count of accounts 'Not in ISC': {not_in_isc_count}")
+        if not_in_isc_count == 0:
+            account_present.append(os.path.basename(file_path))
 
     except FileNotFoundError:
         print("\n    ❌ Error: The specified file was not found. Please check the file path.")
@@ -635,8 +639,7 @@ invalid_count = len(invalid_values)
 if invalid_count > 0:
     invalid_df = pd.DataFrame(invalid_values, columns=['Invalid Accounts'])
     invalid_df.to_excel(os.path.expanduser("~/Downloads/Invalid_Accounts.xlsx"), index=False)
-else:
-    print("No invalid values found.")
+
 
 # Update the original dataframe with only valid values
 valid_df = pd.DataFrame(valid_values, columns=['Accounts'])
@@ -679,6 +682,10 @@ print('\n✅ Files Processed')
 for index, file in enumerate(files_processed, start=1):
     shortened_path = file.split('/')[-1]
     print(f'\n    {index}. {shortened_path} ✅')
+
+print("\n✅ Files where Accounts are Present")
+for index, file in enumerate(account_present, start=1):
+    print (f"\n    {index}. {file}")
 
 print (f"\n❗️ Invalid Accounts:- {invalid_count} ")
 with open('Delete/Accounts to be Imported.txt', 'r') as file:
