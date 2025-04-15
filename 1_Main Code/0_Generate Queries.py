@@ -1,4 +1,6 @@
 import shutil
+import tkinter as tk
+from tkinter import ttk
 import re
 import os
 import pandas as pd
@@ -24,11 +26,82 @@ DIR_PATH = os.path.expanduser("~/Downloads")
 # Path for the consolidated extracted data
 output_file = "Extracted_Files/Extracted_data.xlsx"
 
+print("\n🔍 Select Files to Process")
+# Path to your folder
+folder_path = '/Users/avirajmore/Downloads'
+
+# Get only Excel files in the folder
+files = [f for f in os.listdir(folder_path)
+         if os.path.isfile(os.path.join(folder_path, f)) and f.lower().endswith(('.xlsx', '.xls'))]
+
+# Store selected file names
+selected_files = []
+
+# Tkinter window
+root = tk.Tk()
+root.title("Select Excel Files")
+root.geometry("400x500")
+
+# Scrollable frame
+canvas = tk.Canvas(root)
+scrollbar = ttk.Scrollbar(root, orient="vertical", command=canvas.yview)
+scrollable_frame = ttk.Frame(canvas)
+
+scrollable_frame.bind(
+    "<Configure>",
+    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+)
+
+canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+canvas.configure(yscrollcommand=scrollbar.set)
+
+# Create a dictionary to hold file checkboxes
+check_vars = {}
+
+def toggle_all():
+    state = select_all_var.get()
+    for var in check_vars.values():
+        var.set(state)
+
+def submit_selection():
+    global selected_files
+    selected_files = [file for file, var in check_vars.items() if var.get()]
+    print("Selected Excel Files:")
+    for file in selected_files:
+        print(file)
+    root.destroy()
+
+# Select All checkbox
+select_all_var = tk.BooleanVar()
+select_all_cb = ttk.Checkbutton(scrollable_frame, text="Select All", variable=select_all_var, command=toggle_all)
+select_all_cb.pack(anchor='w', pady=(10, 5), padx=10)
+
+# Individual file checkboxes
+for file in files:
+    var = tk.BooleanVar()
+    cb = ttk.Checkbutton(scrollable_frame, text=file, variable=var)
+    cb.pack(anchor='w', padx=20)
+    check_vars[file] = var
+
+# Submit button
+submit_btn = ttk.Button(root, text="Submit", command=submit_selection)
+submit_btn.pack(pady=10)
+
+# Pack canvas and scrollbar
+canvas.pack(side="left", fill="both", expand=True)
+scrollbar.pack(side="right", fill="y")
+
+# Start GUI
+root.mainloop()
+
+# Now selected_files contains all the checked Excel file names
+
+
 print("\n🔍 Step 1: Extract Data from Files:")
 print("\n   ✅ Files Processed:")
 
 # Loop through each file in the source directory
-for file in os.listdir(DIR_PATH):
+for file in selected_files:
     if file.endswith(".xlsx"):
         file_path = os.path.join(DIR_PATH, file)
 
@@ -322,7 +395,7 @@ def generate_query_from_sheet(extract_file_path, sheet_name, column_name, query_
         with open(output_txt, "w") as file:
             file.write(query)
 
-    print(f"Generated {len(chunks)} query file(s).")
+    print(f"\n       📁 Generated {len(chunks)} query file(s) for {output_txt_base.split("/")[-1]}.")
 
 
 # Queries generation (various sheets & templates)
