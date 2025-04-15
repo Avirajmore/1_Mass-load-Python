@@ -548,27 +548,27 @@ for file_path in file_paths:
         filtered_df.to_excel(output_file_path, index=False, header=False)
         print(f"\n    ✅ Accounts to be imported file created with the filtered data.")
 
-    # ================================================
-    # Delete CSV Files
-    # ================================================
+    # # ================================================
+    # # Delete CSV Files
+    # # ================================================
 
-    # Hardcoded directory
-    directory = os.path.expanduser("~/Downloads")
+    # # Hardcoded directory
+    # directory = os.path.expanduser("~/Downloads")
     
-    files_deleted = 0
-    # Get list of files in the directory
-    for file_name in os.listdir(directory):
-        if file_name.endswith('.csv'):
-            file_path = os.path.join(directory, file_name)
-            os.remove(file_path)
-            files_deleted += 1
+    # files_deleted = 0
+    # # Get list of files in the directory
+    # for file_name in os.listdir(directory):
+    #     if file_name.endswith('.csv'):
+    #         file_path = os.path.join(directory, file_name)
+    #         os.remove(file_path)
+    #         files_deleted += 1
     
-    if files_deleted > 0:
-        print(f"\n✅ Successfully deleted {files_deleted} CSV file(s) from '{directory}'.")
-    else:
-        print(f"\n❌ No CSV files were found in '{directory}'.")
+    # if files_deleted > 0:
+    #     print(f"\n✅ Successfully deleted {files_deleted} CSV file(s) from '{directory}'.")
+    # else:
+    #     print(f"\n❌ No CSV files were found in '{directory}'.")
 
-    print(f"\n{'='*120}\n{' ' * 30} 📝  'Accounts to be Imported' file created 📝 {' ' * 30}\n{'='*120}\n")
+    # print(f"\n{'='*120}\n{' ' * 30} 📝  'Accounts to be Imported' file created 📝 {' ' * 30}\n{'='*120}\n")
 
 
 # ====================================================================================
@@ -687,10 +687,10 @@ print("\n✅ Files where Accounts are Present")
 for index, file in enumerate(account_present, start=1):
     print (f"\n    {index}. {file}")
 
-print (f"\n❗️ Invalid Accounts:- {invalid_count} ")
+print (f"\n❗️ Invalid Accounts: {invalid_count} ")
 with open('Delete/Accounts to be Imported.txt', 'r') as file:
     line_count = sum(1 for line in file)
-print(f'\n❗️ Total Accounts to Be Imported:- {line_count}')
+print(f'\n❗️ Total Accounts to Be Imported: {line_count}')
 
 print("\n👋 Exiting the script. Goodbye!")
 print(f"\n{'='*120}\n{' ' * 30} 📝  Script Completed 📝 {' ' * 30}\n{'='*120}\n")

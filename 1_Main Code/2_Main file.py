@@ -277,10 +277,7 @@ while True:
     # Prompt the user to select a file from the list
     while True:
         
-        if len(files_in_copy_folder) == 1:
-            user_input = str(1)
-        else:
-            user_input = input("\n    👉 Enter the number of the file to process (or type 'exit' to quit): ").strip()
+        user_input = input("\n    👉 Enter the number of the file to process (or type 'exit' to quit): ").strip()
         
         # Allow the user to exit the selection process
         if user_input.lower() == 'exit':
@@ -743,10 +740,113 @@ while True:
 
     print("\n    ✅ Headers of all sheets in the file have been converted to lowercase and data types preserved as specified.")
 
+    # =============================
+    # Defining Function to Rename bulk Query csv
+    # =============================
+
+    def rename_and_move_bulkquery_file(new_name, csv_file_dir):
+        """
+        Searches the downloads folder for a file with 'bulkQuery' in the name and 
+        renames/moves it to the designated CSV directory using the provided new name.
+        """
+        
+        for filename in os.listdir(downloads_dir):
+            if "bulkQuery" in filename and filename.endswith(".csv"):
+                old_path = os.path.join(downloads_dir, filename)
+                new_path = os.path.join(downloads_dir, new_name)
+                shutil.move(old_path, new_path)
+                return True  # Successful rename and move
+        return False  # No matching file found
+    
+    # =============================
+    # Vlookup for legacy id
+    # =============================
+    
+    print("\n\n🔍 Step 6: Looking for Already Existing Oppties")
+
+    # Set paths
+    folder_path = '/Users/avirajmore/Downloads/folder/'  # replace with your actual folder path
+    legacy_csv = '/Users/avirajmore/Downloads/legacyid.csv'  # replace with your actual CSV path
+
+    # Ensure the output directory exists
+    os.makedirs('Delete', exist_ok=True)
+
+    while not os.path.exists(legacy_csv):
+        if rename_and_move_bulkquery_file('legacyid.csv',csv_file_dir):
+            continue  # If renaming was successful, check again if the file exists
+
+        print(f"\n    ❌ File 'legacyid.csv' does not exist. Did you query the Legacy Id?")
+
+        # Read the "Opportunity" sheet
+        df = pd.read_excel(file_path, sheet_name='Opportunity')
+
+        # Extract unique, non-null values from 'opportunity_legacy_id_c'
+        unique_values = df['opportunity_legacy_id_c'].dropna().unique()
+
+        # Convert to string with inverted commas and comma separation
+        formatted_values = ",".join(f"'{val}'" for val in unique_values)
+
+        # Prepare the final query
+        query = f"""SELECT Opportunity_Legacy_Id__c, Id,Name,Owned_By_Name__c,OwnerId 
+        FROM Opportunity 
+        WHERE Opportunity_Legacy_Id__c IN ({formatted_values})"""
+    
+
+    
+        # Write the query to a text file
+        with open('Delete/0_Legacyids.txt', 'w') as file:
+            file.write(query)
+        
+        pyperclip.copy(query)
+        
+        legacy_choice = input("\n        🔸 Do you want to try again? (yes/exit): ").strip().lower()
+
+        while legacy_choice not in ['yes', 'exit']:
+            print("\n          ❗️ Invalid input. Please enter 'yes' or 'exit'.")
+            legacy_choice = input("\n        🔸 Do you want to try again? (yes/exit): ").strip().lower()
+
+        if legacy_choice != 'yes':
+            print ("\n           🚫 Skipping this Step")
+            break
+        
+    
+    if os.path.exists(legacy_csv):
+        # Read CSV file
+        csv_df = pd.read_csv(legacy_csv)
+        csv_ids = set(csv_df['Opportunity_Legacy_Id__c'].dropna().astype(str))
+
+        try:
+            # Read 'Opportunity' sheet
+            df = pd.read_excel(file_path, sheet_name='Opportunity')
+            
+            if 'opportunity_legacy_id_c' in df.columns:
+                # Ensure the column is string for safe comparison
+                df['opportunity_legacy_id_c'] = df['opportunity_legacy_id_c'].astype(str)
+                
+                # Add Found/Not Found column
+                df['Already Exist'] = df['opportunity_legacy_id_c'].apply(
+                    lambda x: 'Already Exist in ISC' if x in csv_ids else 'Does not Exist in ISC'
+                )
+                
+                # Save back to the same Excel file, updating the 'Opportunity' sheet
+                with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+                    df.to_excel(writer, sheet_name='Opportunity', index=False)
+                count_not_exist = (df['Already Exist'] == 'Already Exist in ISC').sum()
+
+                print(f"\n    ✅ Added 'Already Exist' column ")
+                if count_not_exist > 0:
+                    print(f"\n    ❗️ Count of Already Exsisting Opportunities in ISC' : {count_not_exist}")
+                else:
+                    print(f"\n    ✅ All Opptys are new")
+                
+            else:
+                print(f"\n    ❌ 'opportunity_legacy_id_c' not found ")
+        except Exception as e:
+            print(f"\n    ❌ Error processing : {e}")
 
     # ======================================================================
 
-    # Step 6: Convert the email ids to lowercase and fill missing values with a default value
+    # Step 7: Convert the email ids to lowercase and fill missing values with a default value
     #   • Convert email IDs of “owner id” and “created by” column to lowercase for consistent matching (e.g., during lookups like owner ID by email).
     #   • If any of the values are blank, it should automatically fill it with Data migration id
     #   • The code will show how many blank values were filled with Data migration id for reference
@@ -754,7 +854,7 @@ while True:
     # ======================================================================
 
 
-    print("\n\n🔍 Step 6: Converting email ids to lowercase and filling missing values...")
+    print("\n\n🔍 Step 7: Converting email ids to lowercase and filling missing values...")
 
     # Columns to convert to lowercase and fill blanks
     columns_to_process = ['ownerid', 'created_by']
@@ -788,7 +888,7 @@ while True:
 
             else:
                 # If the column doesn't exist, print an error and exit
-                print(f"\n    ❌Error: Column '{column}' not found in the '{opportunity_sheet_name}' sheet. Terminating the Program.")
+                print(f"\n    ❌ Error: Column '{column}' not found in the '{opportunity_sheet_name}' sheet. Terminating the Program.")
                 sys.exit()
         
         # Replace the existing data in the sheet with the modified values
@@ -812,12 +912,12 @@ while True:
 
 
     # ======================================================================
-    # Step 7: Create Blank sheets in the excel for rough work
+    # Step 8: Create Blank sheets in the excel for rough work
     #   • Add blank sheets for rough work, where queried data for vlookups can be pasted.
     # ======================================================================
 
 
-    print("\n\n🔍 Step 7: Creating Blank sheets for rough work...")
+    print("\n\n🔍 Step 8: Creating Blank sheets for rough work...")
 
     # Names of the sheets to add
     sheet_names = [
@@ -846,12 +946,12 @@ while True:
 
     # ======================================================================
 
-    # Step 8: Add Pricebook and RecordType id column in the sheet
+    # Step 9: Add Pricebook and RecordType id column in the sheet
     #   • Add two new columns, "Pricebook" and "RecordType id," with predefined values for all rows.
 
     # ======================================================================
 
-    print("\n\n🔍 Step 8: Adding Pricebook and RecordType id columns...")
+    print("\n\n🔍 Step 9: Adding Pricebook and RecordType id columns...")
 
     # Load the specific sheet into a DataFrame
     df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
@@ -868,12 +968,12 @@ while True:
 
 
     # ======================================================================
-    # Step 9: Change the format of the Date Column
+    # Step 10: Change the format of the Date Column
     #   • Format the date column to YYYY-MM-DD.
     #   • If invalid dates are found, return an error and exit, as closeDate is critical
     # ======================================================================
 
-    print("\n\n🔍 Step 9: Formatting the Date column...")
+    print("\n\n🔍 Step 10: Formatting the Date column...")
 
     date_column = 'expected_close_date'
 
@@ -914,14 +1014,14 @@ while True:
 
 
     # ======================================================================
-    # Step 10: Create new "legacy_opportunity_split_id_c" column if it does not exist
+    # Step 11: Create new "legacy_opportunity_split_id_c" column if it does not exist
     #   • Skip if the column already exists.
     #   • Otherwise, create it and copy values from the "opportunity_legacy_id_c" column.
 
     # ======================================================================
 
 
-    print("\n\n🔍 Step 10: Creating 'legacy_opportunity_split_id_c' column...")
+    print("\n\n🔍 Step 11: Creating 'legacy_opportunity_split_id_c' column...")
 
     # Read the specific sheet into a DataFrame
     df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
@@ -953,14 +1053,14 @@ while True:
 
 
     # ======================================================================
-    # Step 11: Create new column with Trimmed Account_id and Email_id column
+    # Step 12: Create new column with Trimmed Account_id and Email_id column
     #   • Remove extra spaces (including within values) from 'accountid' and 'ownerid' columns.
     #   • Create a new column with trimmed values.
     #   • Throw an error and stop if these columns are missing.
     # ======================================================================
 
 
-    print('\n\n🔍 Step 11: Creating new column with Trimmed Account_id and Email_id...\n')
+    print('\n\n🔍 Step 12: Creating new column with Trimmed Account_id and Email_id...\n')
 
     columns_to_trim = ['accountid', 'ownerid']  
 
@@ -996,13 +1096,13 @@ while True:
 
 
     # ======================================================================
-    # Step 12: Remove the country code from DC Accounts
+    # Step 13: Remove the country code from DC Accounts
     #   • For columns with both DC and DB accounts, remove country codes from DC accounts, as they are invalid.
     #   • And keep The DB values as it is
     # ======================================================================
 
 
-    print("\n\n🔍 Step 12: Processing Accounts with correct format...\n")
+    print("\n\n🔍 Step 13: Processing Accounts with correct format...\n")
 
     accountid_column = 'Trimmed_accountid'
     new_column_name = 'AccountNumber'  
@@ -1027,11 +1127,11 @@ while True:
 
 
     # ======================================================================
-    # Step 13: Concatenate the Values
+    # Step 14: Concatenate the Values
     #   • Add apostrophes and commas to account IDs and emails to format them for Salesforce query use.
     # ======================================================================
 
-    print("\n\n🔍 Step 13: Concatenating the Values...\n")
+    print("\n\n🔍 Step 14: Concatenating the Values...\n")
 
     # Columns to process and their corresponding new column names
     columns_to_concatenate = ['AccountNumber', 'Trimmed_ownerid', 'created_by'] 
@@ -1049,7 +1149,7 @@ while True:
     # If any required columns are missing, notify the user and prompt for confirmation
     if missing_columns:
         print(f"    ❗️ The following columns are missing: {', '.join(missing_columns)}")
-        user_input = input("    📝 Do you want to continue? (yes/no): ").lower()
+        user_input = input("\n    📝 Do you want to continue? (yes/no): ").lower()
         if user_input != 'yes':
             print("    ❌ Operation aborted.")
             exit()
@@ -1070,12 +1170,12 @@ while True:
 
 
     # ======================================================================
-    # Step 14: Extract Concatenated values
+    # Step 15: Extract Concatenated values
     #   • Save formatted values to a separate file for easier copying and pasting into the Workbench query without opening the main file.
     # ======================================================================
 
 
-    print("\n\n🔍 Step 14: Extracting Concatenated values...\n")
+    print("\n\n🔍 Step 15: Extracting Concatenated values...\n")
     
     # Create the output folder if it doesn't already exist
     os.makedirs('Extracts', exist_ok=True)
@@ -1126,8 +1226,6 @@ while True:
     # Load the Excel file into a DataFrame
     df = pd.read_excel(extract_file_path)
 
-    # Ensure the output directory exists
-    os.makedirs('Delete', exist_ok=True)
     # Extract the "accountid" column values
 
     # Check if the 'accountid' column exists before processing
@@ -1193,7 +1291,7 @@ while True:
         
         
     # ==========================================================================================
-    # Step 15: Copy Extracted Data to the Main Excel File
+    # Step 16: Copy Extracted Data to the Main Excel File
     # ------------------------------------------------------------------------------------------
     # • This step transfers the processed account and user data into a separate sheet in the main Excel file to support lookups and validations (e.g., VLOOKUPs).
     # • If the required CSV files are not found in the designated directory, the script attempts to automatically rename and move downloaded bulk query files.
@@ -1201,26 +1299,12 @@ while True:
     # ==========================================================================================
 
 
-    print("\n\n🔍 Step 15: Copying extracted data to main file...")
+    print("\n\n🔍 Step 16: Copying extracted data to main file...")
 
     # Define expected CSV file paths
-    accounts_csv = csv_file_dir+"/accounts.csv"  
-    userid_csv = csv_file_dir+"/userid.csv" 
+    accounts_csv = downloads_dir+"/accounts.csv"  
+    userid_csv = downloads_dir+"/userid.csv" 
     
-    def rename_and_move_bulkquery_file(new_name, csv_file_dir):
-        """
-        Searches the downloads folder for a file with 'bulkQuery' in the name and 
-        renames/moves it to the designated CSV directory using the provided new name.
-        """
-        
-        for filename in os.listdir(downloads_dir):
-            if "bulkQuery" in filename and filename.endswith(".csv"):
-                old_path = os.path.join(downloads_dir, filename)
-                new_path = os.path.join(csv_file_dir, new_name)
-                shutil.move(old_path, new_path)
-                return True  # Successful rename and move
-        return False  # No matching file found
-
     # Check if the CSV files exist, and prompt to retry if not
     while not os.path.exists(accounts_csv):
         # Try renaming a bulkQuery file first
@@ -1310,14 +1394,14 @@ while True:
 
 
     # ======================================================================
-    # Step 16: Check how many Accounts are present in ISC
+    # Step 17: Check how many Accounts are present in ISC
     #   • Perform vlookup on the 'Accountid' column using the rough sheet to fetch Salesforce IDs.
     #   • Handle duplicate Salesforce IDs by prompting you to select one.
     #   • Populate unmatched accounts with "Not present in ISC" and display the count of such accounts.
     # ======================================================================
 
 
-    print("\n\n🔍 Step 16: Checking how many Accounts are present in ISC...")
+    print("\n\n🔍 Step 17: Checking how many Accounts are present in ISC...")
 
 
     try:
@@ -1396,7 +1480,7 @@ while True:
 
 
     # ======================================================================
-    # Step 17: Rename 'Id' to 'userid' in Opportunity_Copy sheet
+    # Step 18: Rename 'Id' to 'userid' in Opportunity_Copy sheet
     #   • Rename the duplicate 'Id' column (from the Userid file) to 'Userid' for clarity after Step 15 merges CSV data into rough sheets.
     # ======================================================================
 
@@ -1405,7 +1489,7 @@ while True:
 
     DEFAULT_USERID = '0053h000000sdCVAAY'
 
-    print("\n\n🔍 Step 17: Renaming 'Id' to 'userid' in Opportunity_Copy sheet")
+    print("\n\n🔍 Step 18: Renaming 'Id' to 'userid' in Opportunity_Copy sheet")
 
     try:
         # Load the Excel workbook
@@ -1429,14 +1513,14 @@ while True:
 
 
     # ======================================================================
-    # Step 18: Get the IDs of the Opportunity Owner
+    # Step 19: Get the IDs of the Opportunity Owner
     #   • Perform vlookup on 'Ownerid' to retrieve Salesforce IDs.
     #   • Handle duplicate IDs by prompting selection.
     #   • Populate unmatched emails with the "Datamigration" Salesforce ID and display their count.
     # ======================================================================
 
 
-    print("\n\n🔍 Step 18: Fetching IDs of Opportunity Owners...")
+    print("\n\n🔍 Step 19: Fetching IDs of Opportunity Owners...")
 
     try:
 
@@ -1534,12 +1618,12 @@ while True:
 
 
     # ======================================================================
-    # Step 19: To get IDs of the Created By
+    # Step 20: To get IDs of the Created By
     #   • Same as Step 18, but applied to the 'Created By' column.
     # ======================================================================
 
 
-    print("\n\n🔍 Step 19: Fetching IDs of 'Created By'...")
+    print("\n\n🔍 Step 20: Fetching IDs of 'Created By'...")
 
     try:
         # Load data from the Excel sheets: 'Opportunity' and 'Opportunity_Copy'
@@ -1625,14 +1709,14 @@ while True:
 
 
     # ======================================================================
-    # Step 20: Renaming Columns
+    # Step 21: Renaming Columns
     #   • Rename all columns in the opportunity sheet to match API names for seamless mass loading.
     #   • Prompt to continue or abort if required columns are missing.
 
     # ======================================================================
 
 
-    print("\n\n🔍 Step 20: Renaming Columns...")
+    print("\n\n🔍 Step 21: Renaming Columns...")
 
 
     # Dictionary mapping old column names to new column names
@@ -1693,12 +1777,12 @@ while True:
 
 
     # ======================================================================
-    # Step 21: Rearrange the Columns in the Opportunity Copy
+    # Step 22: Rearrange the Columns in the Opportunity Copy
     #   • Rearrange columns to prioritize important fields, grouping related ones (e.g., account number and account ID) and moving less important ones to the end.
     # ======================================================================
 
 
-    print("\n\n🔍 Step 21: Rearranging Columns...")
+    print("\n\n🔍 Step 22: Rearranging Columns...")
 
     desired_column_order = [
         'opportunity_legacy_id__c',
@@ -1765,13 +1849,13 @@ while True:
 
 
     # ======================================================================
-    # Step 22: Final Row and Column Count
+    # Step 23: Final Row and Column Count
     #   • Recount rows after processing to ensure no extra rows were added mistakenly.
     #   • If there's a mismatch, prompt to either continue or stop.
     # ======================================================================
 
 
-    print("\n\n🔍 Step 22: Final Row and Column Count...")
+    print("\n\n🔍 Step 23: Final Row and Column Count...")
 
     try:
         df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
@@ -1839,7 +1923,7 @@ while True:
     # Step 2:- Removing duplicate rows and blank rows...
     # ======================================================================
 
-    print("\n\n🔍 Step 2: Removing duplicate rows and blank rows...")
+    print("\n\n🔍 Step 2: Removing blank rows...")
 
     def remove_blank_rows(file_path, product_sheet_name):
         try:
@@ -2447,7 +2531,7 @@ while True:
     print("\n\n🔍 Step 13: Copying data from CSV file to Excel...")
 
     # Define the path to the 'productfamily.csv' file
-    product_family_csv = csv_file_dir+"/productfamily.csv"
+    product_family_csv = downloads_dir+"/productfamily.csv"
 
     # Continuously check if the file exists
     # If not, prompt the user to retry or exit
@@ -2528,36 +2612,47 @@ while True:
     if 'pricebookentryid' in product_df.columns:
         raise KeyError("❌ Error: Column 'pricebookentryid' already exists in 'Opportunity_product'. Please check your data processing steps.")
 
-    # Create 'pricebookentryid' column based on 'id' if entry is active, else mark as 'Not Active'
-    product_copy_df['pricebookentryid'] = product_copy_df.apply(
-        lambda row: row['id'] if row['isactive'] else 'Not Active', axis=1
-    )
+    # 1️⃣ Keep only active entries and get their ids
+    active_product_copy_df = product_copy_df[product_copy_df['isactive'] == True].copy()
+    active_product_copy_df['pricebookentryid'] = active_product_copy_df['id']
+    active_product_copy_df = active_product_copy_df[['practise_multiple country', 'pricebookentryid']].drop_duplicates(subset='practise_multiple country', keep='first')
 
-    # Merge PricebookEntry IDs into the original product sheet based on 'Practise_Multiple country'
+    # 2️⃣ Merge active pricebook ids into product_df
     merged_df = pd.merge(product_df, 
-                        product_copy_df[['practise_multiple country', 'pricebookentryid']], 
-                        left_on='practise_multiple country', 
-                        right_on='practise_multiple country',
+                        active_product_copy_df, 
+                        on='practise_multiple country', 
                         how='left')
 
-    # Fill missing values with 'No Pricebookid found'
+    # 3️⃣ Find rows with no active pricebook id found (null values)
+    missing_pricebook_mask = merged_df['pricebookentryid'].isna()
+
+    # 4️⃣ Now check if any inactive entries exist for those countries
+    inactive_product_copy_df = product_copy_df[product_copy_df['isactive'] == False].copy()
+    inactive_countries = inactive_product_copy_df['practise_multiple country'].unique()
+
+    # 5️⃣ Assign 'Not Active' to countries with inactive records
+    merged_df.loc[merged_df['practise_multiple country'].isin(inactive_countries) & missing_pricebook_mask, 'pricebookentryid'] = 'Not Active'
+
+    # 6️⃣ Fill remaining missing values with 'No Pricebookid found'
     merged_df['pricebookentryid'] = merged_df['pricebookentryid'].fillna('No Pricebookid found')
 
-    # Count occurrences of 'No Pricebookid found' and 'Not Active'
+    # 7️⃣ Count stats
     count_no_pricebookid_found = (merged_df['pricebookentryid'] == 'No Pricebookid found').sum()
     count_not_active = (merged_df['pricebookentryid'] == 'Not Active').sum()
 
-    # Save the updated DataFrame back to the same Excel file
+    # 8️⃣ Save the updated DataFrame back to the same Excel file
     with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
         merged_df.to_excel(writer, sheet_name=product_sheet_name, index=False)
 
-    print(f"\n    ✅ The 'Opportunity_product' sheet has been successfully updated with the 'PriceBookEntryid' column.")
+    # 9️⃣ Print completion message and stats
+    print(f"\n✅ The 'Opportunity_product' sheet has been successfully updated with the 'PriceBookEntryid' column.")
+
     if count_no_pricebookid_found > 0 or count_not_active > 0:
-        print(f"\n        ❗️ Count of 'No Pricebookid found': {count_no_pricebookid_found}")    
-        print(f"\n        ❗️ Count of 'Not Active': {count_not_active}")
+        print(f"\n❗️ Count of 'No Pricebookid found': {count_no_pricebookid_found}")
+        print(f"\n❗️ Count of 'Not Active': {count_not_active}")
     else:
-        print(f"\n    ✅ All Products are Valid")
-    
+        print(f"\n✅ All Products are Valid")
+
 
     # ======================================================================
     # Step 16: Rearranging the Columns in Sequence
@@ -3132,7 +3227,7 @@ while True:
             print("\n\n🔍 Step 7: Copying Data from CSV File...")
 
             # Define the file path for the CSV file
-            team_csv = csv_file_dir+"/teammember.csv"
+            team_csv = downloads_dir+"/teammember.csv" #As email id are store in Userid csv
             
             # Flag to determine whether to proceed with processing the team member CSV
             run_team_code = False
@@ -4238,7 +4333,7 @@ while True:
             print("\n\n🔍 Step 12: Processing CSV File and Adding Filtered Data to Excel...")
 
             # Define the file path for the Exported csv file
-            tags_csv = csv_file_dir+ "/tags.csv"
+            tags_csv = downloads_dir+ "/tags.csv"
 
             # Flag to determine whether to proceed with processing
             run_code_strategy = False
@@ -4528,6 +4623,9 @@ while True:
                         
                         # Filter rows where StrategyId has 'Not found'
                         filtered_df = df[df['StrategyId'] == 'Not found']
+
+                        # Drop duplicate tags
+                        filtered_df = filtered_df.drop_duplicates(subset='tag')
                         
                         # Create the output DataFrame
                         output_df = pd.DataFrame({
@@ -4712,7 +4810,7 @@ while True:
 
     # List of columns that should always be deleted (no prompt to user)
     predefined_columns_oppty = [
-        'AccountNumber', 'Email', 'created_by', 'modified_by', 'created_date',
+        'Already Exist','AccountNumber', 'Email', 'created_by', 'modified_by', 'created_date',
         'modified_date', 'Trimmed_accountid', 'Trimmed_ownerid', 'Type Of Opportunity',
         'Concatenatedaccountid', 'Concatenatedownerid', 'concatenatedcreatedby','accountid','type of opportunity','Email.1'
     ]
@@ -4747,6 +4845,19 @@ while True:
 
     # Track all columns that are dropped (predefined + user-selected)
     all_dropped_columns = []
+
+    # ---------------------- Remove Rows: Already Exist is 'Already Exist in ISC' ----------------------
+
+    count_duplicate_oppty = 0
+
+    if 'Already Exist' in opportunity_df.columns:
+        rows_dropped_duplicates = opportunity_df[opportunity_df['Already Exist'] == "Already Exist in ISC"].copy()
+        count_duplicate_oppty = len(rows_dropped_duplicates)
+
+        if count_duplicate_oppty > 0:
+            rows_dropped_duplicates['Reason'] = "Duplicate Opportunity"
+            opportunity_df = opportunity_df[opportunity_df['Already Exist'] != "Already Exist in ISC"]
+            removed_rows_df = pd.concat([removed_rows_df, rows_dropped_duplicates], ignore_index=True)
 
     # ---------------------- Delete Predefined Columns ----------------------
 
@@ -4863,9 +4974,10 @@ while True:
 
 
     if count_not_in_isc > 0 or count_invalid_pricebook > 0:
-        print(f"\n    ❗️ Total rows removed: {count_not_in_isc + count_invalid_pricebook}")
+        print(f"\n    ❗️ Total rows removed: {count_not_in_isc + count_invalid_pricebook + count_duplicate_oppty}")
         print(f"\n        🔸 Removed due to invalid PricebookEntryId: {count_invalid_pricebook}")
         print(f"\n        🔸 Remove due Account Not in ISC: {count_not_in_isc}")
+        print(f"\n        🔸 Removed due to Duplicate Opportunity: {count_duplicate_oppty}")
     else:
         print(f"\n    ✅ No Rows Removed ")
         
@@ -5334,10 +5446,10 @@ while True:
             print("\n\n🔍 CREATING REPORTING CODES FILE")
             
             # Columns to be removed by default
-            predefined_columns_Reportingcode = ['reporting_codes', 'existing', 'concatcodes']
+            predefined_columns_Reportingcode = [ 'existing', 'concatcodes']
 
             # Columns excluded from user deletion selection
-            excluded_columns_strategy = ['opportunityid','strategyid']
+            excluded_columns_strategy = ['opportunityid','reporting_codes','strategyid']
 
             # File paths
             sheet_name = 'Reporting_codes'
@@ -5517,7 +5629,9 @@ while True:
             print("\n================================================================================")
 
             # Define relevant columns and file paths
-            predefined_columns_tags = ['tag', 'existing', 'concattags']
+            predefined_columns_tags = ['existing', 'concattags']
+            excluded_columns_tags = ['opportunityid','tag','strategyid']
+
             sheet_name = 'Tags'
             output_file = output + "/" + tags  # Final cleaned output path
             removed_rows_tags = removed_rows_dir+'/Removed_Rows - Tags.csv'  # Rows filtered out will be stored here
@@ -5583,7 +5697,7 @@ while True:
 
                 # Prepare GUI for column deletion
                 checkboxes = {}
-                columns_for_gui = [col for col in df.columns if col not in excluded_columns_strategy]
+                columns_for_gui = [col for col in df.columns if col not in excluded_columns_tags]
 
                 # Only show GUI if there are any selectable columns
                 if columns_for_gui:
@@ -5606,7 +5720,7 @@ while True:
                     canvas.create_window((0, 0), window=frame, anchor="nw")
 
                     for column in df.columns:
-                        if column not in excluded_columns_strategy:
+                        if column not in excluded_columns_tags:
                             var = IntVar()
                             checkboxes[column] = var
                             checkbutton = Checkbutton(frame, text=column, variable=var, font=('Helvetica', 12), anchor="w", padx=10)
