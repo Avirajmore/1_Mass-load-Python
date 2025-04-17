@@ -530,6 +530,7 @@ while True:
     vlookup = input("\n📝 Do you want to proceed With Vlookup?(yes/no): ").strip().lower()
 
     if vlookup == 'yes':
+
         # Load the Excel sheet with account IDs
         extract_file_path = 'Extracted_Files/Extracted_data.xlsx'  # replace with your Excel file path
         accounts_df = pd.read_excel(extract_file_path, sheet_name='Accounts')
@@ -563,39 +564,44 @@ while True:
 
         print(f"\n    ✅ VLOOKUP completed for Accounts.")
 
+        try:
 
-        # Load the Excel file's "Strategy" sheet
-        extract_file_path = 'Extracted_Files/Extracted_data.xlsx'  # replace with your Excel file path
-        strategy_df = pd.read_excel(extract_file_path, sheet_name='Strategy')
+            # Load the Excel file's "Strategy" sheet
+            extract_file_path = 'Extracted_Files/Extracted_data.xlsx'  # replace with your Excel file path
+            strategy_df = pd.read_excel(extract_file_path, sheet_name='Strategy')
 
-        # Load the tags CSV file
-        tags_csv_path = os.path.expanduser("~/Downloads")+ '/tags.csv'  # replace with your tags CSV file path
-        tags_df = pd.read_csv(tags_csv_path)
+            # Load the tags CSV file
+            tags_csv_path = os.path.expanduser("~/Downloads")+ '/tags.csv'  # replace with your tags CSV file path
+            tags_df = pd.read_csv(tags_csv_path)
 
-        # Convert both columns to lowercase for case-insensitive matching
-        strategy_df['Strategy_lower'] = strategy_df['Strategy'].astype(str).str.lower()
-        tags_df['Name_lower'] = tags_df['Name'].astype(str).str.lower()
+            # Convert both columns to lowercase for case-insensitive matching
+            strategy_df['Strategy_lower'] = strategy_df['Strategy'].astype(str).str.lower()
+            tags_df['Name_lower'] = tags_df['Name'].astype(str).str.lower()
 
-        # Perform left join (like VLOOKUP)
-        merged_strategy_df = pd.merge(
-            strategy_df,
-            tags_df[['Name_lower', 'Id']],
-            left_on='Strategy_lower',
-            right_on='Name_lower',
-            how='left'
-        )
+            # Perform left join (like VLOOKUP)
+            merged_strategy_df = pd.merge(
+                strategy_df,
+                tags_df[['Name_lower', 'Id']],
+                left_on='Strategy_lower',
+                right_on='Name_lower',
+                how='left'
+            )
 
-        # Fill NaN values with 'Not found in ISC'
-        merged_strategy_df['Id'] = merged_strategy_df['Id'].fillna('Not found in ISC')
+            # Fill NaN values with 'Not found in ISC'
+            merged_strategy_df['Id'] = merged_strategy_df['Id'].fillna('Not found in ISC')
 
-        # Drop helper columns if you don't want them in final output
-        merged_strategy_df.drop(columns=['Strategy_lower', 'Name_lower'], inplace=True)
+            # Drop helper columns if you don't want them in final output
+            merged_strategy_df.drop(columns=['Strategy_lower', 'Name_lower'], inplace=True)
 
-        # Save to a new Excel file
-        output_file_path = 'Extracted_Files/tags_vlookup.xlsx'
-        merged_strategy_df.to_excel(output_file_path, index=False)
+            # Save to a new Excel file
+            output_file_path = 'Extracted_Files/tags_vlookup.xlsx'
+            merged_strategy_df.to_excel(output_file_path, index=False)
 
-        print(f"\n    ✅ VLOOKUP for Strategy completed.")
+            print(f"\n    ✅ VLOOKUP for Strategy completed.")
+        except FileNotFoundError:
+            print(f"\n    ⚠️ tags.csv not found — skipping tags VLOOKUP.")
+        except Exception as e:
+            print(f"\n    ⚠️ Error during tags VLOOKUP: {e}")
 
         # Load the Excel file
         excel_file_path = 'Extracted_Files/Accounts_vlookup.xlsx'  # replace with your file path
@@ -612,22 +618,28 @@ while True:
         accountids_not_found.to_excel(output_file_path, index=False)
 
         print(f"\n    ✅ Missing accountids saved to {output_file_path}")
+        try:
+            # Load the Excel file
+            excel_file_path = 'Extracted_Files/tags_vlookup.xlsx'  # replace with your file path
+            df = pd.read_excel(excel_file_path)
 
-        # Load the Excel file
-        excel_file_path = 'Extracted_Files/tags_vlookup.xlsx'  # replace with your file path
-        df = pd.read_excel(excel_file_path)
+            # Filter rows where Id is 'Not found in ISC'
+            not_found_df = df[df['Id'] == 'Not found in ISC']
 
-        # Filter rows where Id is 'Not found in ISC'
-        not_found_df = df[df['Id'] == 'Not found in ISC']
+            # Select only the 'accountid' column
+            accountids_not_found = not_found_df[['Strategy']]
 
-        # Select only the 'accountid' column
-        accountids_not_found = not_found_df[['Strategy']]
+            # Save to a new Excel file
+            output_file_path = os.path.expanduser("~/Downloads")+'/tags_Missing.xlsx'
+            accountids_not_found.to_excel(output_file_path, index=False)
 
-        # Save to a new Excel file
-        output_file_path = os.path.expanduser("~/Downloads")+'/tags_Missing.xlsx'
-        accountids_not_found.to_excel(output_file_path, index=False)
+            print(f"\n    ✅ Missing tags saved to {output_file_path}")
+        except FileNotFoundError:
+            print(f"\n    ⚠️ tags_vlookup.xlsx not found — skipping missing tags export.")
+        except Exception as e:
+            print(f"\n    ⚠️ Error while handling tags_vlookup.xlsx: {e}")
 
-        print(f"\n    ✅ Missing tags saved to {output_file_path}")
+
         # Load the original Excel file
         file_path = os.path.expanduser("~/Downloads/Accounts_to_be_imported.xlsx")
         df = pd.read_excel(file_path)

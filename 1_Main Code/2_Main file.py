@@ -5504,6 +5504,19 @@ while True:
 
                 if not removed_rows.empty:
                     removed_rows.to_csv(removed_rows_codes, index=False)
+                
+                # Check if all StrategyId values are 'Not Found'
+                if 'strategyid' in df.columns:
+                    strategy_values = df['strategyid'].astype(str).str.lower().dropna()
+
+                    if not strategy_values.empty and strategy_values.nunique() == 1 and strategy_values.iloc[0] == 'not found':
+                        df['Reason'] = 'Code not found'
+                        removed_rows = pd.concat([removed_rows, df], ignore_index=True)
+                        removed_rows.drop(columns=[col for col in predefined_columns_Reportingcode if col in removed_rows.columns], inplace=True)
+                        removed_rows.to_csv(removed_rows_codes, index=False)
+
+                        print(f"\n    ❗️ All StrategyId values are 'Not Found'. Sheet skipped and data moved to removed rows.")
+                        break
 
                 # 7. Drop predefined columns from the cleaned DataFrame
                 predefined_to_delete = [col for col in predefined_columns_Reportingcode if col in df.columns]
@@ -5688,6 +5701,19 @@ while True:
                 # Save removed rows to a separate CSV file
                 if not removed_rows.empty:
                     removed_rows.to_csv(removed_rows_tags, index=False)
+                                
+                # Check if all StrategyId values are 'Not Found'
+                if 'strategyid' in df.columns:
+                    strategy_values = df['strategyid'].astype(str).str.lower().dropna()
+
+                    if not strategy_values.empty and strategy_values.nunique() == 1 and strategy_values.iloc[0] == 'not found':
+                        df['Reason'] = 'Tag not found'
+                        removed_rows = pd.concat([removed_rows, df], ignore_index=True)
+                        removed_rows.drop(columns=[col for col in predefined_columns_tags if col in removed_rows.columns], inplace=True)
+                        removed_rows.to_csv(removed_rows_tags, index=False)
+
+                        print(f"\n    ❗️ All StrategyId values are 'Not Found'. Sheet skipped and data moved to removed rows.")
+                        break
      
                 # Drop predefined columns from the main DataFrame
                 predefined_to_delete = [col for col in predefined_columns_tags if col in df.columns]
