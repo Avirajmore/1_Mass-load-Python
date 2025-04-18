@@ -2,19 +2,36 @@
 import os
 import pandas as pd
 from tabulate import tabulate
-print(f"\n{'='*100}\n{' ' * 30} 📝  File Data Validation 📝 {' ' * 30}\n{'='*100}\n")
+
+line_width = 100
+line = "=" * line_width
+
+title = "📝  File Data Validation 📝"
+print(f"\n{line}")
+print(title.center(line_width))
+print(f"{line}\n")
+
 folder_path = '/Users/avirajmore/Downloads'
+
+summary_list = []
 
 print(f"\n🔍 Files Available: ")
 for file in os.listdir(folder_path):
     if file.endswith(".xlsx"):
         print(f"\n    ✅ {file}")
 
+print(f"\n{'='*100}")
 for file in os.listdir(folder_path):
     if file.endswith(".xlsx"):
         file_path = os.path.join(folder_path,file)
-        
-        
+        title = f"✅ {file} ✅"
+        print(f"\n{line}")
+        print(title.center(line_width))
+        print(f"{line}\n")
+
+
+        # Summary status flag
+        file_status = "✅ All Good"
         
         print(f"\n🔍 Step 1: Select a file")
         print(f"\n    📝 File Selected: {file}")
@@ -37,7 +54,17 @@ for file in os.listdir(folder_path):
             'CLASSNEW', 'CLASSEXP', 'CLASSREN', 'CLASSUPG', 'CLASSDEP', 'CLASSREI', 'CLASSWEX', 'RENEW_QUALIFY',
             'RENEW_DESIGN', 'RENEW_PROPOSE', 'RENEW_NEGOTIATE', 'RENEW_CLOSING', 'RENEW_LOST', 'RENEW_WON',
             'AUTOREN_ORIG', 'AUTOREN_12M', 'AUTOREN_24M', 'AUTOREN_36M', 'TERMINATE', 'Bill CONTINUOUS', 'NOTAPPL',
-            'AUTOREN_SUBNEW', 'AUTOREN_SUBUPG', 'TERMINATE_SUBNEW', 'TERMINATE_SUBUPG','SW','SWSUBSCR','SWSVC','SAAS','MAINT'
+            'AUTOREN_SUBNEW', 'AUTOREN_SUBUPG', 'TERMINATE_SUBNEW', 'TERMINATE_SUBUPG','SW','SWSUBSCR','SWSVC','SAAS','MAINT',
+            'WONSKILL',	'WONBRAND',	'WONPRICE',	'WONINC',	'WONTERMS',	'WONRFP',	'WONISV',	'WONEXEC',	'WONNEEDS',	'WONFIN',
+            'LCDNP',	'LIBMDNP',	'LLTC',	'LOSTTLS',	'LOSTFIN',	'LOSTREN',	'FINPART','IBMRESC',	'FINBP', 'IBMREXP',	'CUSPRIOR',	
+            'FINCASH',	'CUSSTATU',	'COMPEXP',	'COMPINC',	'COMPTRMS',	'COMPSOLN',	'FINREJECT', 'FINCUST',	'COMPSAT',	'FIND',	'IBMDUP',	
+            'IBMERR',	'CUSSPONS',	'FINGOE',	'FINIBM',	'COMPREL',	'COMPPART',	'IBMBUDG',	'FINK',	'IBMSUPP',	'FINCOMP',	'CUSTBUDG',	
+            'IBMLOW',	'CUSTRISK',	'COMPMOVE',	'CUSTACT',	'FINNH',	'FINNONF',	'COMPPRCE',	'RNL_COMP_PRICE',	'RNL_CNTR_EARLY',	'RNL_CNTR_MOVE',	
+            'RNL_CUST_NOBDGT',	'RNL_CUST_NORESP',	'RNL_CUST_OUTOFBUS',	'RNL_CUST_PROJEND',	'RNL_CUST_TEMP',	'RNL_IBM_PRODCHNG',	'RNL_IBM_NOPROD',	
+            'RNL_PROD_NOSUPP',	'RNL_PROD_NOTRELB',	'RNL_PROD_NOSOLN',	'RNL_REVN_MOVESAAS',	'RNL_REVN_MOVETERM',	'RNL_REVN_MOVEPERP',	'RNL_REVN_MOVESUBS',	
+            'RNL_REVN_MOVEPERS',	'RNL_REVN_MOVETYPE',	'RNL_REVN_MOVESALE',	'IBMUNDES',	'IBMUNRSP',	'TLSTRIBM',	'TLSTRNON',	'TLSCLOUD',	'TLSOTHER',	'TLSSELFP',	
+            'TLSSELFE',	'TLSSELFO',	'TLSTPMP',	'TLSTPME',	'TLSTPMSD',	'TLSMVS',	'TLSIBMNA',	'TLSNORES',	'TLSBUDG',	'TLSDUPE',	'TLSNONE',	'BPDREXP',	'BPSUPP',	
+            'BPESA',	'BPQUA',	'BPOTHER',	'TLSRENCO'
         ]
 
         # --- Required Columns ---
@@ -54,7 +81,8 @@ for file in os.listdir(folder_path):
 
         # --- Columns to Validate against API list ---
         columns_to_validate = [
-            "sales_stage", "OI_Source", "Classification Type", "Type", "Renewal type", "Renewal Status","product_type"
+            "sales_stage", "OI_Source", "Classification Type", "Type", "Renewal type", "Renewal Status","product_type",
+            "Won Reason","Lost Category","Lost Reason"
         ]
 
         # --- Columns to check for blanks ---
@@ -63,7 +91,7 @@ for file in os.listdir(folder_path):
                 "opportunity_legacy_id_c", "name", "accountid", "sales_stage","ownerid", "expected_close_date", "currency_code", "ownerid", "OI_Source"
             ],
             "Opportunity_product": [
-                "Product", "product_type", "unitprice", "Term", "Classification Type"
+                "Product", "product_type", "unitprice", "Classification Type"
             ]
         }
 
@@ -75,12 +103,14 @@ for file in os.listdir(folder_path):
                 df_columns_lower = [col.lower() for col in df.columns]
                 missing = [col for col in columns if col.lower() not in df_columns_lower]
                 if missing:
+                    file_status = "❌ Issues Found"
                     print(f"\n    ❌ Missing columns in '{sheet}':")
                     for col in missing:
-                        print(f"\n        - {col}")
+                        print(f"\n        🔸 {col}")
                 else:
                     print(f"\n    ✅ All required columns present in '{sheet}'")
             else:
+                file_status = "❌ Issues Found"
                 print(f"\n    ❌ Sheet '{sheet}' not found.")
 
         # --- Check API Value Validity (Case-Insensitive) ---
@@ -111,11 +141,12 @@ for file in os.listdir(folder_path):
         if invalid_report:
 
             for sheet, columns in invalid_report.items():
+                file_status = "❌ Issues Found"
                 print(f"\n    ❗️ Sheet: {sheet}")
                 for col, values in columns.items():
-                    print(f"\n        • Column: {col}")
+                    print(f"\n        🔹 Column: {col}")
                     for val in values:
-                        print(f"\n            - {val}")
+                        print(f"\n            🔸 {val}")
 
             print("\n    ✅ All other values are valid.\n")
 
@@ -131,46 +162,74 @@ for file in os.listdir(folder_path):
 
             identifier_cols = ['Opportunity Name'] if 'Opportunity Name' in df.columns else []
 
+            # Check for missing reasons based on stage
             missing_won_reason = df[(df['sales_stage'] == 'Won') & (df['Won Reason'].isnull() | (df['Won Reason'].astype(str).str.strip() == ''))]
             missing_lost_info = df[(df['sales_stage'] == 'Lost') & (
                 (df['Lost Category'].isnull() | (df['Lost Category'].astype(str).str.strip() == '')) |
                 (df['Lost Reason'].isnull() | (df['Lost Reason'].astype(str).str.strip() == ''))
             )]
 
+            # 🔴 Check for invalid values in 'Lost' fields when stage is 'Won'
+            invalid_lost_fields_in_won = df[(df['sales_stage'] == 'Won') & (
+                (df['Lost Category'].notnull() & (df['Lost Category'].astype(str).str.strip() != '')) |
+                (df['Lost Reason'].notnull() & (df['Lost Reason'].astype(str).str.strip() != ''))
+            )]
+
+            # 🔴 Check for invalid 'Won Reason' when stage is 'Lost'
+            invalid_won_reason_in_lost = df[(df['sales_stage'] == 'Lost') & (
+                (df['Won Reason'].notnull() & (df['Won Reason'].astype(str).str.strip() != ''))
+            )]
+
+            # Reporting
             if not missing_won_reason.empty:
+                file_status = "❌ Issues Found"
                 print(f"\n    ❗️ Missing 'Won Reason' for these rows (sales_stage = 'Won'):\n")
                 table_str = tabulate(
-                missing_won_reason[['Excel Row'] + identifier_cols + ['sales_stage', 'Won Reason']],
-                headers='keys',
-                tablefmt='pretty',
-                showindex=False
-            )
-            
-                # Add indent to each line of the table
+                    missing_won_reason[['Excel Row'] + identifier_cols + ['sales_stage', 'Won Reason']],
+                    headers='keys', tablefmt='pretty', showindex=False
+                )
                 indented_table = "\n".join("        " + line for line in table_str.splitlines())
                 print(indented_table)
             else:
                 print("\n    ✅ No missing 'Won Reason' for any rows with sales_stage = 'Won'.")
 
             if not missing_lost_info.empty:
+                file_status = "❌ Issues Found"
                 print(f"\n    ❗️ Missing 'Lost Category' or 'Lost Reason' for these rows (sales_stage = 'Lost'):\n")
-                
-                try:
-                    # Generate the table only if there is data
-                    table_str = tabulate(
-                        missing_lost_info[['Excel Row'] + identifier_cols + ['sales_stage', 'Lost Category', 'Lost Reason']],
-                        headers='keys',
-                        tablefmt='pretty',
-                        showindex=False
-                    )
-                except Exception as e:
-                        print(f"Error generating table: {e}")
-
-                # Add indent to each line of the table
+                table_str = tabulate(
+                    missing_lost_info[['Excel Row'] + identifier_cols + ['sales_stage', 'Lost Category', 'Lost Reason']],
+                    headers='keys', tablefmt='pretty', showindex=False
+                )
                 indented_table = "\n".join("        " + line for line in table_str.splitlines())
                 print(indented_table)
             else:
-                    print("\n    ✅ No missing 'Lost Category' or 'Lost Reason' for any rows with sales_stage = 'Lost'.")
+                print("\n    ✅ No missing 'Lost Category' or 'Lost Reason' for any rows with sales_stage = 'Lost'.")
+
+            # 🔴 Invalid values in Lost fields for 'Won' stage
+            if not invalid_lost_fields_in_won.empty:
+                file_status = "❌ Issues Found"
+                print(f"\n    ❗️ Invalid 'Lost Category' or 'Lost Reason' present for these rows (sales_stage = 'Won'):\n")
+                table_str = tabulate(
+                    invalid_lost_fields_in_won[['Excel Row'] + identifier_cols + ['sales_stage', 'Lost Category', 'Lost Reason']],
+                    headers='keys', tablefmt='pretty', showindex=False
+                )
+                indented_table = "\n".join("        " + line for line in table_str.splitlines())
+                print(indented_table)
+            else:
+                print("\n    ✅ No invalid 'Lost Category' or 'Lost Reason' for any rows with sales_stage = 'Won'.")
+
+            # 🔴 Invalid 'Won Reason' in 'Lost' stage
+            if not invalid_won_reason_in_lost.empty:
+                file_status = "❌ Issues Found"
+                print(f"\n    ❗️ Invalid 'Won Reason' present for these rows (sales_stage = 'Lost'):\n")
+                table_str = tabulate(
+                    invalid_won_reason_in_lost[['Excel Row'] + identifier_cols + ['sales_stage', 'Won Reason']],
+                    headers='keys', tablefmt='pretty', showindex=False
+                )
+                indented_table = "\n".join("        " + line for line in table_str.splitlines())
+                print(indented_table)
+            else:
+                print("\n    ✅ No invalid 'Won Reason' for any rows with sales_stage = 'Lost'.")
 
         # --- Function to Check for Blank Values in Given Columns ---
         print(f"\n🔍 Step 5: Check if there are any blank values in Important columns")
@@ -188,9 +247,10 @@ for file in os.listdir(folder_path):
             df_opportunity = pd.read_excel(xls, sheet_name='Opportunity')
             blank_cols_opp = check_blank_values(df_opportunity, blank_values_columns["Opportunity"])
             if blank_cols_opp:
+                file_status = "❌ Issues Found"
                 print("\n    ❗️ Blank values found in columns of 'Opportunity':")
                 for col in blank_cols_opp:
-                    print(f'\n        - {col}')
+                    print(f'\n        🔸 {col}')
             else:
                 print("\n    ✅ No blank values in required columns of 'Opportunity'.")
 
@@ -198,10 +258,24 @@ for file in os.listdir(folder_path):
             df_opportunity_product = pd.read_excel(xls, sheet_name='Opportunity_product')
             blank_cols_prod = check_blank_values(df_opportunity_product, blank_values_columns["Opportunity_product"])
             if blank_cols_prod:
+                file_status = "❌ Issues Found"
                 print("\n    ❗️ Blank values found in columns of 'Opportunity_product':")
                 for col in blank_cols_prod:
-                    print(f'\n        - {col}')
+                    print(f'\n        🔸 {col}')
             else:
                 print("\n    ✅ No blank values in required columns of 'Opportunity_product'.")
+        # Append file result to summary
+        summary_list.append({"File Name": file, "Status": file_status})
 
-        print(f"\n{'='*100}\n{' ' * 30} ✅  File Validation Done ✅ {' ' * 30}\n{'='*100}\n")
+title = "✅  File Validation Done ✅"
+print(f"\n{line}")
+print(title.center(line_width))
+print(f"{line}\n")
+
+# ✅ Final Summary Report
+title = "📊 Final Summary 📊"
+print(f"\n{line}")
+print(title.center(line_width))
+print(f"{line}\n")
+
+print(tabulate(summary_list, headers="keys", tablefmt="fancy_grid"))

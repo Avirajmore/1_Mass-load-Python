@@ -7,9 +7,12 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from tabulate import tabulate
 
 # =======================================================================================================
-print("=" * 100)
-print(" " * 33 + "📝 Success And Error Files EXECUTION 📝")
-print("=" * 100)
+line_width = 100
+line = "=" * line_width
+title = "📝 Success And Error Files EXECUTION 📝"
+print(f"\n{line}")
+print(title.center(line_width))
+print(f"{line}\n")
 # =======================================================================================================
 
 # Copying all the success and error files as backup
@@ -45,7 +48,7 @@ else:
         # Copy each CSV file to the selected folder
         for file in csv_files:
             try:
-                shutil.copy(file, destination_folder)
+                shutil.move(file, destination_folder)
                 success_files.append(os.path.basename(file))
             except Exception:
                 failed_files.append(os.path.basename(file))
@@ -457,7 +460,8 @@ print("\n    ✅ Simulation Complete. 'Summary' Sheet Updated Successfully.\n")
 # ============================================================
 
 print("\n")
-print("=" * 100)
-print(" " * 33 + "📝 Success And Error Files Completed 📝")
-print("=" * 100)
+title =  "📝 Success And Error Files Completed 📝"
+print(f"{line}\n")
+print(title.center(line_width))
+print(f"{line}\n")
 print("\n")

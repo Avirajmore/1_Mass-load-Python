@@ -68,7 +68,7 @@ def submit_selection():
     selected_files = [file for file, var in check_vars.items() if var.get()]
     print("Selected Excel Files:")
     for file in selected_files:
-        print(file)
+        print(f"\n       📁 {file}")
     root.destroy()
 
 # Select All checkbox
@@ -98,7 +98,6 @@ root.mainloop()
 
 
 print("\n🔍 Step 1: Extract Data from Files:")
-print("\n   ✅ Files Processed:")
 
 # Loop through each file in the source directory
 for file in selected_files:
@@ -193,7 +192,6 @@ for file in selected_files:
 
                 combined.to_excel(writer, sheet_name=sheet_name, index=False)
 
-        print(f"\n       📁 {file}")
 
 print(f"\n   ✅ Data Extracted and stored in {output_file}:")
 
