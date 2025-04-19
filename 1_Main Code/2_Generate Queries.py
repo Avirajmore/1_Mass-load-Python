@@ -14,11 +14,13 @@ print(f"\n{'='*120}\n{' ' * 30} 📝  Extract Data and create Queries 📝 {' ' 
 
 
 # Directory where extracted files will be saved
-folder_path = 'Extracted_Files'
+Extract_folder_path = 'Extracted_Files'
+if os.path.exists(Extract_folder_path):
+    shutil.rmtree(Extract_folder_path)
 
 # Create the folder if it doesn't exist
-if not os.path.exists(folder_path):
-    os.makedirs(folder_path)
+if not os.path.exists(Extract_folder_path):
+    os.makedirs(Extract_folder_path)
 
 # Path where source Excel files are located
 DIR_PATH = os.path.expanduser("~/Downloads")
@@ -28,7 +30,7 @@ output_file = "Extracted_Files/Extracted_data.xlsx"
 
 print("\n🔍 Select Files to Process")
 # Path to your folder
-folder_path = '/Users/avirajmore/Downloads'
+folder_path = DIR_PATH
 
 # Get only Excel files in the folder
 files = [f for f in os.listdir(folder_path)
@@ -100,80 +102,96 @@ root.mainloop()
 print("\n🔍 Step 1: Extract Data from Files:")
 
 # Loop through each file in the source directory
-for file in selected_files:
+for file in os.listdir(DIR_PATH):
     if file.endswith(".xlsx"):
         file_path = os.path.join(DIR_PATH, file)
 
         # Load all sheets from the current Excel file
-        xls = pd.read_excel(file_path, sheet_name=None,engine='openpyxl')
+        xls = pd.read_excel(file_path, sheet_name=None, engine='openpyxl')
 
-        # Extract and modify data from the 'Opportunity_product' sheet
+        collected_data = {}
+
+        # Process 'Opportunity_product' sheet if it exists
         if 'Opportunity_product' in xls:
             df = xls['Opportunity_product']
-
-            # Concatenate 'Product' and 'product_type' columns into a new 'product_family' column
             df['product_family'] = df['Product'].astype(str) + '-' + df['product_type'].astype(str)
 
-            # Define how columns should be extracted and grouped from various sheets
-            sheet_config = {
-                "Opportunity": {
-                    "columns": ["accountid", "ownerid", "created_by", "currency_code", "opportunity_legacy_id_c"],
-                    "output": {
-                        "Accounts": ["accountid"],
-                        "Email_id": ["ownerid", "created_by"],
-                        "Currency": ["currency_code"],
-                        "Legacy_Ids": ["opportunity_legacy_id_c"]
-                    }
-                },
-                "Opportunity_product": {
-                    "columns": ["product_family"],
-                    "output": {
-                        "Product": ["product_family"]
-                    }
-                },
-                "Opportunity_Team ": {
-                    "columns": ["Email"],
-                    "output": {
-                        "Email_id": ["Email"]
-                    }
-                },
-                "Reporting_codes": {
-                    "columns": ["reporting_codes", "Tags"],
-                    "output": {
-                        "Strategy": ["reporting_codes", "Tags"]
-                    }
+        # Define how columns should be extracted and grouped from various sheets
+        sheet_config = {
+            "Opportunity": {
+                "columns": ["accountid", "ownerid", "created_by", "currency_code", "opportunity_legacy_id_c"],
+                "output": {
+                    "Accounts": ["accountid"],
+                    "Email_id": ["ownerid", "created_by"],
+                    "Currency": ["currency_code"],
+                    "Legacy_Ids": ["opportunity_legacy_id_c"]
+                }
+            },
+            "Opportunity_product": {
+                "columns": ["product_family"],
+                "output": {
+                    "Product": ["product_family"]
+                }
+            },
+            "Opportunity_Team ": {
+                "columns": ["Email"],
+                "output": {
+                    "Email_id": ["Email"]
                 }
             }
+        }
 
-            collected_data = {}
+        # Process all other sheets as per config
+        for sheet_key, config in sheet_config.items():
+            if sheet_key not in xls:
+                print(f"Sheet '{sheet_key}' not found.")
+                continue
 
-            # Extract data from each sheet based on config
-            for sheet_key, config in sheet_config.items():
-                if sheet_key not in xls:
-                    print(f"Sheet '{sheet_key}' not found.")
+            df = xls[sheet_key]
+            df.columns = df.columns.str.strip()  # Clean column names
+
+            for out_sheet, needed_cols in config["output"].items():
+                valid_cols = [col for col in needed_cols if col in df.columns]
+                if not valid_cols:
                     continue
 
-                df = xls[sheet_key]
-                df.columns = df.columns.str.strip() # Clean column names
+                if out_sheet == "Email_id":
+                    stacked = pd.concat([df[col].dropna().astype(str) for col in valid_cols], ignore_index=True).to_frame(name="Email_id")
+                    collected_data.setdefault(out_sheet, []).append(stacked)
 
-                for out_sheet, needed_cols in config["output"].items():
-                    valid_cols = [col for col in needed_cols if col in df.columns]
-                    if not valid_cols:
-                        continue
+                else:
+                    subset = df[valid_cols].dropna(how='all')
+                    if not subset.empty:
+                        collected_data.setdefault(out_sheet, []).append(subset)
 
-                    # Stack and combine columns into the specified output sheet structure
-                    if out_sheet == "Email_id":
-                        stacked = pd.concat([df[col].dropna().astype(str) for col in valid_cols], ignore_index=True).to_frame(name="Email_id")
-                        collected_data.setdefault(out_sheet, []).append(stacked)
+        # Special handling for 'Reporting_codes' to extract 'Tags'
+        if 'Reporting_codes' in xls:
+            df = xls['Reporting_codes']
+            df.columns = df.columns.str.strip()  # Clean column names
 
-                    elif out_sheet == "Strategy":
-                        stacked = pd.concat([df[col].dropna().astype(str) for col in valid_cols], ignore_index=True).to_frame(name="Strategy")
-                        collected_data.setdefault(out_sheet, []).append(stacked)
+            tags_columns = [col for col in df.columns if col.lower() == 'tags']
+            reporting_codes_columns = [col for col in df.columns if col.lower() == 'reporting_codes']
 
-                    else:
-                        subset = df[valid_cols].dropna(how='all')
-                        if not subset.empty:
-                            collected_data.setdefault(out_sheet, []).append(subset)
+            if reporting_codes_columns:
+                reporting_codes_column = reporting_codes_columns[0]
+
+                # If 'Tags' doesn't exist, create it using 'reporting_codes'
+                if not tags_columns:
+                    df['Tags'] = df[reporting_codes_column]
+                    tags_column = 'Tags'
+                else:
+                    tags_column = tags_columns[0]
+                    # If 'Tags' exists but is all NaN or empty strings
+                    if df[tags_column].isna().all() or (df[tags_column].astype(str).str.strip() == '').all():
+                        df[tags_column] = df[reporting_codes_column]
+
+                # Now extract 'Tags' values (drop NaNs and blanks)
+                strategy_data = df[tags_column].dropna().astype(str).str.strip()
+                strategy_data = strategy_data[strategy_data != '']  # remove empty strings
+
+                if not strategy_data.empty:
+                    strategy_df = strategy_data.to_frame(name='Strategy')
+                    collected_data.setdefault('Strategy', []).append(strategy_df)
 
         # Append or create a new extracted data Excel file
         file_exists = os.path.exists(output_file)
@@ -182,7 +200,6 @@ for file in selected_files:
             for sheet_name, dfs in collected_data.items():
                 combined = pd.concat(dfs, ignore_index=True)
 
-                # If sheet exists, append data; else create new sheet
                 if file_exists:
                     try:
                         existing = pd.read_excel(output_file, sheet_name=sheet_name)
@@ -191,7 +208,6 @@ for file in selected_files:
                         pass  # Sheet doesn't exist, just write new
 
                 combined.to_excel(writer, sheet_name=sheet_name, index=False)
-
 
 print(f"\n   ✅ Data Extracted and stored in {output_file}:")
 
@@ -478,8 +494,9 @@ print(f"\n{'='*120}\n{' ' * 30} 📝 Files Processed 📝 {' ' * 30}\n{'='*120}\
 
 
 DIR_PATH = "Extracted_Files"
+break_outer_loop = False
 
-while True:
+while not break_outer_loop:
     Copy_query = input("\n📝 Do you want to proceed With Copying the Queries? (yes/no): ").strip().lower()
 
     if Copy_query == 'yes':
@@ -498,7 +515,7 @@ while True:
             choose = input('\n📝 Enter the number of the query you want to copy or type "s" to Skip: ').strip()
 
             if choose.lower() == 's':
-                print("\n🚫 Skipping")
+                print("\n    🚫 Skipping Copying Queries")
                 break_outer_loop = True
                 break
 
@@ -507,15 +524,15 @@ while True:
                 with open(os.path.join(query_dir, selected_file), "r") as f:
                     query = f.read()
 
-                print(f"\n✅ {selected_file} copied to clipboard")
+                print(f"\n    ✅ {selected_file} copied to clipboard")
                 pyperclip.copy(query)
 
             else:
-                print("\n❗️ Invalid Selection")
+                print("\n    ❗️ Invalid Selection")
                 continue
 
     elif Copy_query == 'no':
-        print("\n🚫 Skipping\n")
+        print("\n    🚫 Skipping Copying Queries")
         break
 
     else:
@@ -525,7 +542,7 @@ while True:
 
 while True:
 
-    vlookup = input("\n📝 Do you want to proceed With Vlookup?(yes/no): ").strip().lower()
+    vlookup = input("\n📝 Do you want to check For Accounts and Tags Missing?(yes/no): ").strip().lower()
 
     if vlookup == 'yes':
 
@@ -596,6 +613,7 @@ while True:
             merged_strategy_df.to_excel(output_file_path, index=False)
 
             print(f"\n    ✅ VLOOKUP for Strategy completed.")
+
         except FileNotFoundError:
             print(f"\n    ⚠️ tags.csv not found — skipping tags VLOOKUP.")
         except Exception as e:
@@ -624,14 +642,25 @@ while True:
             # Filter rows where Id is 'Not found in ISC'
             not_found_df = df[df['Id'] == 'Not found in ISC']
 
-            # Select only the 'accountid' column
-            accountids_not_found = not_found_df[['Strategy']]
+            # Select only the 'Strategy' column
+            Strategy_not_found = not_found_df[['Strategy']]
+
+            # Create a DataFrame with the desired structure, similar to Code 1
+            output_df = pd.DataFrame({
+                'Name': Strategy_not_found['Strategy'],
+                'Strategy_Full_Name__c': '',
+                'RecordTypeId': '0123h000000kqchAAA',
+                'Record_Type_Name__c': 'Tags',
+                'IsDeleted': False,
+                'Active__c': True
+            })
 
             # Save to a new Excel file
-            output_file_path = os.path.expanduser("~/Downloads")+'/tags_Missing.xlsx'
-            accountids_not_found.to_excel(output_file_path, index=False)
+            csv_output_path = os.path.expanduser("~/Downloads")+'/Tags_to_be_inserted.csv'
+            output_df.to_csv(csv_output_path, index=False)
 
-            print(f"\n    ✅ Missing tags saved to {output_file_path}")
+            print(f"\n    ✅ Missing tags saved to {csv_output_path}")
+
         except FileNotFoundError:
             print(f"\n    ⚠️ tags_vlookup.xlsx not found — skipping missing tags export.")
         except Exception as e:
@@ -666,6 +695,7 @@ while True:
 
         # Count invalid values
         invalid_count = len(invalid_values)
+        valid_count = len(valid_values)
 
         # If there are invalid values, write them to a new Excel file
         if invalid_count > 0:
@@ -678,6 +708,10 @@ while True:
 
         # Save the updated dataframe back to the original file
         valid_df.to_excel(file_path, index=False)
+
+        print(f"\n    ❗️ Total accounts to be imported: {valid_count}")
+        print(f"\n    ❗️ Total invalid accounts: {invalid_count}")
+        print(f"\n    ❗️ Total tags to be inserted: {len(Strategy_not_found)}")
 
         print('\n   🔚 End Of Script\n') 
         break

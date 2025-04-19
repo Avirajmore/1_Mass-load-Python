@@ -4606,7 +4606,7 @@ while True:
                 # ===================================================
                 
                 # Code to create List of tags 
-                output_for_tags = csv_file_dir + "/Tag_to_be_inserted.csv" # Change to your desired output file path
+                output_for_tags = csv_file_dir + "/Tags_to_be_inserted.csv" # Change to your desired output file path
 
 
                 def process_excel(file_path, output_for_tags):
