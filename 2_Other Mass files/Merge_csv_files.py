@@ -1,41 +1,53 @@
+'''
+Description: Code to Merge Multiple CSV Files into a Single File
+
+Functionality Overview:
+
+1) Prompt the user to select multiple CSV files to be merged.
+2) Ask the user to provide a name for the merged CSV file.
+3) Combine all selected CSV files and save the merged file to the Downloads folder.
+'''
+
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
 import os
 
-# Function to select a CSV file
-def select_file(title):
-    while True:
-        root = tk.Tk()
-        root.withdraw()
-        file_path = filedialog.askopenfilename(title=title, filetypes=[("CSV files", "*.csv")])
+# Function to select multiple CSV files
+def select_files(title):
+    root = tk.Tk()
+    root.withdraw()
+    file_paths = filedialog.askopenfilenames(title=title, filetypes=[("CSV files", "*.csv")])
 
-        if file_path:
-            return file_path
-        else:
-            retry = input(f"\n    ❌ No file selected for {title}. Do you want to select a file? (yes/no): ").strip().lower()
-            if retry == "no":
-                print(f"\n       ❗️ Skipping {title}.")
-                return None  # Skip the file selection
+    if file_paths:
+        return file_paths
+    else:
+        print("\n❌ No files selected.")
+        return None
 
-# Select product file
+# Function to merge multiple CSV files
+def merge_csv_files(file_paths, output_file):
+    merged_df = pd.DataFrame()  # Empty DataFrame to start with
 
-file1 = select_file("Select the First CSV file")
-file2 = select_file("Select the Second CSV file")
-output_file = os.path.expanduser("~/Downloads/Merged_file.csv")
+    for file_path in file_paths:
+        df = pd.read_csv(file_path)
+        merged_df = pd.concat([merged_df, df], ignore_index=True)
 
-def merge_csv_files(file1, file2, output_file):
-    # Read both CSV files
-    df1 = pd.read_csv(file1)
-    df2 = pd.read_csv(file2)
-
-    # Concatenate DataFrames while keeping the header only once
-    merged_df = pd.concat([df1, df2], ignore_index=True)
-
-    # Save the merged DataFrame to a new CSV file
     merged_df.to_csv(output_file, index=False)
+    print(f"\n   ✅ Files merged successfully into: {output_file}")
 
-    print(f"Files merged successfully into {output_file}")
+print("\n🔍 Select the csv files to merge")
+# Main flow
+file_paths = select_files("Select CSV files to merge")
 
-# Usage
-merge_csv_files(file1, file2,output_file)
+print("\n🔍 Name of new Csv File")
+if file_paths:
+    output_name = input("\n📄 Enter the name for the merged CSV file (without .csv extension): ").strip()
+    if not output_name:
+        output_name = "Merged_file"  # Default name if left blank
+
+    output_file = os.path.expanduser(f"~/Downloads/{output_name}.csv")
+
+    merge_csv_files(file_paths, output_file)
+else:
+    print("\n   ⚠️ No files selected. Exiting.")

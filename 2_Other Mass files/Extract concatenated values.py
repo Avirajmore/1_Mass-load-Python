@@ -1,3 +1,14 @@
+'''
+Description: Code to Extract Concatenated Values from a Column
+
+Functionality Overview:
+
+1) Prompt the user to select an Excel file.
+2) Display the list of available sheets in the selected file and ask the user to choose one.
+3) Display the column names from the selected sheet and prompt the user to pick a column.
+4) Extract all values from the selected column and save them to a .txt file.
+'''
+
 import sys
 import os
 import pandas as pd
@@ -87,14 +98,25 @@ def process_file(file_path):
     except Exception as e:
         print(f"Error trimming first line: {e}")
 
-folder_path = os.path.expanduser("~/Downloads")
-file_paths = [os.path.join(folder_path, file) for file in os.listdir(folder_path) if file.endswith(('.xlsx', '.xls'))]
-if not file_paths:
-    print("No Excel files found in the folder.")
+print("\n\n🔍 Step 1: Select a File to Process")
 
-for file_path in file_paths:
+# Set the directory to search for Excel files
+directory = os.path.expanduser("~/Downloads")
+
+# Create a hidden root window (used for file dialog)
+root = tk.Tk()
+root.withdraw()
+
+# Ask the user to select an Excel file
+file_path = filedialog.askopenfilename(
+    initialdir=directory,
+    title="📄 Select an Excel file",
+    filetypes=[("Excel files", "*.xlsx")]
+)
+
+# Print the selected file path
+if file_path:
     process_file(file_path)
-    proceed = input("Do you want to proceed with the next file? (yes/no): ").strip().lower()
-    if proceed != 'yes':
-        print("Exiting the process.")
-        break
+else:
+    print("\n    ❌ No file selected. Exiting the program. ❌")
+    sys.exit()

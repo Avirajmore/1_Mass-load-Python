@@ -1,6 +1,9 @@
-
 '''
-To add a Reason column after the masss load is done
+Description: Populate the Reason__c Column with 'ADDLIC' Values
+
+Functionality Overview:
+1) Automatically locate a file named reason.csv.
+2) Populate the Reason__c column in the file with the value 'ADDLIC' for all rows.
 '''
 
 

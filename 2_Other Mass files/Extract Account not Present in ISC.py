@@ -1,3 +1,9 @@
+'''
+Old code which will process account column from all the files and make a list of Accounts to be imported,
+saving Code Just in case
+'''
+
+
 import os
 import re
 import pyperclip
@@ -14,6 +20,7 @@ file_paths = []
 
 if os.path.isdir(folder_path):
     for file in os.listdir(folder_path):
+        
         file_path = os.path.join(folder_path, file)
         if os.path.isfile(file_path) and file.endswith(('.xlsx', '.xls')):
             file_paths.append(file_path)

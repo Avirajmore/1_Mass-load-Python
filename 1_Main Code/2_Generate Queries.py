@@ -1,3 +1,4 @@
+import time
 import shutil
 import tkinter as tk
 from tkinter import ttk
@@ -9,102 +10,44 @@ import itertools
 from openpyxl import load_workbook
 
 # ==================================================
-print(f"\n{'='*120}\n{' ' * 30} 📝  Extract Data and create Queries 📝 {' ' * 30}\n{'='*120}\n")
+line_width = 100
+line = "=" * line_width
+title = "📝  Extract Data and create Queries 📝"
+print(f"\n{line}")
+print(title.center(line_width))
+print(f"{line}\n")
 # ==================================================
 
-
 # Directory where extracted files will be saved
-Extract_folder_path = 'Extracted_Files'
-if os.path.exists(Extract_folder_path):
-    shutil.rmtree(Extract_folder_path)
+EXTRACT_FOLDER = "Extracted_Files"
 
+if os.path.exists(EXTRACT_FOLDER):
+    shutil.rmtree(EXTRACT_FOLDER)
 # Create the folder if it doesn't exist
-if not os.path.exists(Extract_folder_path):
-    os.makedirs(Extract_folder_path)
+os.makedirs(EXTRACT_FOLDER)
 
 # Path where source Excel files are located
-DIR_PATH = os.path.expanduser("~/Downloads")
-
+DOWNLOAD_DIR = os.path.expanduser("~/Downloads")
 # Path for the consolidated extracted data
-output_file = "Extracted_Files/Extracted_data.xlsx"
+EXTRACT_OUTPUT_FILE = "Extracted_Files/Extracted_data.xlsx"
 
-print("\n🔍 Select Files to Process")
-# Path to your folder
-folder_path = DIR_PATH
 
-# Get only Excel files in the folder
-files = [f for f in os.listdir(folder_path)
-         if os.path.isfile(os.path.join(folder_path, f)) and f.lower().endswith(('.xlsx', '.xls'))]
-
-# Store selected file names
-selected_files = []
-
-# Tkinter window
-root = tk.Tk()
-root.title("Select Excel Files")
-root.geometry("400x500")
-
-# Scrollable frame
-canvas = tk.Canvas(root)
-scrollbar = ttk.Scrollbar(root, orient="vertical", command=canvas.yview)
-scrollable_frame = ttk.Frame(canvas)
-
-scrollable_frame.bind(
-    "<Configure>",
-    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-)
-
-canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-canvas.configure(yscrollcommand=scrollbar.set)
-
-# Create a dictionary to hold file checkboxes
-check_vars = {}
-
-def toggle_all():
-    state = select_all_var.get()
-    for var in check_vars.values():
-        var.set(state)
-
-def submit_selection():
-    global selected_files
-    selected_files = [file for file, var in check_vars.items() if var.get()]
-    print("Selected Excel Files:")
-    for file in selected_files:
-        print(f"\n       📁 {file}")
-    root.destroy()
-
-# Select All checkbox
-select_all_var = tk.BooleanVar()
-select_all_cb = ttk.Checkbutton(scrollable_frame, text="Select All", variable=select_all_var, command=toggle_all)
-select_all_cb.pack(anchor='w', pady=(10, 5), padx=10)
-
-# Individual file checkboxes
-for file in files:
-    var = tk.BooleanVar()
-    cb = ttk.Checkbutton(scrollable_frame, text=file, variable=var)
-    cb.pack(anchor='w', padx=20)
-    check_vars[file] = var
-
-# Submit button
-submit_btn = ttk.Button(root, text="Submit", command=submit_selection)
-submit_btn.pack(pady=10)
-
-# Pack canvas and scrollbar
-canvas.pack(side="left", fill="both", expand=True)
-scrollbar.pack(side="right", fill="y")
-
-# Start GUI
-root.mainloop()
-
-# Now selected_files contains all the checked Excel file names
-
+print("\n🔍 Files to Process")
+for file in os.listdir(DOWNLOAD_DIR):
+    if file.endswith(".xlsx"):
+        file_path = os.path.join(DOWNLOAD_DIR, file)
+        xls = pd.read_excel(file_path, sheet_name=None, engine='openpyxl')
+        if 'Opportunity' in xls or 'Opportunity_product' in xls:
+            print(f"\n       📁 {file}")
+        else:
+            print(f"\n       ❌ {file}")
 
 print("\n🔍 Step 1: Extract Data from Files:")
 
 # Loop through each file in the source directory
-for file in os.listdir(DIR_PATH):
+for file in os.listdir(DOWNLOAD_DIR):
     if file.endswith(".xlsx"):
-        file_path = os.path.join(DIR_PATH, file)
+        file_path = os.path.join(DOWNLOAD_DIR, file)
 
         # Load all sheets from the current Excel file
         xls = pd.read_excel(file_path, sheet_name=None, engine='openpyxl')
@@ -144,7 +87,7 @@ for file in os.listdir(DIR_PATH):
         # Process all other sheets as per config
         for sheet_key, config in sheet_config.items():
             if sheet_key not in xls:
-                print(f"Sheet '{sheet_key}' not found.")
+                # print(f"\n   ❗️'{file}' does not have correct format.Skipping the file.")
                 continue
 
             df = xls[sheet_key]
@@ -194,22 +137,22 @@ for file in os.listdir(DIR_PATH):
                     collected_data.setdefault('Strategy', []).append(strategy_df)
 
         # Append or create a new extracted data Excel file
-        file_exists = os.path.exists(output_file)
+        file_exists = os.path.exists(EXTRACT_OUTPUT_FILE)
 
-        with pd.ExcelWriter(output_file, engine="openpyxl", mode="a" if file_exists else "w", if_sheet_exists="overlay" if file_exists else None) as writer:
+        with pd.ExcelWriter(EXTRACT_OUTPUT_FILE, engine="openpyxl", mode="a" if file_exists else "w", if_sheet_exists="overlay" if file_exists else None) as writer:
             for sheet_name, dfs in collected_data.items():
                 combined = pd.concat(dfs, ignore_index=True)
 
                 if file_exists:
                     try:
-                        existing = pd.read_excel(output_file, sheet_name=sheet_name)
+                        existing = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=sheet_name)
                         combined = pd.concat([existing, combined], ignore_index=True)
                     except Exception:
                         pass  # Sheet doesn't exist, just write new
 
                 combined.to_excel(writer, sheet_name=sheet_name, index=False)
 
-print(f"\n   ✅ Data Extracted and stored in {output_file}:")
+print(f"\n   ✅ Data Extracted and stored in {EXTRACT_OUTPUT_FILE}:")
 
 # ============================
 # Trim whitespace in all cells and column names
@@ -217,9 +160,9 @@ print(f"\n   ✅ Data Extracted and stored in {output_file}:")
 
 print("\n🔍 Step 2: Cleaning data")
 
-def trim_columns_all_sheets(extract_file_path):
+def trim_columns_all_sheets(EXTRACT_OUTPUT_FILE):
     # Read all sheets into a dictionary
-    sheets = pd.read_excel(extract_file_path, sheet_name=None, dtype=str)  # Read all as strings to ensure trimming works
+    sheets = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=None, dtype=str)  # Read all as strings to ensure trimming works
     
     trimmed_sheets = {}
 
@@ -236,14 +179,12 @@ def trim_columns_all_sheets(extract_file_path):
         trimmed_sheets[sheet_name] = new_df
     
     # Save the trimmed data back to a new Excel file
-    with pd.ExcelWriter(extract_file_path, engine='openpyxl') as writer:
+    with pd.ExcelWriter(EXTRACT_OUTPUT_FILE, engine='openpyxl') as writer:
         for sheet_name, df in trimmed_sheets.items():
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-# Usage
-extract_file_path = 'Extracted_Files/Extracted_data.xlsx'
 
-trim_columns_all_sheets(extract_file_path)
+trim_columns_all_sheets(EXTRACT_OUTPUT_FILE)
 
 print("\n   ✅ Trimmed Data")
 
@@ -255,7 +196,7 @@ print("\n   ✅ Trimmed Data")
 sheets_to_process = ['Email_id', 'Strategy']
 
 # Read all sheets
-all_sheets = pd.read_excel(extract_file_path, sheet_name=None)
+all_sheets = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=None)
 
 # Process the Email_id and Strategy sheets
 for sheet_name in sheets_to_process:
@@ -278,7 +219,7 @@ for sheet_name in sheets_to_process:
         print(f"Sheet '{sheet_name}' not found in the Excel file.")
 
 # Write all sheets back to the same Excel file
-with pd.ExcelWriter(extract_file_path, engine='openpyxl', mode='w') as writer:
+with pd.ExcelWriter(EXTRACT_OUTPUT_FILE, engine='openpyxl', mode='w') as writer:
     for sheet_name, df in all_sheets.items():
         df.to_excel(writer, sheet_name=sheet_name, index=False)
 
@@ -292,7 +233,7 @@ accountid_column = 'accountid'
 new_column_name = 'accountid'
 
 # Load the specific sheet into a DataFrame
-df = pd.read_excel(extract_file_path, sheet_name="Accounts")
+df = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name="Accounts")
 
 # Define a function to process the values
 def process_value(value):
@@ -304,7 +245,7 @@ def process_value(value):
 df[new_column_name] = df[accountid_column].apply(process_value)
 
 # Save the updated DataFrame back to the Excel file
-with pd.ExcelWriter(extract_file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+with pd.ExcelWriter(EXTRACT_OUTPUT_FILE, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
     df.to_excel(writer, sheet_name='Accounts', index=False)
 
 print("\n   ✅ Formated Account values to the correct Format")
@@ -314,7 +255,7 @@ print("\n   ✅ Formated Account values to the correct Format")
 # ============================
 
 # Load all sheets as a dict of DataFrames
-xls = pd.read_excel(extract_file_path, sheet_name=None)
+xls = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=None)
 
 # Remove duplicates in each sheet
 for sheet_name, df in xls.items():
@@ -325,7 +266,7 @@ for sheet_name, df in xls.items():
         xls[sheet_name] = df
 
 # Save back to the same file
-with pd.ExcelWriter(extract_file_path, engine='openpyxl', mode='w') as writer:
+with pd.ExcelWriter(EXTRACT_OUTPUT_FILE, engine='openpyxl', mode='w') as writer:
     for sheet_name, df in xls.items():
         df.to_excel(writer, sheet_name=sheet_name, index=False)
 
@@ -336,13 +277,13 @@ print("\n   ✅ Removed Duplicates")
 # ============================
 
 print("\n🔍 Step 3: Create file with concatenated Data")
-xls = pd.ExcelFile(extract_file_path)
+xls = pd.ExcelFile(EXTRACT_OUTPUT_FILE)
 
 # Define the output file path to avoid overwriting the original
-output_file_path = 'Extracted_Files/Concatenated_excel_file.xlsx'
+CONCATENATE_OUTPUT_FILE = 'Extracted_Files/Concatenated_excel_file.xlsx'
 
 # Create an Excel writer to save the modified data
-with pd.ExcelWriter(output_file_path, engine='openpyxl') as writer:
+with pd.ExcelWriter(CONCATENATE_OUTPUT_FILE, engine='openpyxl') as writer:
     # Iterate through all sheets
     for sheet_name in xls.sheet_names:
         # Load the sheet into a DataFrame
@@ -356,22 +297,23 @@ with pd.ExcelWriter(output_file_path, engine='openpyxl') as writer:
         # Save the modified DataFrame to the new Excel file
         df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-print(f"\n   ✅ Concated values saved in {output_file_path}")
+print(f"\n   ✅ Concated values saved in {CONCATENATE_OUTPUT_FILE}")
 
 # ============================
 # Function to generate a query file from a single sheet column
 # ============================
+
 print("\n🔍 Step 4: Generating Queries")
-def generate_query_from_sheet(extract_file_path, sheet_name, column_name, query_template, output_txt_base):
+def generate_query_from_sheet(EXTRACT_OUTPUT_FILE, sheet_name, column_name, query_template, output_txt_base):
     # Read specific sheet
-    df = pd.read_excel(extract_file_path, sheet_name=sheet_name, dtype=str)
+    df = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=sheet_name, dtype=str)
 
     # Drop empty values and clean
     values = df[column_name].dropna().astype(str).str.strip().tolist()
 
     # Query parts length
     base_query_length = len(query_template.replace("{values}", ""))
-    max_query_length = 90000
+    max_query_length = 80000
 
     # Estimate max value chunk size per query
     value_strings = [f"'{val}'" for val in values]
@@ -416,28 +358,28 @@ def generate_query_from_sheet(extract_file_path, sheet_name, column_name, query_
 
 account_output_txt = 'Extracted_Files/Queries/1_Account_query.txt'
 account_query = "SELECT AccountNumber, id FROM Account WHERE AccountNumber IN ({values})"
-generate_query_from_sheet(extract_file_path, 'Accounts', 'accountid', account_query,account_output_txt)
+generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Accounts', 'accountid', account_query,account_output_txt)
 
 Email_output_txt = 'Extracted_Files/Queries/2_Userid_query.txt'
 userid_query = "select email,id,Profile.Name,isactive from user where email in ({values}) and Profile.Name != 'IBM Partner Community Login User' and IsActive = true"
-generate_query_from_sheet(extract_file_path, 'Email_id', 'Email_id', userid_query,Email_output_txt)
+generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Email_id', 'Email_id', userid_query,Email_output_txt)
 
 strategy_output_txt = 'Extracted_Files/Queries/4_Strategy_query.txt'
 strategy_query = "Select id,name,Record_Type_Name__c from Strategy__c where name in ({values})"
-generate_query_from_sheet(extract_file_path, 'Strategy', 'Strategy', strategy_query,strategy_output_txt)
+generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Strategy', 'Strategy', strategy_query,strategy_output_txt)
 
 legacy_output_txt = 'Extracted_Files/Queries/5_Legacy_query.txt'
 legacy_query = "SELECT Opportunity_Legacy_Id__c, Id,Name,Owned_By_Name__c,OwnerId FROM Opportunity WHERE Opportunity_Legacy_Id__c IN ({values})"
-generate_query_from_sheet(extract_file_path, 'Legacy_Ids', 'opportunity_legacy_id_c', legacy_query,legacy_output_txt)
+generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Legacy_Ids', 'opportunity_legacy_id_c', legacy_query,legacy_output_txt)
 
 # ============================
 # Function to generate query using two sheets and columns
 # ============================
 
-def generate_query_from_two_sheets(extract_file_path, sheet1, column1, sheet2, column2, query_template, output_txt):
+def generate_query_from_two_sheets(EXTRACT_OUTPUT_FILE, sheet1, column1, sheet2, column2, query_template, output_txt):
     # Read both sheets
-    df1 = pd.read_excel(extract_file_path, sheet_name=sheet1, dtype=str)
-    df2 = pd.read_excel(extract_file_path, sheet_name=sheet2, dtype=str)
+    df1 = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=sheet1, dtype=str)
+    df2 = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=sheet2, dtype=str)
 
     # Clean and dropna
     values1 = df1[column1].dropna().astype(str).str.strip().tolist()
@@ -466,41 +408,64 @@ column2 = 'currency_code'
 product_query = "SELECT Product2.Product_Code_Family__c, CurrencyIsoCode, id, isactive FROM PricebookEntry WHERE Product2.Product_Code_Family__c IN ({product}) AND CurrencyIsoCode IN ({currency})"
 product_output_txt = 'Extracted_Files/Queries/3_PricebookEntry_query.txt'
 
-generate_query_from_two_sheets(extract_file_path, sheet1, column1, sheet2, column2, product_query, product_output_txt)
+generate_query_from_two_sheets(EXTRACT_OUTPUT_FILE, sheet1, column1, sheet2, column2, product_query, product_output_txt)
 
 print("\n   ✅ Queries Generated")
 
 # ============================
-# Function to find & rename 'bulkQuery' CSV file
 # ============================
 
-def rename_and_move_bulkquery_file(new_name, DIR_PATH):
-    """
-    Searches the downloads folder for a file with 'bulkQuery' in the name and 
-    renames/moves it to the designated CSV directory using the provided new name.
-    """
+file_mapping = {
+    "1_Account_query.txt": "accounts.csv",
+    "2_Userid_query.txt": "userid.csv",
+    "3_PricebookEntry_query.txt": "productfamily.csv",
+    "4_Strategy_query.txt": "tags.csv",
+    "5_Legacy_query.txt":"legacyid.csv"
+}
+# ============================
+# Function to find & rename 'bulkQuery' CSV file
+# ============================
+def wait_and_rename_bulkquery_file(new_name, dir_path, part_number=None, timeout=60):
+    # print(f"\n⏳ Waiting for 'bulkQuery' file to appear in {dir_path}... (timeout: {timeout} seconds)")
     
-    for filename in os.listdir(DIR_PATH):
-        if "bulkQuery" in filename and filename.endswith(".csv"):
-            old_path = os.path.join(DIR_PATH, filename)
-            new_path = os.path.join(DIR_PATH, new_name)
-            shutil.move(old_path, new_path)
-            return True  # Successful rename and move
-    return False  # No matching file found
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        for filename in os.listdir(dir_path):
+            if "bulkQuery" in filename and filename.endswith(".csv"):
+                old_path = os.path.join(dir_path, filename)
+                
+                # If part number is present, adjust new_name
+                final_name = new_name.replace(".csv", f"{part_number}.csv") if part_number else new_name
+                new_path = os.path.join(dir_path, final_name)
+
+                if os.path.exists(new_path):
+                    backup_path = new_path.replace(".csv", f"_backup_{int(time.time())}.csv")
+                    os.rename(new_path, backup_path)
+                    print(f"\n   ⚠️ Existing file '{final_name}' backed up as '{os.path.basename(backup_path)}'")
+
+                shutil.move(old_path, new_path)
+                print(f"\n   ✅ File renamed to '{final_name}'")
+
+                return True
+        time.sleep(2)
+    print("\n   ❌ Timeout: No 'bulkQuery' file found. Please Rename it manually")
+    return False
+
 
 # ==================================================
-print(f"\n{'='*120}\n{' ' * 30} 📝 Files Processed 📝 {' ' * 30}\n{'='*120}\n")
+title = "📝 Files Processed 📝"
+print(f"\n{line}")
+print(title.center(line_width))
+print(f"{line}\n")
 # ==================================================
 
-
-DIR_PATH = "Extracted_Files"
 break_outer_loop = False
 
 while not break_outer_loop:
     Copy_query = input("\n📝 Do you want to proceed With Copying the Queries? (yes/no): ").strip().lower()
 
     if Copy_query == 'yes':
-        query_dir = os.path.join(DIR_PATH, "Queries")
+        query_dir = os.path.join(EXTRACT_FOLDER, "Queries")
         query_files = sorted([f for f in os.listdir(query_dir) if f.endswith(".txt")])  # sorted alphabetically
 
         if not query_files:
@@ -524,8 +489,23 @@ while not break_outer_loop:
                 with open(os.path.join(query_dir, selected_file), "r") as f:
                     query = f.read()
 
-                print(f"\n    ✅ {selected_file} copied to clipboard")
+                print(f"\n   ✅ {selected_file} copied to clipboard")
                 pyperclip.copy(query)
+                
+                # Remove _partX if present
+                base_filename = selected_file.split("_part")[0] + ".txt" if "_part" in selected_file else selected_file
+
+                new_csv_name = file_mapping.get(base_filename)
+
+                # Extract part number if any
+                part_number = None
+                if "_part" in selected_file:
+                    part_number = selected_file.split("_part")[-1].split(".txt")[0]
+                if new_csv_name:
+                    print(f"\n   📥 Please download extract — it will automatically Renamed to '{new_csv_name}' when it appears.")
+                    wait_and_rename_bulkquery_file(new_csv_name, DOWNLOAD_DIR, part_number)
+                else:
+                    print("\n   ⚠️ No mapping found for this query file. Skipping rename.")
 
             else:
                 print("\n    ❗️ Invalid Selection")
@@ -539,7 +519,10 @@ while not break_outer_loop:
         print("\n❗️ Invalid Choice")
 
 # ======================
-
+title = "📝  Missing Accounts and Tags 📝"
+print(f"\n{line}")
+print(title.center(line_width))
+print(f"{line}\n")
 while True:
 
     vlookup = input("\n📝 Do you want to check For Accounts and Tags Missing?(yes/no): ").strip().lower()
@@ -547,11 +530,10 @@ while True:
     if vlookup == 'yes':
 
         # Load the Excel sheet with account IDs
-        extract_file_path = 'Extracted_Files/Extracted_data.xlsx'  # replace with your Excel file path
-        accounts_df = pd.read_excel(extract_file_path, sheet_name='Accounts')
+        accounts_df = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name='Accounts')
 
         # Load the CSV file with AccountNumber and Id
-        csv_file_path = os.path.expanduser("~/Downloads")+'/accounts.csv'  # replace with your CSV file path
+        csv_file_path = os.path.expanduser("~/Downloads/accounts.csv")  # replace with your CSV file path
         lookup_df = pd.read_csv(csv_file_path)
 
         # Convert both to lowercase for case-insensitive matching
@@ -574,19 +556,18 @@ while True:
         merged_df.drop(columns=['accountid_lower', 'AccountNumber_lower'], inplace=True)
 
         # Save to a new Excel file
-        output_file_path = 'Extracted_Files/Accounts_vlookup.xlsx'
-        merged_df.to_excel(output_file_path, index=False)
+        ACCOUNT_VLOOKUP_FILE = 'Extracted_Files/Accounts_vlookup.xlsx'
+        merged_df.to_excel(ACCOUNT_VLOOKUP_FILE, index=False)
 
-        print(f"\n    ✅ VLOOKUP completed for Accounts.")
+        # print(f"\n    ✅ VLOOKUP completed for Accounts.")
 
         try:
 
             # Load the Excel file's "Strategy" sheet
-            extract_file_path = 'Extracted_Files/Extracted_data.xlsx'  # replace with your Excel file path
-            strategy_df = pd.read_excel(extract_file_path, sheet_name='Strategy')
+            strategy_df = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name='Strategy')
 
             # Load the tags CSV file
-            tags_csv_path = os.path.expanduser("~/Downloads")+ '/tags.csv'  # replace with your tags CSV file path
+            tags_csv_path = os.path.expanduser("~/Downloads/tags.csv")  # replace with your tags CSV file path
             tags_df = pd.read_csv(tags_csv_path)
 
             # Convert both columns to lowercase for case-insensitive matching
@@ -609,10 +590,10 @@ while True:
             merged_strategy_df.drop(columns=['Strategy_lower', 'Name_lower'], inplace=True)
 
             # Save to a new Excel file
-            output_file_path = 'Extracted_Files/tags_vlookup.xlsx'
-            merged_strategy_df.to_excel(output_file_path, index=False)
+            TAG_VLOOKUP_FILE = 'Extracted_Files/tags_vlookup.xlsx'
+            merged_strategy_df.to_excel(TAG_VLOOKUP_FILE, index=False)
 
-            print(f"\n    ✅ VLOOKUP for Strategy completed.")
+            # print(f"\n    ✅ VLOOKUP for Strategy completed.")
 
         except FileNotFoundError:
             print(f"\n    ⚠️ tags.csv not found — skipping tags VLOOKUP.")
@@ -630,10 +611,10 @@ while True:
         accountids_not_found = not_found_df[['accountid']]
 
         # Save to a new Excel file
-        output_file_path = os.path.expanduser("~/Downloads")+'/Accounts_to_be_imported.xlsx'
-        accountids_not_found.to_excel(output_file_path, index=False)
+        ACCOUNT_TO_IMPORT = os.path.expanduser("~/Downloads")+'/Accounts_to_be_imported.xlsx'
+        accountids_not_found.to_excel(ACCOUNT_TO_IMPORT, index=False)
 
-        print(f"\n    ✅ Missing accountids saved to {output_file_path}")
+        # print(f"\n    ✅ Missing accountids saved to {ACCOUNT_TO_IMPORT}")
         try:
             # Load the Excel file
             excel_file_path = 'Extracted_Files/tags_vlookup.xlsx'  # replace with your file path
@@ -656,10 +637,10 @@ while True:
             })
 
             # Save to a new Excel file
-            csv_output_path = os.path.expanduser("~/Downloads")+'/Tags_to_be_inserted.csv'
-            output_df.to_csv(csv_output_path, index=False)
-
-            print(f"\n    ✅ Missing tags saved to {csv_output_path}")
+            if not output_df.empty:
+                csv_output_path = os.path.expanduser("~/Downloads/Tags_to_be_inserted.csv")
+                output_df.to_csv(csv_output_path, index=False)
+                # print(f"\n    ❗️ Missing tags saved to {csv_output_path}")
 
         except FileNotFoundError:
             print(f"\n    ⚠️ tags_vlookup.xlsx not found — skipping missing tags export.")
@@ -668,8 +649,8 @@ while True:
 
 
         # Load the original Excel file
-        file_path = os.path.expanduser("~/Downloads/Accounts_to_be_imported.xlsx")
-        df = pd.read_excel(file_path)
+        ACCOUNT_TO_IMPORT = os.path.expanduser("~/Downloads/Accounts_to_be_imported.xlsx")
+        df = pd.read_excel(ACCOUNT_TO_IMPORT)
         # Initialize lists to store valid and invalid values
         invalid_values = []
         valid_values = []
@@ -707,13 +688,75 @@ while True:
         valid_df = pd.DataFrame(valid_values, columns=['Accounts'])
 
         # Save the updated dataframe back to the original file
-        valid_df.to_excel(file_path, index=False)
+        valid_df.to_excel(ACCOUNT_TO_IMPORT, index=False)
 
-        print(f"\n    ❗️ Total accounts to be imported: {valid_count}")
-        print(f"\n    ❗️ Total invalid accounts: {invalid_count}")
-        print(f"\n    ❗️ Total tags to be inserted: {len(Strategy_not_found)}")
+        # ===========================================
+        # ===========================================
+        
+        account_list_df = pd.read_csv(csv_file_path)
+        account_numbers_set = set(account_list_df['AccountNumber'].astype(str).str.strip())
+        
+        # Summary stats
+        total_valid = 0
+        total_invalid = 0
+        files_with_no_matches = []
 
-        print('\n   🔚 End Of Script\n') 
+        # Process each Excel file in the folder
+        for file_name in os.listdir(DOWNLOAD_DIR):
+            if file_name.endswith('.xlsx'):
+                file_path = os.path.join(DOWNLOAD_DIR, file_name)
+                try:
+                    df = pd.read_excel(file_path, sheet_name='Opportunity')
+                except Exception as e:
+                    continue
+
+                if 'accountid' not in df.columns:
+                    continue
+                # Clean and process accountid
+                df['accountid'] = df['accountid'].astype(str).str.replace(r'\s+', '', regex=True).str.strip()
+                df['accountid'] = df['accountid'].apply(process_value)
+
+                # Find values not in CSV
+                not_in_csv = df[~df['accountid'].isin(account_numbers_set)]['accountid'].dropna().unique()
+
+                file_valid = []
+                file_invalid = []
+
+                for value in not_in_csv:
+                    value = str(value).strip()
+                    if not (value.lower().startswith('db') or value.lower().startswith('dc')):
+                        file_invalid.append(value)
+                    elif value.lower().startswith('db'):
+                        if not re.search(country_code_pattern, value):
+                            file_invalid.append(value)
+                        else:
+                            file_valid.append(value)
+                    else:
+                        file_valid.append(value)
+
+                # Track if file had no matches
+                if not file_valid and not file_invalid:
+                    files_with_no_matches.append(file_name)
+                        # Append to cumulative DataFrames
+                if file_valid:
+                    valid_df = pd.concat([valid_df, pd.DataFrame(file_valid, columns=['Accounts'])], ignore_index=True)
+                    total_valid += len(file_valid)
+                if file_invalid:
+                    invalid_df = pd.concat([invalid_df, pd.DataFrame(file_invalid, columns=['Invalid Accounts'])], ignore_index=True)
+                    total_invalid += len(file_invalid)
+                
+        # Final summary
+        print("\n   ✅ Processing Complete!")
+        print(f"\n       ❗️ Total tags to be inserted: {len(Strategy_not_found)}")
+        print(f"\n       ❗️ Total Accounts to Be Imported: {valid_count}")
+        print(f"\n       ❗️ Invalid Accounts: {invalid_count}")
+        if files_with_no_matches:
+            print("\n    ✅ Files with No Missing Accounts:")
+            for fname in files_with_no_matches:
+                print(f"\n       📄 {fname}")
+        else:
+            print("\n    ✅ All files had some valid or invalid accounts.\n")
+ 
         break
 
     elif vlookup == 'no' :
@@ -722,3 +765,9 @@ while True:
 
     else:
         print('\n   ❗️ Invalid Choice')
+
+print("\n👋 Exiting the script. Goodbye!")
+title = "📝  Script Completed 📝"
+print(f"\n{line}")
+print(title.center(line_width))
+print(f"{line}\n")
