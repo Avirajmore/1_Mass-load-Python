@@ -765,8 +765,7 @@ while True:
     print("\n\n🔍 Step 6: Looking for Already Existing Oppties")
 
     # Set paths
-    folder_path = '/Users/avirajmore/Downloads/folder/'  # replace with your actual folder path
-    legacy_csv = '/Users/avirajmore/Downloads/legacyid.csv'  # replace with your actual CSV path
+    legacy_csv = os.path.expanduser("~/Downloads/legacyid.csv") 
 
     # Ensure the output directory exists
     os.makedirs('Delete', exist_ok=True)

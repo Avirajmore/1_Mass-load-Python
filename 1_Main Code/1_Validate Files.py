@@ -10,7 +10,7 @@ print(f"\n{line}")
 print(title.center(line_width))
 print(f"{line}\n")
 
-folder_path = '/Users/avirajmore/Downloads'
+folder_path = os.path.expanduser("~/Downloads")
 
 summary_list = []
 
@@ -108,7 +108,7 @@ for file in os.listdir(folder_path):
             for sheet, columns in required_columns.items():
                 if sheet in xls.sheet_names:
                     df = pd.read_excel(xls, sheet_name=sheet)
-                    df_columns_lower = [col.lower() for col in df.columns]
+                    df_columns_lower = [col.strip().lower() for col in df.columns]
                     missing = [col for col in columns if col.lower() not in df_columns_lower]
                     if missing:
                         file_status = "❌ Issues Found"
@@ -245,6 +245,9 @@ for file in os.listdir(folder_path):
             print(f"\n🔍 Step 5: Check if there are any blank values in Important columns")
             def check_blank_values(df, column_names):
                 blank_columns = []
+                if df.empty:
+                    # if no rows, consider all columns as blank
+                    return column_names
                 for col in column_names:
                     if col in df.columns:
                         blanks_found = df[col].isnull().any() or (df[col].apply(lambda x: isinstance(x, str) and x.strip() == '')).any()
@@ -279,6 +282,7 @@ for file in os.listdir(folder_path):
             if "Opportunity" in xls.sheet_names:
                 df_opportunity = pd.read_excel(xls, sheet_name='Opportunity')
                 df_opportunity = df_opportunity.drop_duplicates()
+                df_opportunity = df_opportunity.dropna(how='all')
                 if df_opportunity['opportunity_legacy_id_c'].duplicated().any():
                     file_status = "❌ Issues Found"
                     duplicated_values = df_opportunity[df_opportunity['opportunity_legacy_id_c'].duplicated(keep=False)]

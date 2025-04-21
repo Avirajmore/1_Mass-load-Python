@@ -1,12 +1,13 @@
+import os
+import re
 import time
 import shutil
+import itertools
+import pyperclip
+import pandas as pd
 import tkinter as tk
 from tkinter import ttk
-import re
-import os
-import pandas as pd
-import pyperclip
-import itertools
+from tkinter import filedialog
 from openpyxl import load_workbook
 
 # ==================================================
@@ -350,9 +351,9 @@ def generate_query_from_sheet(EXTRACT_OUTPUT_FILE, sheet_name, column_name, quer
             output_txt = output_txt_base.replace(".txt", f"_part{idx}.txt")
         with open(output_txt, "w") as file:
             file.write(query)
-
-    print(f"\n       📁 Generated {len(chunks)} query file(s) for {output_txt_base.split("/")[-1]}.")
-
+    
+    query_file = output_txt_base.split("/")[-1]
+    print(f"\n       📁 Generated {len(chunks)} query file(s) for {query_file}.")
 
 # Queries generation (various sheets & templates)
 
@@ -508,21 +509,81 @@ while not break_outer_loop:
                     print("\n   ⚠️ No mapping found for this query file. Skipping rename.")
 
             else:
-                print("\n    ❗️ Invalid Selection")
+                print("\n   ❗️ Invalid Selection")
                 continue
 
     elif Copy_query == 'no':
-        print("\n    🚫 Skipping Copying Queries")
+        print("\n   🚫 Skipping Copying Queries")
         break
 
     else:
-        print("\n❗️ Invalid Choice")
+        print("\n   ❗️ Invalid Choice")
+
+
+title = "📝  Merge CSV Files 📝"
+print(f"\n{line}")
+print(title.center(line_width))
+print(f"{line}\n")
+while True:
+
+    merge = input("\n📝 Do you want to merge CSV?(yes/no): ").strip().lower()
+
+    if merge == 'yes':
+
+        # Function to select multiple CSV files
+        def select_files(title):
+            root = tk.Tk()
+            root.withdraw()
+            file_paths = filedialog.askopenfilenames(title=title, filetypes=[("CSV files", "*.csv")])
+
+            if file_paths:
+                return file_paths
+            else:
+                print("\n   ❌ No files selected.")
+                return None
+
+        # Function to merge multiple CSV files
+        def merge_csv_files(file_paths, output_file):
+            merged_df = pd.DataFrame()  # Empty DataFrame to start with
+
+            for file_path in file_paths:
+                df = pd.read_csv(file_path)
+                merged_df = pd.concat([merged_df, df], ignore_index=True)
+
+            merged_df.to_csv(output_file, index=False)
+            print(f"\n   ✅ Files merged successfully into: {output_file}")
+
+        print("\n🔍 Select the csv files to merge")
+        # Main flow
+        file_paths = select_files("Select CSV files to merge")
+
+        print("\n🔍 Name of new Csv File")
+        if file_paths:
+            output_name = input("\n📄 Enter the name for the merged CSV file (without .csv extension): ").strip()
+            if not output_name:
+                output_name = "Merged_file"  # Default name if left blank
+
+            output_file = os.path.expanduser(f"~/Downloads/{output_name}.csv")
+
+            merge_csv_files(file_paths, output_file)
+        else:
+            print("\n   ⚠️ No files selected. Exiting.")
+        
+        break
+
+    elif merge == 'no':
+        print("\n    🚫 Skipping Merging CSV Files")
+        break
+    else:   
+        print("\n    ❗️ Invalid Choice")    
 
 # ======================
+
 title = "📝  Missing Accounts and Tags 📝"
 print(f"\n{line}")
 print(title.center(line_width))
 print(f"{line}\n")
+
 while True:
 
     vlookup = input("\n📝 Do you want to check For Accounts and Tags Missing?(yes/no): ").strip().lower()
