@@ -226,7 +226,7 @@ files_and_sheets = {
     
     "Removed_Rows - Feed Item.csv"                              : "Feed Item Failure",
     
-    "Removed_Rows - Contact.csv"                                : "Contact Failure",
+    "Removed_Rows - Contact.csv"                                : "Contact Failure"
 }
 
 # Define column mapping (CSV column name -> Summary sheet column name)

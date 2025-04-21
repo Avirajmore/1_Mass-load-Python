@@ -7,7 +7,6 @@ import time
 import shutil
 import openpyxl
 import pyperclip
-import numpy as np
 import pandas as pd
 from tkinter import *
 from tabulate import tabulate
@@ -269,7 +268,7 @@ while True:
     # Display available files for selection
 
     print("\n====================================================================================================")
-    print("\n📂 Please select a file to process:")
+    print("\n\n📂 Please select a file to process:")
     print("\n    🔸 List of Files in Copy Folder: ")
 
     for idx, file_name in enumerate(files_in_copy_folder, start=1):
@@ -282,7 +281,7 @@ while True:
         
         # Allow the user to exit the selection process
         if user_input.lower() == 'exit':
-            print("\n        ❌ File selection has been canceled. Exiting process. \n")
+            print("\n        ❌ File selection has been canceled. Exiting process. ")
             sys.exit()
 
         try:
@@ -291,7 +290,7 @@ while True:
             
             if 0 <= selected_index < len(files_in_copy_folder):
                 file_path = os.path.join(copy_file_path, files_in_copy_folder[selected_index])
-                print(f"\n        ✅ You selected the file: {files_in_copy_folder[selected_index]} \n")
+                print(f"\n        ✅ You selected the file: {files_in_copy_folder[selected_index]} ")
                 break # Exit the loop if a valid file is selected
 
             else:
@@ -2645,13 +2644,13 @@ while True:
         merged_df.to_excel(writer, sheet_name=product_sheet_name, index=False)
 
     # 9️⃣ Print completion message and stats
-    print(f"\n    ✅ The 'Opportunity_product' sheet has been successfully updated with the 'PriceBookEntryid' column.")
+    print(f"\n✅ The 'Opportunity_product' sheet has been successfully updated with the 'PriceBookEntryid' column.")
 
     if count_no_pricebookid_found > 0 or count_not_active > 0:
         print(f"\n❗️ Count of 'No Pricebookid found': {count_no_pricebookid_found}")
         print(f"\n❗️ Count of 'Not Active': {count_not_active}")
     else:
-        print(f"\n    ✅ All Products are Valid")
+        print(f"\n✅ All Products are Valid")
 
 
     # ======================================================================
@@ -2863,7 +2862,7 @@ while True:
 
     # Display results based on sheet contents
     if is_empty:
-        print(f"\n📂 The sheet '{original_team_sheet}' is empty or contains only headers.")
+        print(f"\n📂 The sheet '{original_team_sheet}' is empty or contains only headers.\n")
         choice = 'no'
     elif is_empty is None:
         print("\n❗️ Could not process the sheet due to an error.\n")
@@ -4647,221 +4646,29 @@ while True:
 
                 # Example usage
                 process_excel(file_path, output_for_tags)
-                # ========================================================================
-                print("\n")
-                print("=" * 100)
-                print(" " * 33 + "📝 STRATEGY SHEET COMPLETED 📝")
-                print("=" * 100)
-                # ========================================================================
-
             break
         elif choice == "no":
             strategy_choice = 'no'
             print("\n        🚫 Strategy Sheet execution skipped!")
-
-            print("\n")
-            print("=" * 100)
-            print(" " * 33 + "📝 STRATEGY SHEET SKIPPED 📝")
-            print("=" * 100)
 
             break  # Just breaking without running Block 2
         
         else:
             print("\n        ❗️ Invalid input. Please enter 'yes' or 'no'.")
 
-    # ==========================================================================
-                        # Contact Role Sheet Execution
-    # ==========================================================================
-
-    # Display the header once
-    print("\n\n📄 Execute Next Sheet:")
-    required_columns = {'opportunityid', 'contactid'}
-    original_contact_sheet = 'Contact Roles'
-
-    wb = load_workbook(file_path)
-    if original_contact_sheet in wb.sheetnames:
-        # Read the sheet
-        df = pd.read_excel(file_path, sheet_name=original_contact_sheet)
-
-        # Check if 'role' column exists
-        if 'role' in df.columns:
-            # Replace blank or NaN values with 'Other'
-            df['role'] = df['role'].replace(r'^\s*$', np.nan, regex=True)  # Treat empty strings as NaN
-            df['role'] = df['role'].fillna('Other')
-
-            # Write back to the same sheet
-            with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-                df.to_excel(writer, sheet_name=original_contact_sheet, index=False)
-            # print("Updated 'role' column successfully.")
-
-    is_empty, preview = is_sheet_empty(file_path, original_contact_sheet)
-    
-    print(tabulate(preview, headers='keys', tablefmt='fancy_grid', showindex=False))
-
-    if is_empty:
-        print(f"\n📂 The sheet '{original_contact_sheet}' is empty or contains only headers.\n")
-
-        print(f"\n🔹 Do you want to execute the Contact Roles Sheet ? (yes/no): ")
-        print("\n        🚫 Contact Role sheet execution skipped!")
-
+        # ========================================================================
         print("\n")
         print("=" * 100)
-        print(" " * 33 + "📝 CONTACT ROLE SKIPPED 📝")
+        print(" " * 33 + "📝 STRATEGY SHEET COMPLETED 📝")
         print("=" * 100)
 
-        contact_choice = 'no'
-    elif not required_columns.issubset(preview.columns.str.lower()):
-        print(f"\n        🚫 Required columns {required_columns} not found in the sheet. Skipping execution!\n")
-        
-        print("\n")
-        print("=" * 100)
-        print(" " * 33 + "📝 CONTACT ROLE SKIPPED 📝")
-        print("=" * 100)
-        contact_choice = 'no'
-    elif preview[['opportunityid', 'contactid']].isnull().all().any():
-        # Check if either column is completely NaN or blank
-        print(f"\n        🚫 One of the required columns has no data. Skipping execution!\n")
-        contact_choice = 'no'
-        
-        print("\n")
-        print("=" * 100)
-        print(" " * 33 + "📝 CONTACT ROLE SKIPPED 📝")
-        print("=" * 100)
-    elif is_empty is None:
-        print("\n❗️ Could not process the sheet due to an error.\n")
-        contact_choice = 'no'
-    else:
-        while True:
-            user_choice = input(f"\n🔹 Do you want to execute the Contact Roles Sheet ? (yes/no): ").strip().lower()
-            
-            if user_choice == 'yes':
-                
-                contact_choice = 'yes'
-
-                print(f"\n        ⏳ Executing the Sheet: Contact Roles")
-                
-                # ======================================================================
-                print("\n")
-                print("=" * 100)
-                print(" " * 33 + "📝 CONTACT ROLES SHEET EXECUTION 📝")
-                print("=" * 100)
-
-                # ======================================================================
-
-                print("\n🔍 Step 1: Checking if the file exists...")
-
-                if os.path.exists(file_path):
-                    filename = str(file_path.split('/')[-1])
-                    print(f"\n    ✅ File '{filename}' exists at the specified path. ✅")
-                else:
-                    print("\n    ❌ Error: File does not exist or the path is invalid. ❌\n")
-                    sys.exit()  # Stops further execution of the program
-
-                # ===================================================================================
-                # ===================================================================================
-
-                print("\n🔍 Step 2: Verifying opportunities in the 'Opportunity' sheet...")
-
-                opportunity_sheet_name = 'Opportunity'
-                contact_sheet_name = 'Contact Roles'
-
-                try:
-                    # Load the sheets into DataFrames
-                    all_sheets = pd.read_excel(file_path, sheet_name=None)  # Load all sheets into a dictionary
-                    sheet_names = [sheet.lower() for sheet in all_sheets.keys()]  # Convert sheet names to lowercase
-
-                    # Check if the required sheets exist (case-insensitive)
-                    if opportunity_sheet_name.lower() not in sheet_names:
-                        print(f"\n    ❌ Sheet '{opportunity_sheet_name}' not found. ❌")
-                        sys.exit()
-                    if contact_sheet_name.lower() not in sheet_names:
-                        print(f"\n    ❌ Sheet '{contact_sheet_name}' not found. ❌")
-                        sys.exit()
-
-                    # Load the relevant sheets into DataFrames (case-insensitive)
-                    opportunity_df = all_sheets[list(all_sheets.keys())[sheet_names.index(opportunity_sheet_name.lower())]]
-                    contact_df = all_sheets[list(all_sheets.keys())[sheet_names.index(contact_sheet_name.lower())]]
-
-                    # Validate the required columns (case-insensitive)
-                    opportunity_columns = [col.lower() for col in opportunity_df.columns]
-                    product_columns = [col.lower() for col in contact_df.columns]
-
-                    if 'opportunity_legacy_id__c'.lower() not in opportunity_columns:
-                        print(f"\n    ❌ Column 'opportunity_legacy_id__c' not found in the '{opportunity_sheet_name}' sheet. ❌")
-                        sys.exit()
-                    elif 'opportunityid'.lower() not in product_columns:
-                        print(f"\n    ❌ Column 'opportunityid' not found in the '{contact_sheet_name}' sheet. ❌")
-                        sys.exit()
-
-                    # Perform the comparison
-                    contact_df['Existing'] = contact_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
-
-                    # Calculate the number of false values
-                    false_count = (~contact_df['Existing']).sum()
-
-                    # Save the updated data back to the Excel file
-                    with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
-                        contact_df.to_excel(writer, sheet_name=contact_sheet_name, index=False)
-
-                    # Success message with false count
-                    print(f"\n    ✅ Verification completed. 'Existing' column has been added to the '{contact_sheet_name}' sheet. ✅")
-                    print(f"\n    ❗️ Number of False values in 'Existing' column: {false_count}")
-
-                except FileNotFoundError:
-                    # Handle file not found
-                    print(f"\n    ❌ Error: File not found. ❌")
-                    sys.exit()
-                except Exception as e:
-                    # Handle any unexpected errors
-                    print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ❌")
-                    sys.exit()
-
-                # =================================
-
-                # Read the "Contact Roles" sheet from the Excel file
-                df = pd.read_excel(file_path, sheet_name='Contact Roles')
-
-                # Print out the column names to confirm the correct name
-                # print(df.columns)
-
-                # Assuming the correct column name is found, apply the transformation
-                # Adjust 'contactid' to match the correct column name from the printout
-                if 'contactid' in df.columns:
-                    df['contactid'] = df['contactid'].apply(lambda x: str(int(x)))
-                else:
-                    print("Column 'contactid' not found!")
-
-                # Use ExcelWriter to write the changes back to the same file, replacing the existing "Contact Roles" sheet
-                with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-                    df.to_excel(writer, sheet_name='Contact Roles', index=False)
-
-                print("\n")
-                print("=" * 100)
-                print(" " * 33 + "📝 CONTACT ROLES SHEET COMPLETED 📝")
-                print("=" * 100)
-
-                break
-
-            elif user_choice == 'no':
-                contact_choice = 'no'
-                print("\n        🚫 Contact Role sheet execution skipped!\n")
-                
-                print("\n")
-                print("=" * 100)
-                print(" " * 33 + "📝 CONTACT ROLE SHEET SKIPPED 📝")
-                print("=" * 100)
-                break
-            else:
-                print("\n        ❗️ Invalid input. Please enter 'yes' or 'no'.\n")
-
+        # ========================================================================
 
     # ========================================================================
     # Rearranging the sheets!
     # ========================================================================
-    print("\n")
-    print("=" * 100)
-    print(" " * 33 + "📝 Rearranging the sheets 📝")
-    print("=" * 100)
+
+
     #  Rearranging Sheets in Workbook
     print("\n\n📄 Rearranging Sheets in Workbook...")
 
@@ -4981,8 +4788,6 @@ while True:
 
     tags = "5" + '_Tags.csv'
 
-    Contact_role = "6" + '_Contact_Roles.csv'
-
     # Print the generated file names for confirmation
     print("\n    📄 CSV File Names Generated:")
     print(f"\n        1️⃣ {opportunity}")
@@ -4990,14 +4795,12 @@ while True:
     print(f"\n        3️⃣ {opportunity_team}")
     print(f"\n        4️⃣ {reporting_codes}")
     print(f"\n        5️⃣ {tags}")
-    print(f"\n        6️⃣ {Contact_role}")
 
 
     # ======================================================================
     # Step 1: Creating Opportunity Sheet
     # ======================================================================
-    print()
-    print("=" * 100)
+
     print("\n\n🔍 CREATING OPPORTUNITY FILE")
     
     # Define output paths for processed file and removed rows file
@@ -5214,8 +5017,8 @@ while True:
     # =======================================================
     # Step 2:- Creating the Opportunity Product File
     # =======================================================
-    print()
-    print("=" * 100)
+
+
     print("\n\n🔍 CREATING PRODUCT FILE")
 
     sheet_name = 'Opportunity_product'
@@ -6020,200 +5823,13 @@ while True:
             print("\n    ❗️ Invalid response. Please enter 'yes' or 'no'.")
 
 
-    # =======================================================
-    # Step 6: Processing Contact Role
-    # =======================================================
-    while True:
-        print("\n================================================================================")
-        print(f'\n📄 Do you want to run the Contact Role Sheet? (yes/no): {team_member_choice}')
-        
-        # Automatically using the user input captured earlier from file processing
-        user_input = contact_choice 
-        
-        if user_input == "yes":
-            print("\n    ⏳ Running Contact Role Member Sheet...")
-            print("\n================================================================================")
-
-            print("\n🔍 CREATING CONTACTS FILE")
-            
-            # Define input/output file paths and required columns
-            sheet_name = 'Contact Roles'
-            output_file = output + '/' + Contact_role  # Path for the processed CSV
-            removed_rows_contact = removed_rows_dir+'/Removed_Rows - contact.csv'  # Path for removed rows CSV
-
-            predefined_columns_contact = ['existing']
-            
-            excluded_columns_contact = ["opportunityid","contactid","role"]
-
-            # Initialize variables
-            deleted_columns = []
-            rows_dropped = 0
-
-            try:
-                # 📥 Load the 'Contact Roles' sheet into a DataFrame
-                df = pd.read_excel(file_path, sheet_name=sheet_name)
-
-                # 🔠 Convert all column headers to lowercase for consistency
-                df.columns = df.columns.str.lower()
-
-                # ✅ Ensure the 'existing' column is present for processing
-                if 'existing' not in df.columns:
-                    raise ValueError(f"\n    ❌ Column 'existing' not found in the DataFrame from sheet '{sheet_name}'. Please check your input data.")
-
-                # 🚮 Remove rows where 'existing' != True and store them separately
-                removed_rows = df[df['existing'].astype(str).str.lower() != 'true'].copy()
-                df = df[df['existing'].astype(str).str.lower() == 'true']
-                rows_dropped = len(removed_rows)
-                
-                # If any rows were removed, add a reason column and save them
-                if rows_dropped > 0:
-                    removed_rows['Reason'] = "Opportunity Missing From Main sheet"
-                    removed_rows.drop(columns=[col for col in predefined_columns_contact if col in removed_rows.columns], inplace=True)
-                    removed_rows.to_csv(removed_rows_contact, index=False)
-
-                # 🗑️ Remove predefined columns ('existing') from the main DataFrame
-                predefined_to_delete = [col for col in predefined_columns_contact if col in df.columns]
-                if predefined_to_delete:
-                    df.drop(columns=predefined_to_delete, inplace=True)
-                    deleted_columns.extend(predefined_to_delete)
-
-                # ---------------------- Remove Rows Based on External Opportunity IDs ----------------------
-
-                # 🚮 Remove rows based on matching Opportunity IDs from an external CSV
-                opportunity_csv_path = removed_rows_oppty  # Path you passed earlier
-
-                if os.path.exists(opportunity_csv_path):
-                    opportunity_df = pd.read_csv(opportunity_csv_path, usecols=["opportunity_legacy_id__c"])
-
-                    # Clean both data sources for safe comparison
-                    df["opportunityid"] = df["opportunityid"].astype(str).str.strip().str.upper()
-                    opportunity_ids_set = set(opportunity_df["opportunity_legacy_id__c"].astype(str).str.strip().str.upper().dropna())
-
-                    # Identify rows with matching Opportunity IDs
-                    matching_ids = set(df["opportunityid"]).intersection(opportunity_ids_set)
-
-                    # Remove and capture rows with these IDs
-                    rows_to_remove = df[df["opportunityid"].isin(opportunity_ids_set)].copy()
-                    rows_dropped_legacy_match = len(rows_to_remove)
-
-                    if not rows_to_remove.empty:
-                        rows_to_remove["Reason"] = "Opportunity not loaded"
-
-                        # Append or create removed_rows DataFrame
-                        if 'removed_rows' in locals():
-                            removed_rows = pd.concat([removed_rows, rows_to_remove], ignore_index=True)
-                        else:
-                            removed_rows = rows_to_remove.copy()
-
-                        # Exclude these rows from the main DataFrame
-                        df = df[~df["opportunityid"].isin(opportunity_ids_set)]
-                else:
-                    print(f"\n❌ Opportunity IDs file not found: {opportunity_csv_path}")
-                    rows_dropped_legacy_match = 0
-
-                # Save updated removed rows file, if any
-                if 'removed_rows' in locals() and not removed_rows.empty:
-                    removed_rows.dropna(axis=1, how='all', inplace=True)  # Clean up if necessary (drop all-empty columns)
-                    removed_rows.to_csv(removed_rows_contact, index=False)  # Save to CSV
-                
-                checkboxes = {}
-                # 📋 If there are additional, user-deletable columns available
-                if any(col not in excluded_columns_contact for col in df.columns):
-
-                    # Create UI for selecting additional columns to delete
-                    root = Tk()
-                    root.title("Select Columns to Delete")
-
-                    # Set window size
-                    root.geometry("500x600")
-                    root.resizable(False, False)
-
-                    # Scrollable UI
-                    canvas = Canvas(root)
-                    scrollbar = Scrollbar(root, orient="vertical", command=canvas.yview)
-                    canvas.configure(yscrollcommand=scrollbar.set)
-                    scrollbar.pack(side="right", fill="y")
-                    canvas.pack(side="left", fill="both", expand=True)
-
-                    frame = Frame(canvas)
-                    canvas.create_window((0, 0), window=frame, anchor="nw")
-
-                    # Checkbox setup
-                    for column in df.columns:
-                        var = IntVar()
-                        checkboxes[column] = var
-                        checkbutton = Checkbutton(frame, text=column, variable=var, font=('Helvetica', 12), anchor="w", padx=10)
-                        checkbutton.pack(anchor="w", pady=5)
-
-                    # Submit button
-                    submit_button = Button(frame, text="Submit", command=root.quit, font=('Helvetica', 12, 'bold'), relief='flat', padx=20, pady=10)
-                    submit_button.pack(pady=20)
-
-                    # Run the UI
-                    frame.update_idletasks()
-                    canvas.config(scrollregion=canvas.bbox("all"))
-                    root.mainloop()
-                    root.destroy()
-                else:
-                        print("\n    ✅ No user-selectable columns available for deletion. Skipping GUI.")
-
-                # 🗑️ Process user-selected columns for deletion
-                user_selected_columns = [col for col, var in checkboxes.items() if var.get() == 1]
-                if user_selected_columns:
-                    df.drop(columns=user_selected_columns, inplace=True)
-                    deleted_columns.extend(user_selected_columns)
-                    print("\n    ✅ Additional columns deleted:")
-                    for col in user_selected_columns:
-                        print(f"\n        🔸 {col}")
-                else:
-                    print("\n    ✅ No additional columns selected for deletion.")
-
-                # 🧹 Final cleanup of the DataFrame
-                df.dropna(axis=0, how='all', inplace=True)  # Remove rows with all blank values
-                df.dropna(axis=1, how='all', inplace=True)  # Remove columns with all blank values
-                df.drop_duplicates(inplace=True)  # Remove duplicate rows
-
-                # 💾 Save the cleaned DataFrame to the final CSV file
-                output_dir = os.path.dirname(output_file)
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir, exist_ok=True)
-                df.to_csv(output_file, index=False)
-
-                # Summary of deletions
-                total_rows_removed = rows_dropped + rows_dropped_legacy_match
-                print(f"\n    ❗️ Total rows removed: {total_rows_removed}")
-                print(f"\n        🔸 Due to 'existing' == False: {rows_dropped}")
-                print(f"\n        🔸 Due to 'Opportunity not loaded': {rows_dropped_legacy_match}")
-
-                # Final summary messages
-                print("\n    ✅ Processed data saved to:")
-                print(f"\n        📂 {"/".join(output_file.split("/")[-4:])}")
-
-                if total_rows_removed > 0:
-                    print("\n    ✅ Removed rows saved to:")
-                    shortned_path = "/".join(removed_rows_contact.split("/")[-5:])
-                    print(f"\n        📂 {shortned_path}")
-        
-            except ValueError as ve:
-                print(f"\n    ❌ ValueError: {ve}")
-        
-            except Exception as e:
-                print(f"\n    ❌ An error occurred: {e}")
-        
-            break  # Exit loop if "yes" block executed successfully
-        
-        elif user_input == "no":
-            print("\n    🛑 Skipping Contact Role Sheet...")
-            print("\n================================================================================")
-            break
-        else:
-            print("\n    ❗️ Invalid response. Please enter 'yes' or 'no'.")
-
     # ========================================================================
     # Last Step: Copy the Summary File to the Folder
     # ========================================================================
 
+
     print("\n\n🔍 Copying the Summary File to the Selected Folder...")
+
 
     # Check if the reference summary file exists at the specified location
     if not os.path.exists(reference_summary_path):
