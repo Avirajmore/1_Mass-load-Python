@@ -484,7 +484,6 @@ while True:
     # ======================================================================
 
     print("\n\n🔍 Step 1: Checking if the file exists...")
-
     def check_file_exists(file_path):
         if os.path.exists(file_path):
             filename = os.path.basename(file_path)
@@ -496,7 +495,7 @@ while True:
 
     # Example usage:
     filename = check_file_exists(file_path)
-
+    
     # ======================================================================
     # Step 2: Removing Duplicates and Blank Rows
     # ======================================================================
@@ -6282,10 +6281,12 @@ while True:
     else:
         print("\n        🛑 No files were deleted.")
 
-    # =====================================================
-    title = f"✅ File Prepared: {filename} ✅"
-    show_title(title)
-    # =====================================================
+
+    print("\n")
+    print("=" * 100)
+    print(f"\n ✅ File Prepared: {filename} ✅\n")
+    print("=" * 100)
+    
 
     files_in_copy_folder.remove(files_in_copy_folder[selected_index])
 

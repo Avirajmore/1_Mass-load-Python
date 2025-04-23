@@ -2,8 +2,9 @@ import os
 import re
 import time
 import shutil
-import itertools
+import openpyxl
 import pyperclip
+import itertools
 import pandas as pd
 import tkinter as tk
 from tkinter import ttk
@@ -11,12 +12,18 @@ from tkinter import filedialog
 from openpyxl import load_workbook
 
 # ==================================================
-line_width = 100
-line = "=" * line_width
+# Function to display title
+def show_title(title):
+
+    line_width = 100
+    line = "=" * line_width
+    print(f"\n{line}")
+    print(title.center(line_width))
+    print(f"{line}\n")
+
 title = "📝  Extract Data and create Queries 📝"
-print(f"\n{line}")
-print(title.center(line_width))
-print(f"{line}\n")
+
+show_title(title)
 # ==================================================
 
 # Directory where extracted files will be saved
@@ -49,6 +56,22 @@ print("\n🔍 Step 1: Extract Data from Files:")
 for file in os.listdir(DOWNLOAD_DIR):
     if file.endswith(".xlsx"):
         file_path = os.path.join(DOWNLOAD_DIR, file)
+
+        wb = openpyxl.load_workbook(file_path)
+        variant_mapping = {
+            'Opportunity_products': 'Opportunity_product',
+            'Opportunity_Team': 'Opportunity_Team '  # trailing space is intended here
+        }
+
+        # Iterate through the workbook sheets and rename if there's a variant
+        for sheet_name in wb.sheetnames:
+            if sheet_name in variant_mapping:
+                ws = wb[sheet_name]
+                correct_name = variant_mapping[sheet_name]
+                ws.title = correct_name
+                print(f"\n    🔄 Renamed '{sheet_name}' to '{correct_name}' automatically.")
+        # Save the workbook with the new sheet names
+        wb.save(file_path)
 
         # Load all sheets from the current Excel file
         xls = pd.read_excel(file_path, sheet_name=None, engine='openpyxl')
@@ -455,9 +478,7 @@ def wait_and_rename_bulkquery_file(new_name, dir_path, part_number=None, timeout
 
 # ==================================================
 title = "📝 Files Processed 📝"
-print(f"\n{line}")
-print(title.center(line_width))
-print(f"{line}\n")
+show_title(title)
 # ==================================================
 
 break_outer_loop = False
@@ -521,9 +542,7 @@ while not break_outer_loop:
 
 
 title = "📝  Merge CSV Files 📝"
-print(f"\n{line}")
-print(title.center(line_width))
-print(f"{line}\n")
+show_title(title)
 while True:
 
     merge = input("\n📝 Do you want to merge CSV?(yes/no): ").strip().lower()
@@ -580,9 +599,7 @@ while True:
 # ======================
 
 title = "📝  Missing Accounts and Tags 📝"
-print(f"\n{line}")
-print(title.center(line_width))
-print(f"{line}\n")
+show_title(title)
 
 while True:
 
@@ -827,8 +844,16 @@ while True:
     else:
         print('\n   ❗️ Invalid Choice')
 
+import shutil
+
+# Source and destination file paths
+source_file = '/Users/avirajmore/Downloads/userid.csv'
+destination_file = '/Users/avirajmore/Downloads/teammember.csv'
+
+# Check if source file exists
+if os.path.exists(source_file):
+    shutil.copy(source_file, destination_file)
+
 print("\n👋 Exiting the script. Goodbye!")
 title = "📝  Script Completed 📝"
-print(f"\n{line}")
-print(title.center(line_width))
-print(f"{line}\n")
+show_title(title)
