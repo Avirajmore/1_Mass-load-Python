@@ -484,7 +484,6 @@ while True:
     # ======================================================================
 
     print("\n\n🔍 Step 1: Checking if the file exists...")
-
     def check_file_exists(file_path):
         if os.path.exists(file_path):
             filename = os.path.basename(file_path)
@@ -496,7 +495,7 @@ while True:
 
     # Example usage:
     filename = check_file_exists(file_path)
-
+    
     # ======================================================================
     # Step 2: Removing Duplicates and Blank Rows
     # ======================================================================
@@ -782,7 +781,7 @@ while True:
     # Vlookup for legacy id
     # =============================
     
-    print("\n\n🔍 Step 6: Looking for Already Existing Oppties")
+    print("\n\n🔍 Step 6: Looking for Already existing Oppties")
 
     # Set paths
     legacy_csv = os.path.expanduser("~/Downloads/legacyid.csv") 
@@ -1987,19 +1986,19 @@ while True:
             sys.exit()
 
         # Perform the comparison
-        product_df['Existing'] = product_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
+        product_df['existing'] = product_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
 
         # Calculate the number of false values
-        false_count = (~product_df['Existing']).sum()
+        false_count = (~product_df['existing']).sum()
 
         # Save the updated data back to the Excel file
         with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
             product_df.to_excel(writer, sheet_name=product_sheet_name, index=False)
 
         # Success message with false count
-        print(f"\n    ✅ Verification completed. 'Existing' column has been added to the '{product_sheet_name}' sheet. ")
+        print(f"\n    ✅ Verification completed. 'existing' column has been added to the '{product_sheet_name}' sheet. ")
         if false_count > 0:
-            print(f"\n    ❗️ Number of False values in 'Existing' column: {false_count}")
+            print(f"\n    ❗️ Number of False values in 'existing' column: {false_count}")
         else:
             print(f"\n    ✅ All Opportunities Exist In Opportunity Sheet")
 
@@ -2662,8 +2661,8 @@ while True:
     print(f"\n    ✅ The 'Opportunity_product' sheet has been successfully updated with the 'PriceBookEntryid' column.")
 
     if count_no_pricebookid_found > 0 or count_not_active > 0:
-        print(f"\n❗️ Count of 'No Pricebookid found': {count_no_pricebookid_found}")
-        print(f"\n❗️ Count of 'Not Active': {count_not_active}")
+        print(f"\n        ❗️ Count of 'No Pricebookid found': {count_no_pricebookid_found}")
+        print(f"\n        ❗️ Count of 'Not Active': {count_not_active}")
     else:
         print(f"\n    ✅ All Products are Valid")
 
@@ -3131,18 +3130,18 @@ while True:
                 elif 'opportunityid' not in Opportunity_team_df.columns:
                     print(f"\n    ❌ ERROR: Column 'opportunityid' not found in the '{Opportunity_team_sheet_name}' sheet.")
                 else:
-                    # Add a new 'Existing' column
-                    Opportunity_team_df['Existing'] = Opportunity_team_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
+                    # Add a new 'existing' column
+                    Opportunity_team_df['existing'] = Opportunity_team_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
                     
-                    # Count rows where 'Existing' is False
-                    false_count = len(Opportunity_team_df[~Opportunity_team_df['Existing']])
+                    # Count rows where 'existing' is False
+                    false_count = len(Opportunity_team_df[~Opportunity_team_df['existing']])
 
                     # Save the updated DataFrame back to the sheet
                     with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
                         Opportunity_team_df.to_excel(writer, sheet_name=Opportunity_team_sheet_name, index=False)
                     
                     # Display results
-                    print(f"\n    ✅ The 'Existing' column has been added to the '{Opportunity_team_sheet_name}' sheet.")
+                    print(f"\n    ✅ The 'existing' column has been added to the '{Opportunity_team_sheet_name}' sheet.")
                     if false_count > 0:
                         print(f"\n    ❗️ Number of Opportnities Missing in Team sheet: {false_count}")
                     else:
@@ -3381,7 +3380,7 @@ while True:
                 # Specify the preferred order for key columns in the sheet
                 desired_column_order = [
                     "opportunityid",
-                    "Existing",
+                    "existing",
                     "opportunityaccesslevel",
                     "teammemberrole",
                     "email",
@@ -3435,7 +3434,7 @@ while True:
                         if extra_columns:
                             print("\n    🔹 The following extra columns were moved to the end:")
                             for col in extra_columns:
-                                print(f"        🔸 {col}")
+                                print(f"\n        🔸 {col}")
                     else:
                         print(f"\n    ❌ Sheet '{Opportunity_team_sheet_name}' not found in the Excel file.")
 
@@ -3547,8 +3546,6 @@ while True:
                     print(f"\n❌ An unexpected error occurred: {e}")
 
     
-
-
             # ======================================================================
             # Team Member Sheet Completed  
             # ======================================================================
@@ -4051,10 +4048,10 @@ while True:
                     print(f"\n    ❌ Error: Failed to save workbook. {e}")
 
             # ========================================================================
-            # Step 7: Add Existing Column to 'Reporting_codes' Sheet
+            # Step 7: Add existing Column to 'Reporting_codes' Sheet
             # ========================================================================
 
-            print("\n\n🔍 Step 7: Adding 'Existing' Column to 'Reporting_codes' Sheet...")
+            print("\n\n🔍 Step 7: Adding 'existing' Column to 'Reporting_codes' Sheet...")
 
             # Specify the file path of the Excel file
             # file_path = os.path.expanduser("~/Downloads/your_excel_file.xlsx")
@@ -4076,15 +4073,15 @@ while True:
                     print(f"\n    ❌ Column 'opportunityid' not found in 'Reporting codes' sheet.")
                     sys.exit()
                 else:
-                    # Create a new column 'Existing' in reporting_codes_df
-                    reporting_codes_df['Existing'] = reporting_codes_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
+                    # Create a new column 'existing' in reporting_codes_df
+                    reporting_codes_df['existing'] = reporting_codes_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
 
                     # Write back to the Excel file
                     with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
                         reporting_codes_df.to_excel(writer, sheet_name=reporting_codes_sheet_name, index=False)
 
                     # Notify the successful operation
-                    print(f"\n    ✅ 'Existing' column has been successfully added to the 'Reporting codes' sheet.")
+                    print(f"\n    ✅ 'existing' column has been successfully added to the 'Reporting codes' sheet.")
 
             except FileNotFoundError:
                 print(f"    ❌ File not found.")
@@ -4095,10 +4092,10 @@ while True:
 
 
             # ========================================================================
-            # Step 8: Add Existing Column to 'Tags' Sheet
+            # Step 8: Add existing Column to 'Tags' Sheet
             # ========================================================================
 
-            print("\n\n🔍 Step 8: Adding 'Existing' Column to 'Tags' Sheet...")
+            print("\n\n🔍 Step 8: Adding 'existing' Column to 'Tags' Sheet...")
 
 
             # Specify the sheet names
@@ -4118,15 +4115,15 @@ while True:
                     print(f"\n    ❌ Column 'opportunityid' not found in '{tags_sheet_name}' sheet.")
                     sys.exit()
                 else:
-                    # Create a new column 'Existing' in tags_df
-                    tags_df['Existing'] = tags_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
+                    # Create a new column 'existing' in tags_df
+                    tags_df['existing'] = tags_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
 
                     # Write back to the Excel file
                     with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
                         tags_df.to_excel(writer, sheet_name=tags_sheet_name, index=False)
 
                     # Notify the successful operation
-                    print(f"\n    ✅ 'Existing' column has been successfully added to the '{tags_sheet_name}' sheet.")
+                    print(f"\n    ✅ 'existing' column has been successfully added to the '{tags_sheet_name}' sheet.")
 
             except FileNotFoundError:
                 print(f"    ❌ File '{file_path}' not found.")
@@ -4702,39 +4699,32 @@ while True:
                 df.to_excel(writer, sheet_name=original_contact_sheet, index=False)
             # print("Updated 'role' column successfully.")
 
-    is_empty, preview = is_sheet_empty(file_path, original_contact_sheet)
-    
-    print(tabulate(preview, headers='keys', tablefmt='fancy_grid', showindex=False))
-
-    if is_empty:
-        print(f"\n📂 The sheet '{original_contact_sheet}' is empty or contains only headers.\n")
-
-        print(f"\n🔹 Do you want to execute the Contact Roles Sheet ? (yes/no): ")
-        print("\n        🚫 Contact Role sheet execution skipped!")
-
-        print("\n")
-        title = "📝 CONTACT ROLE SKIPPED 📝"
-        show_title(title)
-
-        contact_choice = 'no'
-    elif not required_columns.issubset(preview.columns.str.lower()):
-        print(f"\n        🚫 Required columns {required_columns} not found in the sheet. Skipping execution!\n")
+        is_empty, preview = is_sheet_empty(file_path, original_contact_sheet)
         
-        print("\n")
-        title = "📝 CONTACT ROLE SKIPPED 📝"
-        show_title(title)
+        print(tabulate(preview, headers='keys', tablefmt='fancy_grid', showindex=False))
+
+
+    if original_contact_sheet not in wb.sheetnames:
+        print(f"\n📂 The sheet '{original_contact_sheet}' is missing.\n")
+        print("\n    🚫 Contact Role sheet execution skipped!")
         contact_choice = 'no'
+
+    elif is_empty:
+        print(f"\n📂 The sheet '{original_contact_sheet}' is empty or contains only headers.\n")
+        print("\n    🚫 Contact Role sheet execution skipped!")
+        contact_choice = 'no'
+
+    elif not required_columns.issubset(preview.columns.str.lower()):
+        print(f"\n    🚫 Required columns {required_columns} not found in the sheet. Skipping execution!\n")
+        contact_choice = 'no'
+
     elif preview[['opportunityid', 'contactid']].isnull().all().any():
         # Check if either column is completely NaN or blank
-        print(f"\n        🚫 One of the required columns has no data. Skipping execution!\n")
+        print(f"\n    🚫 One of the required columns has no data. Skipping execution!\n")
         contact_choice = 'no'
-        
-        print("\n")
-        title = "📝 CONTACT ROLE SKIPPED 📝"
-        show_title(title)
 
     elif is_empty is None:
-        print("\n❗️ Could not process the sheet due to an error.\n")
+        print("\n    ❗️ Could not process the sheet due to an error.\n")
         contact_choice = 'no'
 
     else:
@@ -4795,18 +4785,18 @@ while True:
                         sys.exit()
 
                     # Perform the comparison
-                    contact_df['Existing'] = contact_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
+                    contact_df['existing'] = contact_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
 
                     # Calculate the number of false values
-                    false_count = (~contact_df['Existing']).sum()
+                    false_count = (~contact_df['existing']).sum()
 
                     # Save the updated data back to the Excel file
                     with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
                         contact_df.to_excel(writer, sheet_name=contact_sheet_name, index=False)
 
                     # Success message with false count
-                    print(f"\n    ✅ Verification completed. 'Existing' column has been added to the '{contact_sheet_name}' sheet. ✅")
-                    print(f"\n    ❗️ Number of False values in 'Existing' column: {false_count}")
+                    print(f"\n    ✅ Verification completed. 'existing' column has been added to the '{contact_sheet_name}' sheet. ✅")
+                    print(f"\n    ❗️ Number of False values in 'existing' column: {false_count}")
 
                 except FileNotFoundError:
                     # Handle file not found
@@ -4998,11 +4988,22 @@ while True:
     print("=" * 100)
     print("\n\n🔍 CREATING OPPORTUNITY FILE")
     
-    # Define output paths for processed file and removed rows file
-    output_file = output + "/" + opportunity  
-    removed_rows_oppty = removed_rows_dir+'/Removed_Rows - Oppty.csv'  
 
-    # List of columns that should always be deleted (no prompt to user)
+    # --------------------------- Define Path for Processed data and Removed Rows Data  ----------------------
+
+    def get_file_paths(sheet_name, output_dir, removed_rows_dir, output_filename, removed_row_filename):
+        # Construct the full paths based on provided filenames
+        output_file = os.path.join(output_dir, output_filename)  # Processed CSV output path
+        removed_rows_file = os.path.join(removed_rows_dir, removed_row_filename)  # Removed rows CSV
+        
+        return output_file, removed_rows_file
+
+    sheet_name = 'Opportunity'
+    output_file, removed_rows_oppty = get_file_paths(sheet_name, output, removed_rows_dir,opportunity,'Removed_Rows - Oppty.csv')
+
+
+    # -------------------------------------------- Define Columns --------------------------------------------
+
     predefined_columns_oppty = [
         'Already Exist','AccountNumber', 'Email', 'created_by', 'modified_by', 'created_date',
         'modified_date', 'Trimmed_accountid', 'Trimmed_ownerid', 'Type Of Opportunity',
@@ -5010,131 +5011,176 @@ while True:
     ]
 
     # List of columns to exclude from user selection in the GUI
-    excluded_columns = [
+    excluded_columns_oppty = [
         'opportunity_legacy_id__c', 'Legacy_Opportunity_Split_Id__c', 'name', 'StageName',
         'Won_Reason__c', 'Lost_Category__c', 'Lost_Reason__c', 'CloseDate', 'CurrencyIsoCode',
         'OwnerId', 'NextStep', 'OI_Group__c','AccountId','createdbyid','Pricebook2Id','RecordTypeId'
     ]
 
     # ---------------------- Read Opportunity Sheet ----------------------
-
-    try:
-        # Load the Opportunity sheet from the Excel file
-        opportunity_df = pd.read_excel(file_path, sheet_name='Opportunity')
-    except Exception as e:
-        print(f"\n    ❌ Error reading the file: {e}")
-        exit()
     
+    opportunity_df = pd.read_excel(file_path, sheet_name=sheet_name)
+
     # ---------------------- Clean DataFrame ----------------------
-    
-    # Drop blank columns and rows
-    opportunity_df.dropna(axis=1, how='all', inplace=True)  
-    opportunity_df.dropna(axis=0, how='all', inplace=True)  
 
-    # Drop duplicate rows
-    opportunity_df.drop_duplicates(inplace=True)  
+    def clean_dataframe(df: pd.DataFrame, drop_duplicates: bool = True) -> pd.DataFrame:
+        """
+        Cleans the given DataFrame by:
+        - Dropping columns that are completely empty
+        - Dropping rows that are completely empty
+        - Optionally dropping duplicate rows
+
+        Parameters:
+            df (pd.DataFrame): The DataFrame to clean.
+            drop_duplicates (bool): Whether to drop duplicate rows. Defaults to True.
+
+        Returns:
+            pd.DataFrame: A cleaned DataFrame.
+        """
+        df.dropna(axis=1, how='all', inplace=True)  # Drop blank columns
+        df.dropna(axis=0, how='all', inplace=True)  # Drop blank rows
+        if drop_duplicates:
+            df.drop_duplicates(inplace=True)        # Drop duplicate rows
+        return df
+
+
+    # call the function to clean the DataFrame
+    opportunity_df = clean_dataframe(opportunity_df)
 
     # Initialize DataFrame to store removed rows and reasons
-    removed_rows_df = pd.DataFrame(columns=opportunity_df.columns.tolist() + ['Reason'])
+    removed_rows_oppty_df = pd.DataFrame(columns=opportunity_df.columns.tolist() + ['Reason'])
 
     # Track all columns that are dropped (predefined + user-selected)
-    all_dropped_columns = []
+    dropped_columns_oppty = []
 
     # ---------------------- Remove Rows: Already Exist is 'Already Exist in ISC' ----------------------
 
-    count_duplicate_oppty = 0
+    def remove_rows_based_on_condition(df, removed_rows_df , column, value,reason):
+    
+        # Initialize the count to 0 for tracking removed rows
+        row_removed_count = 0
 
-    if 'Already Exist' in opportunity_df.columns:
-        rows_dropped_duplicates = opportunity_df[opportunity_df['Already Exist'] == "Already Exist in ISC"].copy()
-        count_duplicate_oppty = len(rows_dropped_duplicates)
+        if column in df.columns:
+            # Identify rows to remove based on the condition
+            rows_to_remove = df[df[column] == value].copy()
+            
+            # Count the rows that are being removed
+            row_removed_count = len(rows_to_remove)  # Count the rows to be removed
+            
+            if not rows_to_remove.empty:
+                # Add a reason for removal
+                rows_to_remove['Reason'] = reason
+                # Add the removed rows to the removed_rows_df
+                removed_rows_df = pd.concat([removed_rows_df, rows_to_remove], ignore_index=True)
+            
+            # Update the original DataFrame to keep only rows that don't match the condition
+            df = df[df[column] != value]    # Keep only unmatched rows
 
-        if count_duplicate_oppty > 0:
-            rows_dropped_duplicates['Reason'] = "Duplicate Opportunity"
-            opportunity_df = opportunity_df[opportunity_df['Already Exist'] != "Already Exist in ISC"]
-            removed_rows_df = pd.concat([removed_rows_df, rows_dropped_duplicates], ignore_index=True)
+        return df, removed_rows_df, row_removed_count
+
+    opportunity_df, removed_rows_oppty_df, count_duplicate_oppty = remove_rows_based_on_condition(opportunity_df, removed_rows_oppty_df , 'Already Exist' , "Already Exist in ISC" ,  "Duplicate Opportunity")
 
     # ---------------------- Delete Predefined Columns ----------------------
 
-    # Identify and drop columns listed in predefined_columns_oppty
-    columns_to_delete = [col for col in predefined_columns_oppty if col in opportunity_df.columns]
-    if columns_to_delete:
-        opportunity_df.drop(columns=columns_to_delete, inplace=True)
-        all_dropped_columns.extend(columns_to_delete)
-    else:
-        print("\n    ❗️ No predefined columns found for deletion.")
+    def delete_predefined_columns(df, predefined_columns,dropped_columns):
+            
+
+        columns_to_delete_predefined = []
+        for col in predefined_columns:
+            if col in df.columns:
+                columns_to_delete_predefined.append(col)
+
+        if columns_to_delete_predefined:
+            df.drop(columns=columns_to_delete_predefined, inplace=True)
+            dropped_columns.extend(columns_to_delete_predefined)
+        
+        return df, dropped_columns
+    
+    # Call the function to delete predefined columns
+    opportunity_df,dropped_columns_oppty = delete_predefined_columns(opportunity_df, predefined_columns_oppty,dropped_columns_oppty)
 
     # ---------------------- GUI for User-Selectable Column Deletion ----------------------
 
-    # Filter columns to be shown in the GUI (excluding important ones)
-    columns_for_ui = []
-    for col in opportunity_df.columns:
-        if col not in excluded_columns:
-            columns_for_ui.append(col)
+    def show_column_deletion_gui(df, excluded_columns, dropped_columns):
+        """
+        Displays a GUI for selecting columns to delete from a DataFrame.
 
-    # If there are columns left for user selection, show checkbox GUI
-    if columns_for_ui:
-        root = Tk()
-        root.title("Select Columns to Delete")
-        root.geometry("500x600")
-        root.resizable(False, False)
+        Parameters:
+        - opportunity_df (pd.DataFrame): The DataFrame from which columns may be deleted.
+        - excluded_columns (list): List of columns that should not be shown in the GUI.
+        - dropped_columns (list): A list to extend with any columns deleted by the user.
 
-        # Scrollable canvas setup
-        canvas = Canvas(root)
-        scrollbar = Scrollbar(root, orient="vertical", command=canvas.yview)
-        canvas.configure(yscrollcommand=scrollbar.set)
-        scrollbar.pack(side="right", fill="y")
-        canvas.pack(side="left", fill="both", expand=True)
+        Returns:
+        - pd.DataFrame: The modified DataFrame with selected columns removed.
+        """
+        # Filter columns to be shown in the GUI (excluding important ones)
+
+        columns_for_ui = []
+        for col in df.columns:
+            if col not in excluded_columns:
+                columns_for_ui.append(col)
         
-        # Frame inside canvas to hold checkboxes
-        frame = Frame(canvas)
-        canvas.create_window((0, 0), window=frame, anchor="nw")
-
-        # Add checkboxes for each column
         checkboxes = {}
-        for column in columns_for_ui:
-            var = IntVar()
-            checkboxes[column] = var
-            checkbutton = Checkbutton(frame, text=column, variable=var, font=('Helvetica', 12), anchor="w", padx=10)
-            checkbutton.pack(anchor="w", pady=5)
+        if columns_for_ui:
+            root = Tk()
+            root.title("Select Columns to Delete")
+            root.geometry("500x600")
+            root.resizable(False, False)
 
-        # Submit button to close GUI
-        button_frame = Frame(root)
-        submit_button = Button(button_frame, text="Submit", command=root.quit,
-                            font=('Helvetica', 12, 'bold'), relief='flat', padx=20, pady=10)
-        submit_button.pack(side="right")
-        button_frame.pack(anchor="ne", padx=20, pady=10)
-        frame.update_idletasks()
-        canvas.config(scrollregion=canvas.bbox("all"))
+            # Scrollable canvas setup
+            canvas = Canvas(root)
+            scrollbar = Scrollbar(root, orient="vertical", command=canvas.yview)
+            canvas.configure(yscrollcommand=scrollbar.set)
+            scrollbar.pack(side="right", fill="y")
+            canvas.pack(side="left", fill="both", expand=True)
+            
+            # Frame inside canvas to hold checkboxes
+            frame = Frame(canvas)
+            canvas.create_window((0, 0), window=frame, anchor="nw")
 
-        root.mainloop()
-        root.destroy()
+            for column in columns_for_ui:
+                var = IntVar()
+                checkboxes[column] = var
+                checkbutton = Checkbutton(frame, text=column, variable=var, font=('Helvetica', 12), anchor="w", padx=10)
+                checkbutton.pack(anchor="w", pady=5)
 
-        # After GUI closes, delete selected columns
-        columns_to_delete_from_user = [col for col, var in checkboxes.items() if var.get() == 1]
+            # Submit button to close GUI
+            button_frame = Frame(root)
+            submit_button = Button(button_frame, text="Submit", command=root.quit,
+                                font=('Helvetica', 12, 'bold'), relief='flat', padx=20, pady=10)
+            submit_button.pack(side="right")
+            button_frame.pack(anchor="ne", padx=20, pady=10)
+            frame.update_idletasks()
+            canvas.config(scrollregion=canvas.bbox("all"))
+
+            root.mainloop()
+            root.destroy()
+        else:
+            print("\n    ✅ No user-selectable columns available for deletion. Skipping GUI.")
+
+        # Delete selected columns
+        columns_to_delete_from_user = []
+        for col, var in checkboxes.items():
+            if var.get() == 1:
+                columns_to_delete_from_user.append(col)
+
         if columns_to_delete_from_user:
-            opportunity_df.drop(columns=columns_to_delete_from_user, inplace=True)
-            all_dropped_columns.extend(columns_to_delete_from_user)
+            df.drop(columns=columns_to_delete_from_user, inplace=True)
+            dropped_columns.extend(columns_to_delete_from_user)
             print("\n    ✅ Additional columns deleted:")
             for col in columns_to_delete_from_user:
                 print(f"\n        🔸 {col}")
         else:
             print("\n    ✅ No additional columns selected for deletion.")
 
-    else:
-        print("\n    ✅ No user-selectable columns available for deletion. Skipping GUI.")
+        return df
+    # Call the GUI function to show the column deletion options
+    
+    opportunity_df = show_column_deletion_gui(opportunity_df, excluded_columns_oppty, dropped_columns_oppty)
 
 # ---------------------- Remove Rows: AccountId is 'Not in ISC' ----------------------
     
-    count_not_in_isc = 0
-
-    if 'AccountId' in opportunity_df.columns:
-        rows_dropped_not_in_isc = opportunity_df[opportunity_df['AccountId'] == "Not in ISC"].copy()
-        count_not_in_isc = len(rows_dropped_not_in_isc)  # Count the rows to be removed
-    
-        if count_not_in_isc > 0:
-            rows_dropped_not_in_isc['Reason'] = "AccountId is 'Not in ISC'"
-            opportunity_df = opportunity_df[opportunity_df['AccountId'] != "Not in ISC"]
-            removed_rows_df = pd.concat([removed_rows_df, rows_dropped_not_in_isc], ignore_index=True)
+    opportunity_df, removed_rows_oppty_df, count_not_in_isc = remove_rows_based_on_condition(opportunity_df, removed_rows_oppty_df , 'AccountId' , "Not in ISC" ,  "AccountId is 'Not in ISC'")
 
 # ---------------------- Remove Rows with Invalid PricebookEntryId ----------------------
 
@@ -5158,57 +5204,72 @@ while True:
             opportunity_df = opportunity_df[
                 ~opportunity_df['opportunity_legacy_id__c'].isin(invalid_pricebook_ids)
             ]
-            removed_rows_df = pd.concat([removed_rows_df, rows_to_remove_invalid_pricebook], ignore_index=True)
+            removed_rows_oppty_df = pd.concat([removed_rows_oppty_df, rows_to_remove_invalid_pricebook], ignore_index=True)
 
     except Exception as e:
         print(f"\n    ❌ Error processing invalid PricebookEntryId rows: {e}")
 
 
-# ---------------------- Print Row Removal Summary ----------------------
+# ---------------------- Row Removal Summary ----------------------
 
+    def print_removal_summary(reason_counts: dict, label: str = "rows"):
+        total_removed = sum(reason_counts.values())
 
-    if count_not_in_isc > 0 or count_invalid_pricebook > 0:
-        print(f"\n    ❗️ Total rows removed: {count_not_in_isc + count_invalid_pricebook + count_duplicate_oppty}")
-        print(f"\n        🔸 Removed due to invalid PricebookEntryId: {count_invalid_pricebook}")
-        print(f"\n        🔸 Remove due Account Not in ISC: {count_not_in_isc}")
-        print(f"\n        🔸 Removed due to Duplicate Opportunity: {count_duplicate_oppty}")
-    else:
-        print(f"\n    ✅ No Rows Removed ")
+        if total_removed > 0:
+            print(f"\n    ❗️ Total {label} removed: {total_removed}")
+            for reason, count in reason_counts.items():
+                print(f"\n        🔸 {reason}: {count}")
+        else:
+            print(f"\n    ✅ No {label} removed")
+    
+    print_removal_summary({
+        "Removed due to invalid PricebookEntryId": count_invalid_pricebook,
+        "Remove due Account Not in ISC": count_not_in_isc,
+        "Removed due to Duplicate Opportunity": count_duplicate_oppty
+    })
         
 # ---------------------- Clean Removed Rows DF ----------------------
+   
+    def drop_dropped_columns_from_removed_rows(dropped_columns,removed_rows_df):
+        columns_to_drop_from_removed = []
+        for col in dropped_columns:
+            if col in removed_rows_df.columns:
+                columns_to_drop_from_removed.append(col)
+
+        if columns_to_drop_from_removed:
+            removed_rows_df.drop(columns=columns_to_drop_from_removed, inplace=True)
+
+        return removed_rows_df
+
+    removed_rows_oppty_df = drop_dropped_columns_from_removed_rows(dropped_columns_oppty,removed_rows_oppty_df)
+
+    # ---------------------- Save Cleaned Opportunity Data ----------------------
+
+    def save_dataframe(df, file_path, label):
+        try:
+            df.to_csv(file_path, index=False)
+            shortened = "/".join(file_path.split("/")[-4:])
+            print(f"\n    ✅ {label} data saved to:\n\n        📂 {shortened}")
+        except Exception as e:
+            print(f"\n    ❌ Error saving the {label.lower()} file: {e}")
     
-    # Drop all dropped columns from removed_rows_df (retain only 'Reason' and important columns)
-    columns_to_drop_from_removed = []
-    for col in all_dropped_columns:
-        if col in removed_rows_df.columns:
-            columns_to_drop_from_removed.append(col)
+    save_dataframe(opportunity_df, output_file, "Opportunity")
 
-    if columns_to_drop_from_removed:
-        removed_rows_df.drop(columns=columns_to_drop_from_removed, inplace=True)
-
-# ---------------------- Save Cleaned Opportunity Data ----------------------
-
-    try:
-        opportunity_df.to_csv(output_file, index=False)
-        print("\n    ✅ Processed data saved to:")
-        shortened_output = "/".join(output_file.split("/")[-4:])
-        print(f"\n        📂 {shortened_output}")
-    except Exception as e:
-        print(f"\n    ❌ Error saving the processed file: {e}")
 
 # ---------------------- Save Removed Rows Data ----------------------
 
-    if not removed_rows_df.empty:
-        try:
-            removed_rows_df.to_csv(removed_rows_oppty, index=False)
-            print(f"\n    ✅ Removed rows saved to:")
-            shortned_path = "/".join(removed_rows_oppty.split("/")[-5:])
-            print(f"\n        📂 {shortned_path}")
-        except Exception as e:
-            print(f"\n    ❌ Error saving the removed rows file: {e}")
+    def save_removed_rows(df_removed, removed_path, label):
+        if not df_removed.empty:
+            try:
+                df_removed.to_csv(removed_path, index=False)
+                shortened = "/".join(removed_path.split("/")[-5:])
+                print(f"\n    ✅ Removed rows saved to:\n\n        📂 {shortened}")
+            except Exception as e:
+                print(f"\n    ❌ Error saving the removed rows file for {label.lower()}: {e}")
 
-    
-    
+    save_removed_rows(removed_rows_oppty_df, removed_rows_oppty, "Removed Rows_Opportunity")
+
+
     # =======================================================
     # Step 2:- Creating the Opportunity Product File
     # =======================================================
@@ -5216,9 +5277,13 @@ while True:
     print("=" * 100)
     print("\n\n🔍 CREATING PRODUCT FILE")
 
-    sheet_name = 'Opportunity_product'
+    # ---------------------- Define Path for Processed data and Removed Rows Data  ----------------------
 
-    # Define hardcoded columns to delete from product sheet
+    sheet_name = 'Opportunity_product'
+    output_file, removed_rows_product = get_file_paths(sheet_name, output, removed_rows_dir,opportunity_product,'Removed_Rows - Product.csv')
+    
+    # -------------------------------------------- Define Columns --------------------------------------------
+
     predefined_columns_product = [
         'existing', 'product', 'product_type', 'Product_Family__c', 
         'opportunity currency', 'practise_multiple country', 
@@ -5227,198 +5292,82 @@ while True:
 
     # Define columns that should never be shown to the user for deletion
     excluded_columns_product = [
-    'Type__c',
-    'Renewal_Type__c',
-    'Renewal_Status__c',
-    'Expiration_Date__c',
-    'Expiring_Term__c',
-    'Expiring_Amount__c',
-    'External_IDs__c',
-    'month 1 revenue',
-    'month 2 revenue',
-    'month 3 revenue',
-    'next quarter revenue',
-    'first 12 months revenue',
-    'pre-contract planned revenue',
-    'pre-contract start date',
-    'pre-contract end date',
-    'loss reason/attition reason',
-    'Legacy_Opportunity_Split_Id__c',
-    'PricebookEntryId',
-    'UnitPrice',
-    'Term__c',
-    'Classification__c',
-    'Quantity'
-]
+    'Type__c','Renewal_Type__c','Renewal_Status__c','Expiration_Date__c','Expiring_Term__c','Expiring_Amount__c',
+    'External_IDs__c','month 1 revenue','month 2 revenue','month 3 revenue','next quarter revenue','first 12 months revenue',
+    'pre-contract planned revenue','pre-contract start date','pre-contract end date','loss reason/attition reason',
+    'Legacy_Opportunity_Split_Id__c','PricebookEntryId','UnitPrice','Term__c','Classification__c','Quantity'
+    ]
 
-
-    # ---------------------- Initialize Trackers ----------------------
-
-    deleted_columns = []                   # Stores all deleted column names
-    rows_dropped = 0                       # Total rows dropped
-    rows_dropped_existing_false = 0        # Rows dropped where 'existing' == False
-
-    # Initialize DataFrame to track removed rows with reasons
-    removed_rows_df = pd.DataFrame()
-
-    # Try to read data from the "Opportunity_product" sheet into a DataFrame
     try:
-
         # ---------------------- Load Product Sheet ----------------------
 
-        df = pd.read_excel(file_path, sheet_name=sheet_name)
+        product_df = pd.read_excel(file_path, sheet_name=sheet_name)
 
-        # Remove rows where 'existing' is False
-        initial_row_count = len(df)
-        removed_rows_df = df[df['existing'] == False].copy()
-        rows_dropped_existing_false = len(removed_rows_df)  # Track the number of rows removed
-        df = df[df['existing'] == True]
+        # ---------------------- Clean DataFrame ----------------------
+        
+        product_df = clean_dataframe(product_df, drop_duplicates=False)  # Clean the opportunity_df without dropping duplicates
+    
+        # Initialize DataFrame to track removed rows with reasons
+        removed_rows_product_df = pd.DataFrame(columns=product_df.columns.tolist() + ['Reason'])
+        
+        # Track all columns that are dropped (predefined + user-selected)
+        dropped_columns_product = []
+        
+        # ---------------------- Remove Rows Based on existing ----------------------
+        
+        # Call the function to remove non-existing rows
+        product_df, removed_rows_product_df, rows_dropped_existing_count = remove_rows_based_on_condition(product_df, removed_rows_product_df,'existing',False,"Opportunity Missing From Main sheet")
 
-        # Add a "Reason" column to the removed rows to specify why they were removed
-        removed_rows_df['Reason'] = "Opportunity Missing From Main sheet"
+        # ---------------------- Remove Rows Based on Removed Oppties ----------------------
 
-        # ---------------------- Remove Rows Based on External Opportunity IDs ----------------------
-
-        # Load opportunity_legacy_id__c values from external CSV
-        opportunity_csv_path = removed_rows_oppty # Replace with actual path
-        if os.path.exists(opportunity_csv_path):
+        def load_removed_rows_oppty(removed_rows_oppty,df,removed_rows_df,column_match):
             
-            opportunity_df = pd.read_csv(opportunity_csv_path, usecols=["opportunity_legacy_id__c"])
-            opportunity_ids_set = set(opportunity_df["opportunity_legacy_id__c"].dropna())  # Store as a set for fast lookup
+            rows_dropped_legacy_count = 0
+            if os.path.exists(removed_rows_oppty):
+                
+                oppty_removed_rows_df = pd.read_csv(removed_rows_oppty, usecols=["opportunity_legacy_id__c"])
+                opportunity_ids_set = set(oppty_removed_rows_df["opportunity_legacy_id__c"].dropna().astype(str))
 
-            # Filter rows where "Legacy_Opportunity_Split_Id__c" exists in opportunity_ids_set
-            rows_to_remove = df[df["Legacy_Opportunity_Split_Id__c"].isin(opportunity_ids_set)].copy()
-            rows_dropped_legacy_match = len(rows_to_remove)
+                # Filter rows where "Legacy_Opportunity_Split_Id__c" exists in opportunity_ids_set
+                removed_rows_legacy = df[df[column_match].astype(str).isin(opportunity_ids_set)].copy()
+                rows_dropped_legacy_count = len(removed_rows_legacy)
 
-            if not rows_to_remove.empty:
-                rows_to_remove["Reason"] = "Opportunity not loaded"
-                removed_rows_df = pd.concat([removed_rows_df, rows_to_remove], ignore_index=True)
-                df = df[~df["Legacy_Opportunity_Split_Id__c"].isin(opportunity_ids_set)]  # Keep only unmatched rows
-        else:
-            rows_dropped_legacy_match = 0
+                if not removed_rows_legacy.empty:
+                    removed_rows_legacy["Reason"] = "Opportunity not loaded"
+                    removed_rows_df = pd.concat([removed_rows_df, removed_rows_legacy], ignore_index=True)
+                    df = df[~df[column_match].astype(str).isin(opportunity_ids_set)]  # Keep only unmatched rows
+            return df, removed_rows_df, rows_dropped_legacy_count
 
+        product_df,removed_rows_product_df,rows_dropped_legacy_count = load_removed_rows_oppty(removed_rows_oppty, product_df, removed_rows_product_df, "Legacy_Opportunity_Split_Id__c")
+        
         # ---------------------- Remove Predefined Columns ----------------------
 
-        columns_to_delete_predefined = []
-
-        for col in predefined_columns_product:
-            if col in df.columns:
-                columns_to_delete_predefined.append(col)
-
-        if columns_to_delete_predefined:
-            df.drop(columns=columns_to_delete_predefined, inplace=True)
-            removed_rows_df.drop(columns=columns_to_delete_predefined, inplace=True, errors='ignore')
-            deleted_columns.extend(columns_to_delete_predefined)
+        product_df, dropped_columns_product = delete_predefined_columns(product_df, predefined_columns_product, dropped_columns_product)
 
         # ---------------------- User-Guided Column Deletion (GUI) ----------------------
-
-        checkboxes = {}
-
-        if any(col not in excluded_columns_product for col in df.columns):
-            root = Tk()
-            root.title("Select Columns to Delete")
-
-            # Set window size and make it fixed
-            root.geometry("500x600")
-            root.resizable(False, False)
-
-            # Scrollbar setup
-            canvas = Canvas(root)
-            scrollbar = Scrollbar(root, orient="vertical", command=canvas.yview)
-            canvas.configure(yscrollcommand=scrollbar.set)
-
-            scrollbar.pack(side="right", fill="y")
-            canvas.pack(side="left", fill="both", expand=True)
-
-            frame = Frame(canvas)
-            canvas.create_window((0, 0), window=frame, anchor="nw")
-
-            # Add checkboxes for columns
-            for column in df.columns:
-                if column not in excluded_columns_product:
-                    var = IntVar()
-                    checkboxes[column] = var
-                    checkbutton = Checkbutton(frame, text=column, variable=var, font=('Helvetica', 12), anchor="w", padx=10)
-                    checkbutton.pack(anchor="w", pady=5)
-
-            # Submit button
-            button_frame = Frame(root)
-            submit_button = Button(button_frame, text="Submit", command=root.quit, 
-                                font=('Helvetica', 12, 'bold'), relief='flat', padx=20, pady=10)
-            submit_button.pack(side="right")
-
-            # Place the button frame in the grid to ensure it stays at the top right
-            button_frame.pack(anchor="ne", padx=20, pady=10)  # 'ne' positions it top-right
-
-            # Update the scroll region to fit all elements
-            frame.update_idletasks()
-            canvas.config(scrollregion=canvas.bbox("all"))
-
-            # Run the Tkinter main loop
-            root.mainloop()
-            root.destroy()
-        else:
-            print("\n    ✅ No user-selectable columns available for deletion. Skipping GUI.")
         
-        # Process user-selected columns
+        product_df = show_column_deletion_gui(product_df, excluded_columns_product, dropped_columns_product)
+        
+        # ---------------------- Row Removal Summary ----------------------
 
-        columns_to_delete_from_user = []
-
-        for col, var in checkboxes.items():
-            if var.get() == 1:
-                columns_to_delete_from_user.append(col)
-
-        if columns_to_delete_from_user:
-           
-            # Remove the selected columns from the main DataFrame (df)
-            df.drop(columns=columns_to_delete_from_user, inplace=True)
-           
-            # Also remove the same columns from the removed rows DataFrame (removed_rows_df)
-            removed_rows_df.drop(columns=columns_to_delete_from_user, inplace=True, errors='ignore')
-            deleted_columns.extend(columns_to_delete_from_user)
-           
-            print("\n    ✅ Additional columns deleted:")
-           
-            for col in columns_to_delete_from_user:
-                print(f"\n        🔸 {col}")
-        else:
-            print("\n    ✅ No additional columns selected for deletion.")
-
-        # ---------------------- Cleanup & Row Summary ----------------------
-
-        if rows_dropped_legacy_match > 0 or rows_dropped_existing_false > 0:
-            print(f"\n    ❗️ Total rows removed: {rows_dropped_existing_false+rows_dropped_legacy_match}")
-            print(f"\n        🔸 Due to 'existing' == False: {rows_dropped_existing_false}")
-            print(f"\n        🔸 Due to due to 'Opportunity not loaded': {rows_dropped_legacy_match}")
-        else:
-            print(f"\n    ✅ No Rows removed")
-            
-
-        df.dropna(axis=0, how='all', inplace=True) # Remove empty rows
-        df.dropna(axis=1, how='all', inplace=True) # Remove empty columns
-
-    # ---------------------- Save Processed Product File ----------------------
-
-        output_file = output + "/" + opportunity_product  # Path for the processed CSV
-        output_dir = os.path.dirname(output_file)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir, exist_ok=True)  # Create the directory if it doesn't exist
-
-        # Step 12: Save the processed DataFrame to the specified CSV file
-        df.to_csv(output_file, index=False)
-        print("\n    ✅ Processed data saved to")
-        shortened_output = "/".join(output_file.split("/")[-4:])
-        print(f"\n        📂 {shortened_output}")
+        print_removal_summary({
+            "Due to 'existing' == False": rows_dropped_existing_count,
+            "Due to 'Opportunity not loaded'": rows_dropped_legacy_count
+        })
+        
+        # ---------------------- Clean Removed Rows DF ----------------------
+        
+        # Drop all dropped columns from removed_rows_df (retain only 'Reason' and important columns)
+        
+        removed_rows_product_df = drop_dropped_columns_from_removed_rows(dropped_columns_product,removed_rows_product_df)
+        
+        # ---------------------- Save Processed Product File ----------------------
+        
+        save_dataframe(product_df, output_file, "Product")
 
         # ---------------------- Save Removed Rows Data ----------------------
-        removed_rows_product = removed_rows_dir+'/Removed_Rows - Product.csv'  # Path for the removed rows CSV
-        if not removed_rows_df.empty:
-            # Keep only common columns and "Reason"
-            removed_rows_df = removed_rows_df[removed_rows_df.columns.intersection(df.columns.tolist() + ['Reason'])]
-            removed_rows_df.to_csv(removed_rows_product, index=False)
-            print("\n    ✅ Removed rows saved to:")
-            shortned_path = "/".join(removed_rows_product.split("/")[-5:])
-            print(f"\n        📂 {shortned_path}")
+        
+        save_removed_rows(removed_rows_product_df, removed_rows_product, "Removed Rows_Product")
 
     except Exception as e:
         print(f"\n    ❌ An error occurred: {e}")
@@ -5446,176 +5395,77 @@ while True:
 
             print("\n\n🔍 CREATING TEAM MEMBER FILE")
 
-            # Columns to delete automatically
-            predefined_columns_Team = ['Existing', 'email', 'Concat_T_M']
+            # ------------------------- Define Path for Processed data and Removed Rows Data  ----------------------
+
+            sheet_name = 'Opportunity_team'
+            output_file, removed_rows_team = get_file_paths(sheet_name, output, removed_rows_dir,opportunity_team,'Removed_Rows - Team.csv')
+            
+            # ---------------------- Define Columns ----------------------
+
+            predefined_columns_Team = ['existing', 'email', 'Concat_T_M']
             
             # Columns that should not appear in the deletion GUI
             excluded_columns_Team=['OpportunityId','OpportunityAccessLevel','TeamMemberRole','UserId']
-
-            # File paths for output
-            sheet_name = 'Opportunity_team'
-            output_file = output + '/' + opportunity_team  # Path for the processed CSV
-            removed_rows_team = removed_rows_dir+'/Removed_Rows - Team.csv'  # Path for removed rows CSV
-
-            # Initialize tracking and storage variables
-            deleted_columns = []
-            rows_dropped = 0
-            removed_rows_saved = False  # Flag to track if removed rows were saved
-            checkboxes = {} 
 
             try:
                 
                 # ---------------------- Load Sheet ----------------------
 
-                df = pd.read_excel(file_path, sheet_name=sheet_name)
-
-                # ---------------------- Remove rows where 'Existing' is False ----------------------
-
-                removed_rows = pd.DataFrame()  # Initialize an empty DataFrame for removed rows
-                if 'Existing' in df.columns:
-                    removed_rows_existing = df[df['Existing'] == False].copy()
-                    df = df[df['Existing'] == True]
-                    rows_dropped = len(removed_rows_existing)
-
-                    if rows_dropped > 0:
-                        removed_rows_existing['Reason'] = "Opportunity Missing From Main sheet"
-                        removed_rows = pd.concat([removed_rows, removed_rows_existing], ignore_index=True)
-                        
-                # ---------------------- Remove rows with legacy Opportunity IDs ----------------------
-                rows_dropped_legacy = 0  # Initialize count for legacy-based removals
+                team_df = pd.read_excel(file_path, sheet_name=sheet_name)
                 
-                if os.path.exists(removed_rows_oppty):
-                    legacy_df = pd.read_csv(removed_rows_oppty)  # Load opportunity_legacy_id__c values
+                # ---------------------- Clean DataFrame ----------------------
 
-                    if 'opportunity_legacy_id__c' in legacy_df.columns and 'OpportunityId' in df.columns:
-                        legacy_ids = set(legacy_df['opportunity_legacy_id__c'].dropna().astype(str))
-                        removed_rows_legacy = df[df['OpportunityId'].astype(str).isin(legacy_ids)].copy()
-                        df = df[~df['OpportunityId'].astype(str).isin(legacy_ids)]  # Remove matching rows
+                team_df = clean_dataframe(team_df)
 
-                        rows_dropped_legacy = len(removed_rows_legacy)  # Count removed rows
+                #---------------------- Initialize Removed Rows df ----------------------
+                
+                removed_rows_team_df = pd.DataFrame(columns=team_df.columns.tolist() + ['Reason'])
+                
+                # ---------------------- columns that are dropped ----------------------
 
-                        if rows_dropped_legacy > 0:
-                            removed_rows_legacy['Reason'] = "Opportunity not loaded"
-                            removed_rows = pd.concat([removed_rows, removed_rows_legacy], ignore_index=True)
+                dropped_columns_team = [] 
+                
+                # ---------------------- Remove rows where 'existing' is False ----------------------
 
-                # ---------------------- Save Removed Rows ----------------------
-                if not removed_rows.empty:
-                    # Drop columns that will be removed from main DF
-                    columns_to_drop = []
-                    for col in predefined_columns_Team:
-                        if col in removed_rows.columns:
-                            columns_to_drop.append(col)
-                    removed_rows.drop(columns=columns_to_drop, inplace=True)
-
-                    removed_rows.to_csv(removed_rows_team, index=False)
-                    removed_rows_saved = True
+                team_df,removed_rows_team_df,rows_dropped_existing_count =  remove_rows_based_on_condition(team_df, removed_rows_team_df,'existing',False,"Opportunity Missing From Main sheet")
+                        
+                # ---------------------- Remove Rows Based on Removed Oppties ----------------------
+                
+                team_df,removed_rows_team_df,rows_dropped_legacy_count = load_removed_rows_oppty(removed_rows_oppty, team_df, removed_rows_team_df, "OpportunityId")
 
                 # ---------------------- Remove Predefined Columns ----------------------
-
-                predefined_to_delete = []
-                for col in predefined_columns_Team:
-                    if col in df.columns:
-                        predefined_to_delete.append(col)
-
-                if predefined_to_delete:
-                    df.drop(columns=predefined_to_delete, inplace=True)
-                    deleted_columns.extend(predefined_to_delete)
+                
+                team_df, dropped_columns_team = delete_predefined_columns(team_df, predefined_columns_Team, dropped_columns_team)
                 
                 # ---------------------- GUI: Let User Select Additional Columns to Delete ----------------------
-                
-                columns_for_ui = []
 
-                for col in df.columns:
-                    if col not in excluded_columns_Team:
-                        columns_for_ui.append(col)
-                
-                if columns_for_ui:
-                # Step 4: GUI for selecting additional columns to delete
-                    root = Tk()
-                    root.title("Select Columns to Delete")
-                    root.geometry("500x600")
-                    root.resizable(False, False)
-
-                    # Scrollable UI
-                    canvas = Canvas(root)
-                    scrollbar = Scrollbar(root, orient="vertical", command=canvas.yview)
-                    canvas.configure(yscrollcommand=scrollbar.set)
-                    scrollbar.pack(side="right", fill="y")
-                    canvas.pack(side="left", fill="both", expand=True)
-
-                    frame = Frame(canvas)
-                    canvas.create_window((0, 0), window=frame, anchor="nw")
-
-                    # Add checkboxes for each selectable column
-                    for column in columns_for_ui:   
-                        var = IntVar()
-                        checkboxes[column] = var
-                        checkbutton = Checkbutton(frame, text=column, variable=var, font=('Helvetica', 12), anchor="w", padx=10)
-                        checkbutton.pack(anchor="w", pady=5)
-
-                    # Submit button
-                    submit_button = Button(frame, text="Submit", command=root.quit, 
-                                        font=('Helvetica', 12, 'bold'), relief='flat', padx=20, pady=10)
-                    submit_button.pack(pady=20)
-
-                    # Run the GUI
-                    frame.update_idletasks()
-                    canvas.config(scrollregion=canvas.bbox("all"))
-                    root.mainloop()
-                    root.destroy()
-                else:
-                    print("\n    ✅ No user-selectable columns available for deletion. Skipping GUI.")
-
-                # ---------------------- Delete Columns Selected via GUI ----------------------
-
-                user_selected_columns = [col for col, var in checkboxes.items() if var.get() == 1]
-                if user_selected_columns:
-                    df.drop(columns=user_selected_columns, inplace=True)
-                    deleted_columns.extend(user_selected_columns)
-                    print("\n    ✅ Additional columns deleted:")
-                    for col in user_selected_columns:
-                        print(f"\n        🔸 {col}")
-                else:
-                    print("\n    ✅ No additional columns selected for deletion.")
-                
+                # Call the GUI function to show the column deletion options
+                team_df = show_column_deletion_gui(team_df, excluded_columns_Team, dropped_columns_team)
                 
                 # ---------------------- Row Removal Summary ----------------------
 
-                if rows_dropped > 0 or rows_dropped_legacy > 0:
-                    print(f"\n    ❗️ Total rows removed: {rows_dropped + rows_dropped_legacy}")
-                    print(f"\n        🔸 Due to 'existing' == False: {rows_dropped}")
-                    print(f"\n        🔸 Due to 'Opportunity not loaded': {rows_dropped_legacy}")
+                print_removal_summary({
+                    "Due to 'existing' == False": rows_dropped_existing_count,
+                    "Due to 'Opportunity not loaded'": rows_dropped_legacy_count
+                })                
 
-                else:
-                    print(f"\n    ✅ No rows dropped")
-
-                # ---------------------- Clean Final DataFrame ----------------------
-
-                df.dropna(axis=0, how='all', inplace=True)  # Remove rows with all blank values
-                df.dropna(axis=1, how='all', inplace=True)  # Remove columns with all blank values
-                df.drop_duplicates(inplace=True)  # Remove duplicate rows
+                # ---------------------- Clean Removed Rows DF ----------------------
+                
+                removed_rows_team_df = drop_dropped_columns_from_removed_rows(dropped_columns_team,removed_rows_team_df)
 
                 # ---------------------- Save Processed Output ----------------------
                 
-                output_dir = os.path.dirname(output_file)
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir, exist_ok=True)
-                df.to_csv(output_file, index=False)
-
-                # Final confirmation prints
-
-                print(f"\n    ✅ Processed data saved to: ")
-                shortned_path = "/".join(output_file.split("/")[-4:])
-                print(f"\n        📂 {shortned_path}")
+                save_dataframe(team_df, output_file, "Team Member")
                 
-                if removed_rows_saved:
-                    print("\n    ✅ Removed rows saved to:")
-                    shortned_path = "/".join(removed_rows_team.split("/")[-5:])
-                    print(f"\n        📂 {shortned_path}")
+                # ---------------------- Save Removed Rows Data ----------------------
 
+                save_removed_rows(removed_rows_team_df, removed_rows_team, "Removed Rows_Team")
+                
 
             except Exception as e:
+            
                 print(f"\n    ❌ An error occurred: {e}")
+            
             break # Exit loop if "yes" block executed successfully
         
         elif user_input == "no":
@@ -5639,173 +5489,93 @@ while True:
 
             print("\n\n🔍 CREATING REPORTING CODES FILE")
             
-            # Columns to be removed by default
-            predefined_columns_Reportingcode = [ 'existing', 'concatcodes']
+            # ---------------------- Define Path for Processed data and Removed Rows Data  ----------------------
+
+            sheet_name = 'Reporting_codes'
+            output_file, removed_rows_codes = get_file_paths(sheet_name, output, removed_rows_dir,reporting_codes,'Removed_Rows - ReportingCodes.csv')
+            
+            # -------------------------------- Define Columns --------------------------------------
+                      
+            predefined_columns_Reportingcode = [ 'existing', 'concatcodes',"reporting_codes"]
 
             # Columns excluded from user deletion selection
-            excluded_columns_strategy = ['opportunityid','reporting_codes','strategyid']
+            excluded_columns_codes = ['opportunityid','StrategyId']
 
-            # File paths
-            sheet_name = 'Reporting_codes'
-            output_file = output + "/" + reporting_codes  # Path for the processed CSV
-            removed_rows_codes = removed_rows_dir+'/Removed_Rows - ReportingCodes.csv'  # Path for removed rows CSV
-
-            # Initialize variables
-            deleted_columns = []
-            rows_dropped = 0
 
             try:
-                # 1. Load the Reporting_codes sheet into a DataFrame
-                df = pd.read_excel(file_path, sheet_name=sheet_name)
+                # ---------------------- Load Sheet ----------------------
+                codes_df = pd.read_excel(file_path, sheet_name=sheet_name)
 
-                # 2. Convert all column names to lowercase for consistency
-                df.columns = df.columns.str.lower()
+                # ---------------------- Clean DataFrame ----------------------
 
-                # 3. Check that the required 'existing' column is present
-                if 'existing' not in df.columns:
-                    raise ValueError(f"\n    ❌ Column 'existing' not found in the DataFrame from sheet '{sheet_name}'. Please check your input data.")
-
-                # 4. Remove rows where 'existing' is False
-                removed_rows = df[df['existing'].astype(str).str.lower() != 'true'].copy()
-                removed_rows['Reason'] = "Opportunity Missing From Main sheet"
-                removed_rows.drop(columns=[col for col in predefined_columns_Reportingcode if col in removed_rows.columns], inplace=True)
-                df = df[df['existing'].astype(str).str.lower() == 'true']
-                rows_dropped_existing = len(removed_rows)
-
-                # 5. Remove rows where opportunity ID is listed in removed_rows_oppty
-                try:
-                    oppty_df = pd.read_csv(removed_rows_oppty, usecols=['opportunity_legacy_id__c'])
-                    oppty_ids_to_remove = set(oppty_df['opportunity_legacy_id__c'].astype(str))
-
-                    # Step 4.3: Remove rows where "opportunityid" is in removed_rows_oppty file
-                    if 'opportunityid' in df.columns:
-                        removed_opportunity_rows = df[df['opportunityid'].astype(str).isin(oppty_ids_to_remove)].copy()
-                        df = df[~df['opportunityid'].astype(str).isin(oppty_ids_to_remove)]
-                        rows_dropped_opportunity = len(removed_opportunity_rows)
-                    else:
-                        removed_opportunity_rows = pd.DataFrame()
-                        rows_dropped_opportunity = 0
-
-                except Exception as e:
-                    removed_opportunity_rows = pd.DataFrame()
-                    rows_dropped_opportunity = 0
-
-                # 6. Save all removed rows to a separate file
-                if not removed_opportunity_rows.empty:
-                    removed_opportunity_rows['Reason'] = "Opportunity not loaded"
-                    removed_opportunity_rows.drop(columns=[col for col in predefined_columns_Reportingcode if col in removed_opportunity_rows.columns], inplace=True)
-                    removed_rows = pd.concat([removed_rows, removed_opportunity_rows], ignore_index=True)
-
-                if not removed_rows.empty:
-                    removed_rows.to_csv(removed_rows_codes, index=False)
+                codes_df = clean_dataframe(codes_df)
                 
+                #---------------------- Initialize Removed Rows df ----------------------
+                
+                removed_rows_code_df = pd.DataFrame(columns=codes_df.columns.tolist() + ['Reason'])
+
+                # ---------------------- columns that are dropped ----------------------
+
+                dropped_columns_codes = [] 
+
+                
+                # ---------------------- Remove all Rows If all Codes are not found ----------------------
+
                 # Check if all StrategyId values are 'Not Found'
-                if 'strategyid' in df.columns:
-                    strategy_values = df['strategyid'].astype(str).str.lower().dropna()
+                def remove_if_strategy_not_found(df, removed_rows_df, removed_rows_path,reason,predefined_columns):                    
+                    if 'StrategyId' in df.columns:
+                        strategy_values = df['StrategyId'].astype(str).str.lower().dropna()
 
-                    if not strategy_values.empty and strategy_values.nunique() == 1 and strategy_values.iloc[0] == 'not found':
-                        df['Reason'] = 'Code not found'
-                        removed_rows = pd.concat([removed_rows, df], ignore_index=True)
-                        removed_rows.drop(columns=[col for col in predefined_columns_Reportingcode if col in removed_rows.columns], inplace=True)
-                        removed_rows.to_csv(removed_rows_codes, index=False)
+                        if not strategy_values.empty and strategy_values.nunique() == 1 and strategy_values.iloc[0] == 'not found':
+                            df['Reason'] = reason
+                            removed_rows_df = pd.concat([removed_rows_df, df], ignore_index=True)
+                            removed_rows_df.drop(columns=[col for col in predefined_columns if col in removed_rows_df.columns], inplace=True)
+                            removed_rows_df.to_csv(removed_rows_path, index=False)
 
-                        print(f"\n    ❗️ All StrategyId values are 'Not Found'. Sheet skipped and data moved to removed rows.")
-                        break
+                            print(f"\n    ❗️ All StrategyId values are 'Not Found'. Sheet skipped and data moved to removed rows.")
+                            return df, removed_rows_df, True  # Signal to break or skip
+                    return df, removed_rows_df, False
+                                
+                codes_df,removed_rows_code_df,should_break =  remove_if_strategy_not_found(codes_df, removed_rows_code_df, removed_rows_codes,'Code not found',predefined_columns_Reportingcode)
 
-                # 7. Drop predefined columns from the cleaned DataFrame
-                predefined_to_delete = [col for col in predefined_columns_Reportingcode if col in df.columns]
-                if predefined_to_delete:
-                    df.drop(columns=predefined_to_delete, inplace=True)
-                    deleted_columns.extend(predefined_to_delete)
-
-                # 8. Setup column selection UI
-                checkboxes = {}
-                columns_for_gui = [col for col in df.columns if col not in excluded_columns_strategy]
-
-
-                if columns_for_gui:
-                        
-                    # GUI to allow user to select columns to delete
-                    root = Tk()
-                    root.title("Select Columns to Delete")
-
-                    # Set window size
-                    root.geometry("500x600")
-                    root.resizable(False, False)
-
-                    # Scrollable UI
-                    canvas = Canvas(root)
-                    scrollbar = Scrollbar(root, orient="vertical", command=canvas.yview)
-                    canvas.configure(yscrollcommand=scrollbar.set)
-                    scrollbar.pack(side="right", fill="y")
-                    canvas.pack(side="left", fill="both", expand=True)
-
-                    frame = Frame(canvas)
-                    canvas.create_window((0, 0), window=frame, anchor="nw")
-
-                    for column in df.columns:
-                        if column not in excluded_columns_strategy:
-                            var = IntVar()
-                            checkboxes[column] = var
-                            checkbutton = Checkbutton(frame, text=column, variable=var, font=('Helvetica', 12), anchor="w", padx=10)
-                            checkbutton.pack(anchor="w", pady=5)
-
-                    # Submit button
-                    submit_button = Button(frame, text="Submit", command=root.quit, font=('Helvetica', 12, 'bold'), relief='flat', padx=20, pady=10)
-                    submit_button.pack(pady=20)
-
-                    # Run the UI
-                    frame.update_idletasks()
-                    canvas.config(scrollregion=canvas.bbox("all"))
-                    root.mainloop()
-                    root.destroy()
-                else:
-                    print("\n    ✅ No eligible columns to show in the GUI (excluded or already removed).")
-
-                # 9. Process selected columns from the UI
-                user_selected_columns = [col for col, var in checkboxes.items() if var.get() == 1]
-                if user_selected_columns:
-                    df.drop(columns=user_selected_columns, inplace=True)
-                    deleted_columns.extend(user_selected_columns)
-                    print("\n    ✅ Additional columns deleted:")
-                    for col in user_selected_columns:
-                        print(f"\n        🔸 {col}")
-                else:
-                    print("\n    ✅ No additional columns selected for deletion.")
+                if should_break:
+                    break
                 
-                # 10. Print a summary of removed rows
-                total_rows_removed = rows_dropped_existing + rows_dropped_opportunity
-                if total_rows_removed > 0:
-                    print(f"\n    ❗️ Total rows removed: {total_rows_removed}")
-                    print(f"\n        🔸 Due to 'existing' == False: {rows_dropped_existing}")
-                    print(f"\n        🔸 Due to due to 'Opportunity not loaded': {rows_dropped_opportunity}")
-                else:
-                    print(f"\n    ✅ No rows removed")
+                # ---------------------- Remove rows where 'existing' is False ----------------------
+                
+                codes_df, removed_rows_code_df, rows_dropped_existing_count = remove_rows_based_on_condition(codes_df, removed_rows_code_df,'existing',False,"Opportunity Missing From Main sheet")
 
-                # 11. Final cleanup of the DataFrame
-                df.dropna(axis=0, how='all', inplace=True)  # Remove rows with all blank values
-                df.dropna(axis=1, how='all', inplace=True)  # Remove columns with all blank values
-                df.drop_duplicates(inplace=True)  # Remove duplicate rows
+                # ---------------------- Remove Rows Based on Removed Oppties ----------------------
 
-                # 12. Save the cleaned DataFrame to output file
-                if not df.empty:
-                    output_dir = os.path.dirname(output_file)
-                    if not os.path.exists(output_dir):
-                        os.makedirs(output_dir, exist_ok=True)
-                    df.to_csv(output_file, index=False)
 
-                # Final messages
-                if not df.empty:
-                    print("\n    ✅ Processed data saved to:")
-                    shortened_output = "/".join(output_file.split("/")[-4:])
-                    print(f"\n        📂 {shortened_output}")
-                else:
-                    print ("\n    ❗️ Processed data was Not Saved as there is no Data")
+                codes_df,removed_rows_code_df,rows_dropped_legacy_count = load_removed_rows_oppty(removed_rows_oppty, codes_df, removed_rows_code_df, "opportunityid")
+                
+                # ---------------------- Remove Predefined Columns ----------------------
+                
+                codes_df, dropped_columns_codes = delete_predefined_columns(codes_df, predefined_columns_Reportingcode, dropped_columns_codes)
+       
+                # ---------------------- GUI: Let User Select Additional Columns to Delete ----------------------
 
-                if total_rows_removed > 0:
-                    print("\n    ✅ Removed rows saved to:")
-                    shortned_path = "/".join(removed_rows_codes.split("/")[-5:])
-                    print(f"\n        📂 {shortned_path}")
+                codes_df = show_column_deletion_gui(codes_df, excluded_columns_codes, dropped_columns_codes)
+
+                # ---------------------- Row Removal Summary ----------------------
+
+                print_removal_summary({
+                    "Due to 'existing' == False": rows_dropped_existing_count,
+                    "Due to 'Opportunity not loaded'": rows_dropped_legacy_count
+                })      
+            
+                # ---------------------- Clean Removed Rows DF ----------------------                
+
+                removed_rows_code_df = drop_dropped_columns_from_removed_rows(dropped_columns_codes,removed_rows_code_df)
+
+                # ---------------------- Save Processed Output ----------------------
+                
+                save_dataframe(codes_df, output_file, "Reporting Codes")
+                
+                # ---------------------- Save Removed Rows Data ----------------------
+                
+                save_removed_rows(removed_rows_code_df, removed_rows_codes, "Removed Rows_Codes")
 
             except ValueError as ve:
                 print(f"\n    ❌ ValueError: {ve}")
@@ -5835,173 +5605,79 @@ while True:
             print("\n    ⏳ Running Tags Sheet...")
             print("\n================================================================================")
 
-            # Define relevant columns and file paths
-            predefined_columns_tags = ['existing', 'concattags']
-            excluded_columns_tags = ['opportunityid','tag','strategyid']
-
+            # ---------------------- Define Path for Processed data and Removed Rows Data  ----------------------
+            
             sheet_name = 'Tags'
-            output_file = output + "/" + tags  # Final cleaned output path
-            removed_rows_tags = removed_rows_dir+'/Removed_Rows - Tags.csv'  # Rows filtered out will be stored here
+            output_file, removed_rows_tags = get_file_paths(sheet_name, output, removed_rows_dir,tags,'Removed_Rows - Tags.csv')
+            
+            # -------------------------------- Define Columns --------------------------------------
+            
+            predefined_columns_tags = ['existing', 'concattags','tag']
+            
+            excluded_columns_tags = ['opportunityid','StrategyId']
 
-            # Initialize variables
-            deleted_columns = []
-            rows_dropped = 0
 
             try:
                 print("\n\n🔍 CREATING TAGS FILE")
 
-                # Read the 'Tags' sheet from the Excel file
-                df = pd.read_excel(file_path, sheet_name=sheet_name)
+                # ---------------------- Load Sheet ----------------------
 
-                # Standardize column names to lowercase
-                df.columns = df.columns.str.lower()
+                tags_df = pd.read_excel(file_path, sheet_name=sheet_name)
 
-                # Validate presence of 'existing' column
-                if 'existing' not in df.columns:
-                    raise ValueError(f"\n    ❌ Column 'existing' not found in the DataFrame from sheet '{sheet_name}'. Please check your input data.")
-
-                # Filter out rows where 'existing' is not True
-                removed_rows = df[df['existing'].astype(str).str.lower() != 'true'].copy()
-                removed_rows['Reason'] = "Opportunity Missing From Main sheet"
-                removed_rows.drop(columns=[col for col in predefined_columns_tags if col in removed_rows.columns], inplace=True)
-                df = df[df['existing'].astype(str).str.lower() == 'true']
-                rows_dropped_existing = len(removed_rows)
-
-                # Attempt to filter rows based on removed opportunities
-                try:
-                    oppty_df = pd.read_csv(removed_rows_oppty, usecols=['opportunity_legacy_id__c'])
-                    oppty_ids_to_remove = set(oppty_df['opportunity_legacy_id__c'].astype(str))
-
-                    # Step 4.3: Remove rows where "opportunityid" is in removed_rows_oppty file
-                    if 'opportunityid' in df.columns:
-                        removed_opportunity_rows = df[df['opportunityid'].astype(str).isin(oppty_ids_to_remove)].copy()
-                        df = df[~df['opportunityid'].astype(str).isin(oppty_ids_to_remove)]
-                        rows_dropped_opportunity = len(removed_opportunity_rows)
-                    else:
-                        removed_opportunity_rows = pd.DataFrame()
-                        rows_dropped_opportunity = 0
-                        print("\n    ❗️ Warning: Column 'opportunityid' not found in the Reporting Codes sheet. Skipping opportunity-based filtering.")
-               
-                except Exception as e:
-                    removed_opportunity_rows = pd.DataFrame()
-                    rows_dropped_opportunity = 0
-
-                # Merge both sets of removed rows and add reasons
-                if not removed_opportunity_rows.empty:
-                    removed_opportunity_rows['Reason'] = "Opportunity not loaded"
-                    removed_opportunity_rows.drop(columns=[col for col in predefined_columns_tags if col in removed_opportunity_rows.columns], inplace=True)
-                    removed_rows = pd.concat([removed_rows, removed_opportunity_rows], ignore_index=True)
-
-                # Save removed rows to a separate CSV file
-                if not removed_rows.empty:
-                    removed_rows.to_csv(removed_rows_tags, index=False)
-                                
-                # Check if all StrategyId values are 'Not Found'
-                if 'strategyid' in df.columns:
-                    strategy_values = df['strategyid'].astype(str).str.lower().dropna()
-
-                    if not strategy_values.empty and strategy_values.nunique() == 1 and strategy_values.iloc[0] == 'not found':
-                        df['Reason'] = 'Tag not found'
-                        removed_rows = pd.concat([removed_rows, df], ignore_index=True)
-                        removed_rows.drop(columns=[col for col in predefined_columns_tags if col in removed_rows.columns], inplace=True)
-                        removed_rows.to_csv(removed_rows_tags, index=False)
-
-                        print(f"\n    ❗️ All StrategyId values are 'Not Found'. Sheet skipped and data moved to removed rows.")
-                        break
-     
-                # Drop predefined columns from the main DataFrame
-                predefined_to_delete = [col for col in predefined_columns_tags if col in df.columns]
-                if predefined_to_delete:
-                    df.drop(columns=predefined_to_delete, inplace=True)
-                    deleted_columns.extend(predefined_to_delete)
-
-                # Prepare GUI for column deletion
-                checkboxes = {}
-                columns_for_gui = [col for col in df.columns if col not in excluded_columns_tags]
-
-                # Only show GUI if there are any selectable columns
-                if columns_for_gui:
-
-                    root = Tk()
-                    root.title("Select Columns to Delete")
-
-                    # Set window size
-                    root.geometry("500x600")
-                    root.resizable(False, False)
-
-                    # Scrollable UI
-                    canvas = Canvas(root)
-                    scrollbar = Scrollbar(root, orient="vertical", command=canvas.yview)
-                    canvas.configure(yscrollcommand=scrollbar.set)
-                    scrollbar.pack(side="right", fill="y")
-                    canvas.pack(side="left", fill="both", expand=True)
-
-                    frame = Frame(canvas)
-                    canvas.create_window((0, 0), window=frame, anchor="nw")
-
-                    for column in df.columns:
-                        if column not in excluded_columns_tags:
-                            var = IntVar()
-                            checkboxes[column] = var
-                            checkbutton = Checkbutton(frame, text=column, variable=var, font=('Helvetica', 12), anchor="w", padx=10)
-                            checkbutton.pack(anchor="w", pady=5)
-
-                    # Submit button
-                    submit_button = Button(frame, text="Submit", command=root.quit, font=('Helvetica', 12, 'bold'), relief='flat', padx=20, pady=10)
-                    submit_button.pack(pady=20)
-
-                    # Run the UI
-                    frame.update_idletasks()
-                    canvas.config(scrollregion=canvas.bbox("all"))
-                    root.mainloop()
-                    root.destroy()
-                else:
-                    print("\n    ✅ No eligible columns to show in the GUI (excluded or already removed).")
-
-                # Apply user's column deletion choices
-                user_selected_columns = [col for col, var in checkboxes.items() if var.get() == 1]
-                if user_selected_columns:
-                    df.drop(columns=user_selected_columns, inplace=True)
-                    deleted_columns.extend(user_selected_columns)
-                    print("\n    ✅ Additional columns deleted:")
-                    for col in user_selected_columns:
-                        print(f"\n        🔸 {col}")
-                else:
-                    print("\n    ✅ No additional columns selected for deletion.")
+                # ---------------------- Clean DataFrame ----------------------
                 
-                # Display summary of removed rows
-                total_rows_removed = rows_dropped_existing + rows_dropped_opportunity
-                if total_rows_removed > 0:
-                    print(f"\n    ❗️ Total rows removed: {total_rows_removed}")
-                    print(f"\n        🔸 Due to 'existing' == False: {rows_dropped_existing}")
-                    print(f"\n        🔸 Due to due to 'Opportunity not loaded': {rows_dropped_opportunity}")
-                else:
-                    print(f"\n    ✅ No rows removed")
-
-                # Final cleaning of the DataFrame
-                df.dropna(axis=0, how='all', inplace=True)  # Remove rows with all blank values
-                df.dropna(axis=1, how='all', inplace=True)  # Remove columns with all blank values
-                df.drop_duplicates(inplace=True)  # Remove duplicate rows
-
-                # Save the final cleaned DataFrame
-                if not df.empty:
-                    output_dir = os.path.dirname(output_file)
-                    if not os.path.exists(output_dir):
-                        os.makedirs(output_dir, exist_ok=True)
-                    df.to_csv(output_file, index=False)
-
-                # Final user-facing summaries
-                if not df.empty:
-                    print("\n    ✅ Processed data saved to:")
-                    shortened_output = "/".join(output_file.split("/")[-4:])
-                    print(f"\n        📂 {shortened_output}")
-                else:
-                    print ("\n    ❗️ Processed data was Not Saved as there is no Data")
+                tags_df = clean_dataframe(tags_df)
                 
-                if total_rows_removed > 0:
-                    print("\n    ✅ Removed rows saved to:")
-                    shortned_path = "/".join(removed_rows_tags.split("/")[-5:])
-                    print(f"\n        📂 {shortned_path}")
+                #---------------------- Initialize Removed Rows df ----------------------
+                removed_rows_tag_df = pd.DataFrame(columns=tags_df.columns.tolist() + ['Reason'])
+
+                # ---------------------- columns that are dropped ----------------------
+
+                dropped_columns_tags = [] 
+
+                # ---------------------- Remove all Rows If all Tags are not found ----------------------
+                
+                tags_df,removed_rows_tag_df,should_break =  remove_if_strategy_not_found(tags_df, removed_rows_tag_df, removed_rows_tags,'Tag not found',predefined_columns_tags)
+
+                if should_break:
+                    break
+                
+                # ---------------------- Remove rows where 'existing' is False ----------------------
+                
+                tags_df, removed_rows_tag_df, rows_dropped_existing_count = remove_rows_based_on_condition(tags_df, removed_rows_tag_df,'existing',False,"Opportunity Missing From Main sheet")
+
+                # ---------------------- Remove Rows Based on Removed Oppties ----------------------
+                
+                tags_df,removed_rows_tag_df,rows_dropped_legacy_count = load_removed_rows_oppty(removed_rows_oppty, tags_df, removed_rows_tag_df, "opportunityid")
+                
+                # ---------------------- Remove Predefined Columns ----------------------
+                
+                tags_df, dropped_columns_tags = delete_predefined_columns(tags_df, predefined_columns_tags, dropped_columns_tags)
+
+                # ---------------------- GUI: Let User Select Additional Columns to Delete ----------------------
+                
+                # Call the GUI function to show the column deletion options
+                tags_df = show_column_deletion_gui(tags_df, excluded_columns_tags, dropped_columns_tags)
+
+                # ---------------------- Row Removal Summary ----------------------
+
+                print_removal_summary({
+                    "Due to 'existing' == False": rows_dropped_existing_count,
+                    "Due to 'Opportunity not loaded'": rows_dropped_legacy_count
+                })      
+                
+                # ---------------------- Clean Removed Rows DF ----------------------
+                
+                removed_rows_tag_df = drop_dropped_columns_from_removed_rows(dropped_columns_tags,removed_rows_tag_df)    
+
+                # ---------------------- Save Processed Output ----------------------
+                
+                save_dataframe(tags_df, output_file, "Tags")
+                
+                # ---------------------- Save Removed Rows Data ----------------------
+                
+                save_removed_rows(removed_rows_tag_df, removed_rows_tags, "Removed Rows_Tags")
+
 
             except ValueError as ve:
                 print(f"\n    ❌ ValueError: {ve}")
@@ -6034,163 +5710,69 @@ while True:
 
             print("\n🔍 CREATING CONTACTS FILE")
             
-            # Define input/output file paths and required columns
+            # ------------------------ Define Path for Processed data and Removed Rows Data  ----------------------
+
             sheet_name = 'Contact Roles'
-            output_file = output + '/' + Contact_role  # Path for the processed CSV
-            removed_rows_contact = removed_rows_dir+'/Removed_Rows - contact.csv'  # Path for removed rows CSV
+            output_file, removed_rows_contact = get_file_paths(sheet_name, output, removed_rows_dir,Contact_role,'Removed_Rows - contact.csv')
+
+            # Define hardcoded columns to delete from contact sheet
 
             predefined_columns_contact = ['existing']
             
             excluded_columns_contact = ["opportunityid","contactid","role"]
 
-            # Initialize variables
-            deleted_columns = []
-            rows_dropped = 0
-
+            
             try:
-                # 📥 Load the 'Contact Roles' sheet into a DataFrame
-                df = pd.read_excel(file_path, sheet_name=sheet_name)
+                # ---------------------- Load Product Sheet ----------------------
 
-                # 🔠 Convert all column headers to lowercase for consistency
-                df.columns = df.columns.str.lower()
+                contact_df = pd.read_excel(file_path, sheet_name=sheet_name)
 
-                # ✅ Ensure the 'existing' column is present for processing
-                if 'existing' not in df.columns:
-                    raise ValueError(f"\n    ❌ Column 'existing' not found in the DataFrame from sheet '{sheet_name}'. Please check your input data.")
-
-                # 🚮 Remove rows where 'existing' != True and store them separately
-                removed_rows = df[df['existing'].astype(str).str.lower() != 'true'].copy()
-                df = df[df['existing'].astype(str).str.lower() == 'true']
-                rows_dropped = len(removed_rows)
+                # ---------------------- Clean DataFrame ----------------------
                 
-                # If any rows were removed, add a reason column and save them
-                if rows_dropped > 0:
-                    removed_rows['Reason'] = "Opportunity Missing From Main sheet"
-                    removed_rows.drop(columns=[col for col in predefined_columns_contact if col in removed_rows.columns], inplace=True)
-                    removed_rows.to_csv(removed_rows_contact, index=False)
+                contact_df = clean_dataframe(contact_df)
 
-                # 🗑️ Remove predefined columns ('existing') from the main DataFrame
-                predefined_to_delete = [col for col in predefined_columns_contact if col in df.columns]
-                if predefined_to_delete:
-                    df.drop(columns=predefined_to_delete, inplace=True)
-                    deleted_columns.extend(predefined_to_delete)
+                #---------------------- Initialize Removed Rows df ----------------------
+                removed_rows_contact_df = pd.DataFrame(columns=contact_df.columns.tolist() + ['Reason'])
 
-                # ---------------------- Remove Rows Based on External Opportunity IDs ----------------------
-
-                # 🚮 Remove rows based on matching Opportunity IDs from an external CSV
-                opportunity_csv_path = removed_rows_oppty  # Path you passed earlier
-
-                if os.path.exists(opportunity_csv_path):
-                    opportunity_df = pd.read_csv(opportunity_csv_path, usecols=["opportunity_legacy_id__c"])
-
-                    # Clean both data sources for safe comparison
-                    df["opportunityid"] = df["opportunityid"].astype(str).str.strip().str.upper()
-                    opportunity_ids_set = set(opportunity_df["opportunity_legacy_id__c"].astype(str).str.strip().str.upper().dropna())
-
-                    # Identify rows with matching Opportunity IDs
-                    matching_ids = set(df["opportunityid"]).intersection(opportunity_ids_set)
-
-                    # Remove and capture rows with these IDs
-                    rows_to_remove = df[df["opportunityid"].isin(opportunity_ids_set)].copy()
-                    rows_dropped_legacy_match = len(rows_to_remove)
-
-                    if not rows_to_remove.empty:
-                        rows_to_remove["Reason"] = "Opportunity not loaded"
-
-                        # Append or create removed_rows DataFrame
-                        if 'removed_rows' in locals():
-                            removed_rows = pd.concat([removed_rows, rows_to_remove], ignore_index=True)
-                        else:
-                            removed_rows = rows_to_remove.copy()
-
-                        # Exclude these rows from the main DataFrame
-                        df = df[~df["opportunityid"].isin(opportunity_ids_set)]
-                else:
-                    print(f"\n❌ Opportunity IDs file not found: {opportunity_csv_path}")
-                    rows_dropped_legacy_match = 0
-
-                # Save updated removed rows file, if any
-                if 'removed_rows' in locals() and not removed_rows.empty:
-                    removed_rows.dropna(axis=1, how='all', inplace=True)  # Clean up if necessary (drop all-empty columns)
-                    removed_rows.to_csv(removed_rows_contact, index=False)  # Save to CSV
+                # ---------------------- columns that are dropped ----------------------
                 
-                checkboxes = {}
-                # 📋 If there are additional, user-deletable columns available
-                if any(col not in excluded_columns_contact for col in df.columns):
+                dropped_columns_contacts = []
+                
+                # ---------------------- Remove rows where 'existing' is False ----------------------
 
-                    # Create UI for selecting additional columns to delete
-                    root = Tk()
-                    root.title("Select Columns to Delete")
+                contact_df, removed_rows_contact_df, rows_dropped_existing_count = remove_rows_based_on_condition(contact_df, removed_rows_contact_df,'existing',False,"Opportunity Missing From Main sheet")
 
-                    # Set window size
-                    root.geometry("500x600")
-                    root.resizable(False, False)
+                # ---------------------- Remove Rows Based on Removed Oppties ----------------------
 
-                    # Scrollable UI
-                    canvas = Canvas(root)
-                    scrollbar = Scrollbar(root, orient="vertical", command=canvas.yview)
-                    canvas.configure(yscrollcommand=scrollbar.set)
-                    scrollbar.pack(side="right", fill="y")
-                    canvas.pack(side="left", fill="both", expand=True)
+                contact_df,removed_rows_contact_df,rows_dropped_legacy_count = load_removed_rows_oppty(removed_rows_oppty, contact_df, removed_rows_contact_df, "opportunityid")
 
-                    frame = Frame(canvas)
-                    canvas.create_window((0, 0), window=frame, anchor="nw")
+                # ---------------------- Remove Predefined Columns ----------------------
+                
+                contact_df, dropped_columns_contacts = delete_predefined_columns(contact_df, predefined_columns_contact, dropped_columns_contacts)
 
-                    # Checkbox setup
-                    for column in df.columns:
-                        var = IntVar()
-                        checkboxes[column] = var
-                        checkbutton = Checkbutton(frame, text=column, variable=var, font=('Helvetica', 12), anchor="w", padx=10)
-                        checkbutton.pack(anchor="w", pady=5)
+                # ---------------------- GUI: Let User Select Additional Columns to Delete ----------------------
+                
+                contact_df = show_column_deletion_gui(contact_df, excluded_columns_contact, dropped_columns_contacts)
+                
+                # ---------------------- Row Removal Summary ----------------------
 
-                    # Submit button
-                    submit_button = Button(frame, text="Submit", command=root.quit, font=('Helvetica', 12, 'bold'), relief='flat', padx=20, pady=10)
-                    submit_button.pack(pady=20)
+                print_removal_summary({
+                    "Due to 'existing' == False": rows_dropped_existing_count,
+                    "Due to 'Opportunity not loaded'": rows_dropped_legacy_count
+                })   
+                
+                # ---------------------- Clean Removed Rows DF ----------------------   
 
-                    # Run the UI
-                    frame.update_idletasks()
-                    canvas.config(scrollregion=canvas.bbox("all"))
-                    root.mainloop()
-                    root.destroy()
-                else:
-                        print("\n    ✅ No user-selectable columns available for deletion. Skipping GUI.")
+                removed_rows_contact_df = drop_dropped_columns_from_removed_rows(dropped_columns_contacts,removed_rows_contact_df)    
+            
+                # ---------------------- Save Processed Output ----------------------
+                
+                save_dataframe(contact_df, output_file, "Contact")
 
-                # 🗑️ Process user-selected columns for deletion
-                user_selected_columns = [col for col, var in checkboxes.items() if var.get() == 1]
-                if user_selected_columns:
-                    df.drop(columns=user_selected_columns, inplace=True)
-                    deleted_columns.extend(user_selected_columns)
-                    print("\n    ✅ Additional columns deleted:")
-                    for col in user_selected_columns:
-                        print(f"\n        🔸 {col}")
-                else:
-                    print("\n    ✅ No additional columns selected for deletion.")
+                # ---------------------- Save Removed Rows Data ----------------------
+                
+                save_removed_rows(removed_rows_contact_df, removed_rows_contact, "Removed Rows_Contact")
 
-                # 🧹 Final cleanup of the DataFrame
-                df.dropna(axis=0, how='all', inplace=True)  # Remove rows with all blank values
-                df.dropna(axis=1, how='all', inplace=True)  # Remove columns with all blank values
-                df.drop_duplicates(inplace=True)  # Remove duplicate rows
-
-                # 💾 Save the cleaned DataFrame to the final CSV file
-                output_dir = os.path.dirname(output_file)
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir, exist_ok=True)
-                df.to_csv(output_file, index=False)
-
-                # Summary of deletions
-                total_rows_removed = rows_dropped + rows_dropped_legacy_match
-                print(f"\n    ❗️ Total rows removed: {total_rows_removed}")
-                print(f"\n        🔸 Due to 'existing' == False: {rows_dropped}")
-                print(f"\n        🔸 Due to 'Opportunity not loaded': {rows_dropped_legacy_match}")
-
-                # Final summary messages
-                print("\n    ✅ Processed data saved to:")
-                print(f"\n        📂 {"/".join(output_file.split("/")[-4:])}")
-
-                if total_rows_removed > 0:
-                    print("\n    ✅ Removed rows saved to:")
-                    shortned_path = "/".join(removed_rows_contact.split("/")[-5:])
-                    print(f"\n        📂 {shortned_path}")
         
             except ValueError as ve:
                 print(f"\n    ❌ ValueError: {ve}")
@@ -6282,10 +5864,12 @@ while True:
     else:
         print("\n        🛑 No files were deleted.")
 
-    # =====================================================
-    title = f"✅ File Prepared: {filename} ✅"
-    show_title(title)
-    # =====================================================
+
+    print("\n")
+    print("=" * 100)
+    print(f"\n ✅ File Prepared: {filename} ✅\n")
+    print("=" * 100)
+    
 
     files_in_copy_folder.remove(files_in_copy_folder[selected_index])
 
