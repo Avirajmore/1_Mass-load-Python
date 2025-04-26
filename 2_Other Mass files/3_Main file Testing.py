@@ -1,5 +1,4 @@
 # Importing all the necessary Libraries
-
 import os
 import re
 import sys
@@ -25,16 +24,16 @@ from openpyxl.utils.exceptions import SheetTitleException
 
 # Path of the folder Where you want to save the Mass Load Files. 
 # ❗️ Change this path if you want to store files in a different location
-base_dir = os.path.expanduser("~/Documents/Office Docs/Massload Files/2025") 
+BASE_DIR = os.path.expanduser("~/Documents/Office Docs/Massload Files/2025") 
 
 # for Example :-  os.path.expanduser("~/Downloads") == "/Users/avirajmore/Downloads" 
 
 # Path of the folder Where you have saved a the template of the Summary file
 # ❗️ Change this path if your summary file is stored elsewhere
-reference_summary_path = os.path.expanduser("~/Documents/Office Docs/Massload Files/Reference File/Reference_Summary_file.xlsx") #Change it to where you want to store the summary file
+REF_SUMMARY_FILE_PATH = os.path.expanduser("~/Documents/Office Docs/Massload Files/Reference File/Reference_Summary_file.xlsx") #Change it to where you want to store the summary file
 
 # Path for the Downloads Folder
-downloads_dir = os.path.expanduser("~/Downloads")
+DOWNLOADS_DIR = os.path.expanduser("~/Downloads")
 
 # =========================================================
 # Folder Creation starts
@@ -74,7 +73,7 @@ def is_valid_folder_name(name):
 #     else:
 #         print("\n        ❗️ Error: Invalid folder name. Please avoid using invalid characters like \\ / : * ? \" < > |.")
 
-# main_folder_path = os.path.join(base_dir, Sprint_Number)
+# main_folder_path = os.path.join(BASE_DIR, Sprint_Number)
 # os.makedirs(main_folder_path, exist_ok=True)
 # print(f"\n        ✅ Folder '{Sprint_Number}' created successfully")
 
@@ -99,8 +98,8 @@ while True:
 
 # Create the main folder and subfolders
 
-# Construct a Full path for the user-specified Folder inside base_dir
-Current_iteration_Folder = os.path.join(base_dir, Current_Iteration_Folder_Name )
+# Construct a Full path for the user-specified Folder inside BASE_DIR
+Current_iteration_Folder = os.path.join(BASE_DIR, Current_Iteration_Folder_Name )
 
 # Create the main subfolder (if it doesn't already exist)
 os.makedirs(Current_iteration_Folder, exist_ok=True)
@@ -128,16 +127,16 @@ files_moved = []
 print(f"\n\n🔍 Step 2: Moving Excel files")
 
 # Check if any Excel files exist in Downloads folder before moving them
-if os.path.exists(downloads_dir):
+if os.path.exists(DOWNLOADS_DIR):
     
     # Loop through all files in the Downloads folder
-    for file_name in os.listdir(downloads_dir):
+    for file_name in os.listdir(DOWNLOADS_DIR):
     
         # Check if the file has an Excel file extension (case-insensitive)    
         if file_name.lower().endswith(excel_extensions):
             
             # Construct full source and target file paths
-            source_path = os.path.join(downloads_dir, file_name)
+            source_path = os.path.join(DOWNLOADS_DIR, file_name)
             target_path = os.path.join(Current_iteration_Folder, file_name)
             
             # Move the file from Downloads to the target folder
@@ -357,7 +356,7 @@ while True:
             ws = wb[sheet_name]
             correct_name = variant_mapping[sheet_name]
             ws.title = correct_name
-            print(f"\n    🔄 Renamed '{sheet_name}' to '{correct_name}' automatically.")
+            print(f"\n    ✅  Renamed '{sheet_name}' to '{correct_name}' automatically.")
 
     # Get the list of sheet names present in the current workbook
     sheets_in_file = wb.sheetnames
@@ -481,7 +480,7 @@ while True:
     # ======================================================================
     # Step 1: File Existence Check
     # ======================================================================
-
+    #  i am here
     print("\n\n🔍 Step 1: Checking if the file exists...")
     def check_file_exists(file_path):
         if os.path.exists(file_path):
@@ -496,6 +495,22 @@ while True:
     filename = check_file_exists(file_path)
     
     # ======================================================================
+    #  Extract the Mpp_Number__c column and save it to a new Excel file
+    # ======================================================================
+
+    df = pd.read_excel(file_path, sheet_name="Opportunity", dtype={"Mpp_Number__c": str})
+
+    if 'Mpp_Number__c' in df.columns:
+        # Extract the two required columns
+        columns_to_extract = ["opportunity_legacy_id_c", "Mpp_Number__c"]
+        mpp_df = df[columns_to_extract]
+
+        # Save to a new Excel file, ensuring Mpp_Number__c remains text
+        mpp_output_file = os.path.join(csv_file_dir,"MPP_Column.xlsx")
+        with pd.ExcelWriter(mpp_output_file, engine='openpyxl') as writer:
+            mpp_df.to_excel(writer, index=False)
+
+    # ======================================================================
     # Step 2: Removing Duplicates and Blank Rows
     # ======================================================================
 
@@ -505,35 +520,32 @@ while True:
     # Define Opportunity Sheet Name
     opportunity_sheet_name = "Opportunity"
 
-    # Function to clean a specific Excel sheet by removing duplicate and blank rows
-    def remove_duplicates_and_blank_rows(file_path, opportunity_sheet_name):
+    def clean_sheet(file_path, sheet_name, remove_duplicates=False):
         try:
-            # Try to read the spreadsheet with the given sheet name
-            df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
+            # Read the spreadsheet with the given sheet name
+            df = pd.read_excel(file_path, sheet_name=sheet_name)
 
-            # Remove duplicate rows from the DataFrame
-            df = df.drop_duplicates()
+            # Remove duplicate rows if requested
+            if remove_duplicates:
+                df = df.drop_duplicates()
 
             # Remove rows where all cells are NaN (blank rows)
             df = df.dropna(how='all')
 
-            # Save the cleaned data back to the same file without modifying formatting
+            # Save the cleaned data back to the same file
             with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-                df.to_excel(writer, sheet_name=opportunity_sheet_name, index=False)
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-            print(f"\n    ✅ Removed all the duplicate rows and blank rows. ")
+            if remove_duplicates:
+                print(f"\n    ✅ Removed duplicate and blank rows from '{sheet_name}' sheet. ")
+            else:
+                print(f"\n    ✅ Removed blank rows from '{sheet_name}' sheet. ")
 
-        except ValueError as e:
-            # Handle the case where the sheet does not exist
-            print(f"\n    ❌ Error: The sheet '{opportunity_sheet_name}' does not exist in the file. ")
-            sys.exit()
         except Exception as e:
-            # Handle any other exceptions
             print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ")
             sys.exit()
 
-    # Call the function to clean the 'Opportunity' sheet
-    remove_duplicates_and_blank_rows(file_path, opportunity_sheet_name)
+    clean_sheet(file_path, opportunity_sheet_name, remove_duplicates=True)
     
     # =========================================================
 
@@ -562,7 +574,6 @@ while True:
             sys.exit(1)
         except ValueError:
             print("\n    ❌ Error: Failed to read the Excel file. It may be corrupted or not a valid Excel format.")
-            sys.exit(1)
         except Exception as e:
             print(f"\n    ❌ An unexpected error occurred: {e}")
             sys.exit(1)
@@ -758,10 +769,10 @@ while True:
         renames/moves it to the designated CSV directory using the provided new name.
         """
         
-        for filename in os.listdir(downloads_dir):
+        for filename in os.listdir(DOWNLOADS_DIR):
             if "bulkQuery" in filename and filename.endswith(".csv"):
-                old_path = os.path.join(downloads_dir, filename)
-                new_path = os.path.join(downloads_dir, new_name)
+                old_path = os.path.join(DOWNLOADS_DIR, filename)
+                new_path = os.path.join(DOWNLOADS_DIR, new_name)
                 shutil.move(old_path, new_path)
                 return True  # Successful rename and move
         return False  # No matching file found
@@ -1309,8 +1320,8 @@ while True:
     print("\n\n🔍 Step 16: Copying extracted data to main file...")
 
     # Define expected CSV file paths
-    accounts_csv = downloads_dir+"/accounts.csv"  
-    userid_csv = downloads_dir+"/userid.csv" 
+    accounts_csv = DOWNLOADS_DIR+"/accounts.csv"  
+    userid_csv = DOWNLOADS_DIR+"/userid.csv" 
     
     # Check if the CSV files exist, and prompt to retry if not
     while not os.path.exists(accounts_csv):
@@ -1919,32 +1930,7 @@ while True:
 
     print("\n\n🔍 Step 2: Removing blank rows...")
 
-    def remove_blank_rows(file_path, product_sheet_name):
-        try:
-            # Try to read the spreadsheet with the given sheet name
-            df = pd.read_excel(file_path, sheet_name=product_sheet_name)
-
-            # Remove rows where all cells are NaN (blank rows)
-            df = df.dropna(how='all')
-
-            # Save the cleaned data back to the same file without modifying formatting
-            with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-                df.to_excel(writer, sheet_name=product_sheet_name, index=False)
-
-            print(f"\n    ✅ Removed all the blank rows from '{product_sheet_name}' sheet. ")
-
-        except ValueError as e:
-            # Handle the case where the sheet does not exist
-            print(f"\n    ❌ Error: The sheet '{product_sheet_name}' does not exist in the file. ")
-            sys.exit()
-        except Exception as e:
-            # Handle any other exceptions
-            print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ")
-            sys.exit()
-
-    # Call the function for 'Opportunity_product' sheet
-    remove_blank_rows(file_path, product_sheet_name)
-
+    clean_sheet(file_path, product_sheet_name, remove_duplicates=False)
 
     # ======================================================================
     # Step 3 :- Add Exsising column, To check if the given Opportunities are present in the Opportunity Sheet 
@@ -2525,7 +2511,7 @@ while True:
     print("\n\n🔍 Step 13: Copying data from CSV file to Excel...")
 
     # Define the path to the 'productfamily.csv' file
-    product_family_csv = downloads_dir+"/productfamily.csv"
+    product_family_csv = DOWNLOADS_DIR+"/productfamily.csv"
 
     # Continuously check if the file exists
     # If not, prompt the user to retry or exit
@@ -3179,7 +3165,7 @@ while True:
             print("\n\n🔍 Step 7: Copying Data from CSV File...")
 
             # Define the file path for the CSV file
-            team_csv = downloads_dir+"/teammember.csv" #As email id are store in Userid csv
+            team_csv = DOWNLOADS_DIR+"/teammember.csv" #As email id are store in Userid csv
             
             # Flag to determine whether to proceed with processing the team member CSV
             run_team_code = False
@@ -4266,7 +4252,7 @@ while True:
             print("\n\n🔍 Step 12: Processing CSV File and Adding Filtered Data to Excel...")
 
             # Define the file path for the Exported csv file
-            tags_csv = downloads_dir+ "/tags.csv"
+            tags_csv = DOWNLOADS_DIR+ "/tags.csv"
 
             # Flag to determine whether to proceed with processing
             run_code_strategy = False
@@ -4873,7 +4859,7 @@ while True:
         print(f"\n    ✅ Output folder selected automatically:")
         
         # Show a relative path by trimming the base directory for cleaner display
-        print(f"\n        📂 {output.split(base_dir, 1)[-1]}")
+        print(f"\n        📂 {output.split(BASE_DIR, 1)[-1]}")
 
     else:
         # If the path doesn't exist or is invalid, show an error and print full path
@@ -4925,20 +4911,20 @@ while True:
         return output_file, removed_rows_file
 
     sheet_name = 'Opportunity'
-    output_file, removed_rows_oppty = get_file_paths(sheet_name, output, removed_rows_dir,opportunity,'Removed_Rows - Oppty.csv')
+    opppty_processed_file, removed_rows_oppty = get_file_paths(sheet_name, output, removed_rows_dir,opportunity,'Removed_Rows - Oppty.csv')
 
 
     # -------------------------------------------- Define Columns --------------------------------------------
 
     predefined_columns_oppty = [
         'Already Exist','AccountNumber', 'Email', 'created_by', 'modified_by', 'created_date',
-        'modified_date', 'Trimmed_accountid', 'Trimmed_ownerid', 'Type Of Opportunity',
+        'modified_date', 'Trimmed_accountid', 'Trimmed_ownerid', 'Type Of Opportunity',"mpp_number__c",
         'Concatenatedaccountid', 'Concatenatedownerid', 'concatenatedcreatedby','accountid','type of opportunity','Email.1'
     ]
 
     # List of columns to exclude from user selection in the GUI
     excluded_columns_oppty = [
-        'opportunity_legacy_id__c', 'Legacy_Opportunity_Split_Id__c', 'name', 'StageName',
+        'opportunity_legacy_id__c', 'Legacy_Opportunity_Split_Id__c', 'name', 'StageName','description',
         'Won_Reason__c', 'Lost_Category__c', 'Lost_Reason__c', 'CloseDate', 'CurrencyIsoCode',
         'OwnerId', 'NextStep', 'OI_Group__c','AccountId','createdbyid','Pricebook2Id','RecordTypeId'
     ]
@@ -5135,7 +5121,6 @@ while True:
     except Exception as e:
         print(f"\n    ❌ Error processing invalid PricebookEntryId rows: {e}")
 
-
 # ---------------------- Row Removal Summary ----------------------
 
     def print_removal_summary(reason_counts: dict, label: str = "rows"):
@@ -5179,7 +5164,7 @@ while True:
         except Exception as e:
             print(f"\n    ❌ Error saving the {label.lower()} file: {e}")
     
-    save_dataframe(opportunity_df, output_file, "Opportunity")
+    save_dataframe(opportunity_df, opppty_processed_file, "Opportunity")
 
 
 # ---------------------- Save Removed Rows Data ----------------------
@@ -5195,6 +5180,34 @@ while True:
 
     save_removed_rows(removed_rows_oppty_df, removed_rows_oppty, "Removed Rows_Opportunity")
 
+    mpp_output_file = os.path.join(csv_file_dir,"MPP_Column.xlsx")
+    
+    if os.path.exists(mpp_output_file):
+        csv_df = pd.read_csv(opppty_processed_file, dtype={'opportunity_legacy_id__c': str})
+        excel_df = pd.read_excel(mpp_output_file, dtype={'opportunity_legacy_id_c': str, 'Mpp_Number__c': str})
+        # Read the files, preserve leading zeros
+        csv_df = pd.read_csv(opppty_processed_file, dtype={'opportunity_legacy_id__c': str})
+        excel_df = pd.read_excel(mpp_output_file, dtype={'opportunity_legacy_id_c': str, 'Mpp_Number__c': str})
+
+        # Convert matching columns to lowercase for case-insensitive comparison
+        csv_df['opportunity_legacy_id__c_lower'] = csv_df['opportunity_legacy_id__c'].str.lower()
+        excel_df['opportunity_legacy_id_c_lower'] = excel_df['opportunity_legacy_id_c'].str.lower()
+
+        # Merge the Excel Mpp_Number__c into the CSV based on lowercased IDs
+        csv_df = csv_df.merge(
+            excel_df[['opportunity_legacy_id_c_lower', 'Mpp_Number__c']],
+            how='left',
+            left_on='opportunity_legacy_id__c_lower',
+            right_on='opportunity_legacy_id_c_lower'
+        )
+
+        # Drop the helper lowercase columns
+        csv_df.drop(columns=['opportunity_legacy_id__c_lower', 'opportunity_legacy_id_c_lower'], inplace=True)
+
+        # Save back to the **same CSV file** (overwrite)
+        csv_df.to_csv(opppty_processed_file, index=False)
+
+        print(f"CSV file '{opppty_processed_file}' updated successfully with 'Mpp_Number__c' values.")
 
     # =======================================================
     # Step 2:- Creating the Opportunity Product File
@@ -5206,7 +5219,7 @@ while True:
     # ---------------------- Define Path for Processed data and Removed Rows Data  ----------------------
 
     sheet_name = 'Opportunity_product'
-    output_file, removed_rows_product = get_file_paths(sheet_name, output, removed_rows_dir,opportunity_product,'Removed_Rows - Product.csv')
+    product_processed_file, removed_rows_product = get_file_paths(sheet_name, output, removed_rows_dir,opportunity_product,'Removed_Rows - Product.csv')
     
     # -------------------------------------------- Define Columns --------------------------------------------
 
@@ -5289,7 +5302,7 @@ while True:
         
         # ---------------------- Save Processed Product File ----------------------
         
-        save_dataframe(product_df, output_file, "Product")
+        save_dataframe(product_df, product_processed_file, "Product")
 
         # ---------------------- Save Removed Rows Data ----------------------
         
@@ -5324,7 +5337,7 @@ while True:
             # ------------------------- Define Path for Processed data and Removed Rows Data  ----------------------
 
             sheet_name = 'Opportunity_team'
-            output_file, removed_rows_team = get_file_paths(sheet_name, output, removed_rows_dir,opportunity_team,'Removed_Rows - Team.csv')
+            team_procesed_file, removed_rows_team = get_file_paths(sheet_name, output, removed_rows_dir,opportunity_team,'Removed_Rows - Team.csv')
             
             # ---------------------- Define Columns ----------------------
 
@@ -5381,7 +5394,7 @@ while True:
 
                 # ---------------------- Save Processed Output ----------------------
                 
-                save_dataframe(team_df, output_file, "Team Member")
+                save_dataframe(team_df, team_procesed_file, "Team Member")
                 
                 # ---------------------- Save Removed Rows Data ----------------------
 
@@ -5418,7 +5431,7 @@ while True:
             # ---------------------- Define Path for Processed data and Removed Rows Data  ----------------------
 
             sheet_name = 'Reporting_codes'
-            output_file, removed_rows_codes = get_file_paths(sheet_name, output, removed_rows_dir,reporting_codes,'Removed_Rows - ReportingCodes.csv')
+            code_processed_file, removed_rows_codes = get_file_paths(sheet_name, output, removed_rows_dir,reporting_codes,'Removed_Rows - ReportingCodes.csv')
             
             # -------------------------------- Define Columns --------------------------------------
                       
@@ -5497,7 +5510,7 @@ while True:
 
                 # ---------------------- Save Processed Output ----------------------
                 
-                save_dataframe(codes_df, output_file, "Reporting Codes")
+                save_dataframe(codes_df, code_processed_file, "Reporting Codes")
                 
                 # ---------------------- Save Removed Rows Data ----------------------
                 
@@ -5534,7 +5547,7 @@ while True:
             # ---------------------- Define Path for Processed data and Removed Rows Data  ----------------------
             
             sheet_name = 'Tags'
-            output_file, removed_rows_tags = get_file_paths(sheet_name, output, removed_rows_dir,tags,'Removed_Rows - Tags.csv')
+            tag_processed_file, removed_rows_tags = get_file_paths(sheet_name, output, removed_rows_dir,tags,'Removed_Rows - Tags.csv')
             
             # -------------------------------- Define Columns --------------------------------------
             
@@ -5598,7 +5611,7 @@ while True:
 
                 # ---------------------- Save Processed Output ----------------------
                 
-                save_dataframe(tags_df, output_file, "Tags")
+                save_dataframe(tags_df, tag_processed_file, "Tags")
                 
                 # ---------------------- Save Removed Rows Data ----------------------
                 
@@ -5639,7 +5652,7 @@ while True:
             # ------------------------ Define Path for Processed data and Removed Rows Data  ----------------------
 
             sheet_name = 'Contact Roles'
-            output_file, removed_rows_contact = get_file_paths(sheet_name, output, removed_rows_dir,Contact_role,'Removed_Rows - contact.csv')
+            contact_processed_file, removed_rows_contact = get_file_paths(sheet_name, output, removed_rows_dir,Contact_role,'Removed_Rows - contact.csv')
 
             # Define hardcoded columns to delete from contact sheet
 
@@ -5693,7 +5706,7 @@ while True:
             
                 # ---------------------- Save Processed Output ----------------------
                 
-                save_dataframe(contact_df, output_file, "Contact")
+                save_dataframe(contact_df, contact_processed_file, "Contact")
 
                 # ---------------------- Save Removed Rows Data ----------------------
                 
@@ -5722,9 +5735,9 @@ while True:
     print("\n\n🔍 Copying the Summary File to the Selected Folder...")
 
     # Check if the reference summary file exists at the specified location
-    if not os.path.exists(reference_summary_path):
+    if not os.path.exists(REF_SUMMARY_FILE_PATH):
         print("\n    ❌ Error: Reference file does not exist at the specified path.")
-        print(f"\n       📂 Path: {reference_summary_path}\n")
+        print(f"\n       📂 Path: {REF_SUMMARY_FILE_PATH}\n")
     else:
         try:
             # Extract the name of the selected folder (from the output path)
@@ -5734,7 +5747,7 @@ while True:
             destination_file_path = os.path.join(output, f"{selected_folder_name}_summary file.xlsx")
 
             # Copy the reference file to the destination location
-            shutil.copy(reference_summary_path, destination_file_path)
+            shutil.copy(REF_SUMMARY_FILE_PATH, destination_file_path)
             print(f"\n    ✅ Reference file copied successfully to the folder: {selected_folder_name}")
 
             # Load the copied file using openpyxl
@@ -5776,7 +5789,7 @@ while True:
     response = 'yes'
     # response = 'no'
     if response == 'yes':
-        # Get list of files in the downloads_dir
+        # Get list of files in the DOWNLOADS_DIR
         def delete_folder(folder_path):
             if os.path.exists(folder_path):
                 shutil.rmtree(folder_path)
