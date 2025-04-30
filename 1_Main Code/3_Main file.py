@@ -2,6 +2,7 @@
 import os
 import re
 import sys
+import time
 import shutil
 import openpyxl
 import pyperclip
@@ -21,7 +22,7 @@ from openpyxl.utils.exceptions import SheetTitleException
 # =========================================================
 # Define the base paths for storing mass load files
 # =========================================================
-
+start_time = time.time()   # Record start time
 # Path of the folder Where you want to save the Mass Load Files. 
 # ❗️ Change this path if you want to store files in a different location
 BASE_DIR = os.path.expanduser("~/Documents/Office Docs/Massload Files/2025") 
@@ -480,7 +481,7 @@ while True:
     # ======================================================================
     # Step 1: File Existence Check
     # ======================================================================
-    #  i am here
+
     print("\n\n🔍 Step 1: Checking if the file exists...")
     def check_file_exists(file_path):
         if os.path.exists(file_path):
@@ -531,7 +532,10 @@ while True:
 
             # Remove rows where all cells are NaN (blank rows)
             df = df.dropna(how='all')
-
+            # Remove rows where all cells are NaN (blank rows)
+            df = df.dropna(how='all')
+            if sheet_name == "Opportunity":
+                df = df.dropna(subset=['opportunity_legacy_id_c'], how='all')
             # Save the cleaned data back to the same file
             with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
@@ -5807,6 +5811,9 @@ while True:
     title = "✅ File Prepared: {filename} ✅"
     show_title(title)
     
+    end_time = time.time()   # Record start time
+    elapsed_time = end_time - start_time
+    print(f"\n⏱️ Elapsed time: {elapsed_time:.2f} seconds")
 
     files_in_copy_folder.remove(files_in_copy_folder[selected_index])
 

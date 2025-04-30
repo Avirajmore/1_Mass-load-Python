@@ -3,6 +3,7 @@ import re
 import time
 import shutil
 import openpyxl
+import threading
 import pyperclip
 import itertools
 import pandas as pd
@@ -69,7 +70,7 @@ for file in os.listdir(DOWNLOAD_DIR):
                 ws = wb[sheet_name]
                 correct_name = variant_mapping[sheet_name]
                 ws.title = correct_name
-                print(f"\n    🔄 Renamed '{sheet_name}' to '{correct_name}' automatically.")
+                print(f"\n   🔄 Renamed '{sheet_name}' to '{correct_name}' automatically.")
         # Save the workbook with the new sheet names
         wb.save(file_path)
 
@@ -336,6 +337,7 @@ def generate_query_from_sheet(EXTRACT_OUTPUT_FILE, sheet_name, column_name, quer
     values = df[column_name].dropna().astype(str).str.strip().tolist()
 
     # Query parts length
+
     base_query_length = len(query_template.replace("{values}", ""))
     max_query_length = 80000
 
@@ -449,11 +451,25 @@ file_mapping = {
 # ============================
 # Function to find & rename 'bulkQuery' CSV file
 # ============================
+
 def wait_and_rename_bulkquery_file(new_name, dir_path, part_number=None, timeout=60):
+    def listen_for_cancel():
+        nonlocal cancel
+        cancel = input("\n   ⭕️ Press 'C' to cancel the operation: ").strip().lower() == 'c'
+
+    cancel = False
+    cancel_thread = threading.Thread(target=listen_for_cancel)
+    cancel_thread.daemon = True
+    cancel_thread.start()
+
     # print(f"\n⏳ Waiting for 'bulkQuery' file to appear in {dir_path}... (timeout: {timeout} seconds)")
     
     start_time = time.time()
     while time.time() - start_time < timeout:
+        if cancel:
+            print("\n   ❌ Operation cancelled by user.")
+            return False
+        
         for filename in os.listdir(dir_path):
             if "bulkQuery" in filename and filename.endswith(".csv"):
                 old_path = os.path.join(dir_path, filename)
@@ -468,10 +484,11 @@ def wait_and_rename_bulkquery_file(new_name, dir_path, part_number=None, timeout
                     print(f"\n   ⚠️ Existing file '{final_name}' backed up as '{os.path.basename(backup_path)}'")
 
                 shutil.move(old_path, new_path)
-                print(f"\n   ✅ File renamed to '{final_name}'")
+                print(f"\n\n   ✅ File renamed to '{final_name}'", flush=True)
 
                 return True
         time.sleep(2)
+    
     print("\n   ❌ Timeout: No 'bulkQuery' file found. Please Rename it manually")
     return False
 
@@ -543,58 +560,35 @@ while not break_outer_loop:
 
 title = "📝  Merge CSV Files 📝"
 show_title(title)
-while True:
 
-    merge = input("\n📝 Do you want to merge CSV?(yes/no): ").strip().lower()
+# List all CSV files in the directory
+all_files = [f for f in os.listdir(DOWNLOAD_DIR) if f.endswith('.csv')]
 
-    if merge == 'yes':
+# Dictionary to store files grouped by their prefix
+prefix_groups = {}
 
-        # Function to select multiple CSV files
-        def select_files(title):
-            root = tk.Tk()
-            root.withdraw()
-            file_paths = filedialog.askopenfilenames(title=title, filetypes=[("CSV files", "*.csv")])
+# Regex to capture the prefix and the number
+pattern = re.compile(r"([a-zA-Z_]+)\d+\.csv")
 
-            if file_paths:
-                return file_paths
-            else:
-                print("\n   ❌ No files selected.")
-                return None
+for filename in all_files:
+    match = pattern.match(filename)
+    if match:
+        prefix = match.group(1)
+        prefix_groups.setdefault(prefix, []).append(filename)
 
-        # Function to merge multiple CSV files
-        def merge_csv_files(file_paths, output_file):
-            merged_df = pd.DataFrame()  # Empty DataFrame to start with
+# Merge files group-wise
+for prefix, files in prefix_groups.items():
+    combined_df = pd.DataFrame()
+    for file in sorted(files):  # Sort to maintain order
+        file_path = os.path.join(DOWNLOAD_DIR, file)
+        df = pd.read_csv(file_path)
+        combined_df = pd.concat([combined_df, df], ignore_index=True)
+    # Save the merged file
+    output_file = os.path.join(DOWNLOAD_DIR, f"{prefix}.csv")
+    combined_df.to_csv(output_file, index=False)
+    print(f"\n   ✅ Merged {len(files)} files into {output_file}")
 
-            for file_path in file_paths:
-                df = pd.read_csv(file_path)
-                merged_df = pd.concat([merged_df, df], ignore_index=True)
-
-            merged_df.to_csv(output_file, index=False)
-            print(f"\n   ✅ Files merged successfully into: {output_file}")
-
-        print("\n🔍 Select the csv files to merge")
-        # Main flow
-        file_paths = select_files("Select CSV files to merge")
-
-        print("\n🔍 Name of new Csv File")
-        if file_paths:
-            output_name = input("\n📄 Enter the name for the merged CSV file (without .csv extension): ").strip()
-            if not output_name:
-                output_name = "Merged_file"  # Default name if left blank
-
-            output_file = os.path.expanduser(f"~/Downloads/{output_name}.csv")
-
-            merge_csv_files(file_paths, output_file)
-        else:
-            print("\n   ⚠️ No files selected. Exiting.")
-        
-        break
-
-    elif merge == 'no':
-        print("\n    🚫 Skipping Merging CSV Files")
-        break
-    else:   
-        print("\n    ❗️ Invalid Choice")    
+print("\n   ✅ All merging complete!")
 
 # ======================
 

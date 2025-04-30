@@ -3,6 +3,7 @@ import pandas as pd
 from tabulate import tabulate
 import openpyxl
 
+# ------------------------------------ Function to Display Section Titles Nicely ------------------------------------
 
 def show_title(title):
 
@@ -12,12 +13,19 @@ def show_title(title):
     print(title.center(line_width))
     print(f"{line}\n")
 
+# ------------------------------------ Start Program ------------------------------------
+
+# Display the main title
 title = "📝  File Data Validation 📝"
 show_title(title)
 
+# Define the folder path to look for Excel files
 folder_path = os.path.expanduser("~/Downloads")
 
+# Create a list to store file validation summaries
 summary_list = []
+
+# ------------------------------------ Show Available Excel Files ------------------------------------
 
 print(f"\n🔍 Files Available: ")
 for file in os.listdir(folder_path):
@@ -25,17 +33,25 @@ for file in os.listdir(folder_path):
         file_path = os.path.join(folder_path, file)
         print(f"\n    ✅ {file}")
 
+# ------------------------------------ Start Validation Process for Each Excel File ------------------------------------
+
+
 for file in os.listdir(folder_path):
     if file.endswith(".xlsx"):
+        
         file_path = os.path.join(folder_path,file)
-
+        
+        # Show current file being processed 
         title = f"✅ {file} ✅"
         show_title(title)
 
-        # Summary status flag
+        # Initialize status for the file
         file_status = "✅ All Good"
+        
+        # ------------------------------------ Setup Validation Parameters ------------------------------------
 
-        # --- Valid API Names ---
+        # --- List of Valid API Names ---
+        # Used to validate values in specific columns (e.g., sales stages, types, etc.)
         valid_api_names = [
             'Engage', 'Qualify', 'Design', 'Propose', 'Negotiate', 'Closing', 'Prospecting', 'Developing', 'Negotiation', 'Won', 'Lost',
             'RNL_MAINT_ADMIN', 'RNL_MAINT_NOPAY', 'RNL_MAINT_CATCH', 'RNL_MAINT_ENDSUPP', 'RNL_MAINT_OUTPROD',
@@ -63,11 +79,12 @@ for file in os.listdir(folder_path):
             'BPESA',	'BPQUA',	'BPOTHER',	'TLSRENCO'
         ]
 
-        # --- Required Columns ---
+        # --- Required Columns for Validation ---
+        # Define the mandatory columns for each shee
         required_columns = {
             "Opportunity": [
                 "opportunity_legacy_id_c", "name", "accountid", "sales_stage",
-                "expected_close_date", "currency_code", "ownerid", "OI_Source"
+                "expected_close_date", "currency_code", "ownerid", "OI_Source",'created_by'
             ],
             "Opportunity_product": [
                 "OpportunityId", "Product", "product_type", "unitprice", "Term",
@@ -75,16 +92,16 @@ for file in os.listdir(folder_path):
             ]
         }
 
-        # --- Columns to Validate against API list ---
+        # --- Columns That Must Have Values from the Valid API List ---
         columns_to_validate = [
             "sales_stage", "OI_Source", "Classification Type", "Type", "Renewal type", "Renewal Status","product_type",
             "Won Reason","Lost Category","Lost Reason"
         ]
 
-        # --- Columns to check for blanks ---
+        # --- Columns to Check for Missing (Blank) Values ---
         blank_values_columns = {
             "Opportunity": [
-                "opportunity_legacy_id_c", "name", "accountid", "sales_stage","ownerid", "expected_close_date", "currency_code", "ownerid", "OI_Source"
+                "opportunity_legacy_id_c", "name", "accountid", "sales_stage", "expected_close_date", "currency_code", "ownerid", "OI_Source"
             ],
             "Opportunity_product": [
                 "Product", "product_type", "unitprice", "Classification Type"
@@ -184,14 +201,11 @@ for file in os.listdir(folder_path):
             # Save the modified workbook only once after all operations
             wb.save(file_path)
 
-
-        # Example usage:
-
+        # Call the function to check and rename sheets
         check_and_rename_sheets(file_path)
 
-        # --- Check Required Columns ---
-        
-        # --- Load Excel file ---
+        # ------------------------------ Check for Mandatory Columns -------------------------
+
         xls = pd.ExcelFile(file_path)
         
         print(f"\n🔍 Step 2: Checking Required Columns: ")
@@ -211,7 +225,8 @@ for file in os.listdir(folder_path):
                 file_status = "❌ Issues Found"
                 print(f"\n    ❌ Sheet '{sheet}' not found.")
 
-        # --- Check API Value Validity (Case-Insensitive) ---
+        # ----------------------  Check for Columns with Invalid API names ---------------------
+
         print(f"\n🔍 Step 3: Checking for Invalid API names:")
         file_path = os.path.join(folder_path, file)
         xls = pd.ExcelFile(file_path)
@@ -257,7 +272,8 @@ for file in os.listdir(folder_path):
             file_status = "❌ Issues Found"
             print(f"\n    ❌ One or both sheets 'Opportunity' and 'Opportunity_product' not found.")
 
-        # --- Check Opportunity: Missing 'Won Reason' and 'Lost Reason/Category' ---
+        # ----------------------  Check for missing Lost Catergory, Loss reason and won reason ---------------------
+
         print(f"\n🔍 Step 4: Check if Won Reason, Lost category and Lost reason are present")
         if "Opportunity" in xls.sheet_names:
             try:
@@ -344,7 +360,8 @@ for file in os.listdir(folder_path):
             file_status = "❌ Issues Found"
             print(f"\n    ❌ Sheet 'Opportunity' not found.")
 
-        # --- Function to Check for Blank Values in Given Columns ---
+        # ----------------------  Check for Blank values in Important Columns ---------------------
+
         print(f"\n🔍 Step 5: Check if there are any blank values in Important columns")
         def check_blank_values(df, column_names):
             blank_columns = []
@@ -358,10 +375,12 @@ for file in os.listdir(folder_path):
                         blank_columns.append(col)
             return blank_columns
 
-        # --- Check for Blank Values in 'Opportunity' and 'Opportunity_product' ---
         if 'Opportunity' in xls.sheet_names:
             try:
                 df_opportunity = pd.read_excel(xls, sheet_name='Opportunity')
+                df_opportunity = df_opportunity.dropna(axis=0,how='all')
+                df_opportunity = df_opportunity.dropna(axis=1,how='all')
+                df_opportunity = df_opportunity.dropna(subset=['opportunity_legacy_id_c'], how='all')
                 blank_cols_opp = check_blank_values(df_opportunity, blank_values_columns["Opportunity"])
                 if blank_cols_opp:
                     file_status = "❌ Issues Found"
@@ -395,6 +414,8 @@ for file in os.listdir(folder_path):
         else:  
             file_status = "❌ Issues Found"
             print(f"\n    ❌ Sheet 'Opportunity_product' not found.")
+
+        # ----------------------- Check for Duplicate Oppty Legacy Id -----------------------
 
         print(f"\n🔍 Step 6: Check if there are any duplicate Oppty Legacy id")
         if "Opportunity" in xls.sheet_names:
