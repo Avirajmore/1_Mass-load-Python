@@ -1,8 +1,8 @@
 # Importing all the necessary Libraries
-import time
 import os
 import re
 import sys
+import time
 import shutil
 import openpyxl
 import pyperclip
@@ -17,7 +17,7 @@ from openpyxl.utils.exceptions import SheetTitleException
 # =========================================================================================================================================
                                                  # FOLDER CREATION & FILE MOVEMENT
 # =========================================================================================================================================
-
+start_time = time.time()   # Record start time
 
 # =========================================================
 # Define the base paths for storing mass load files
@@ -310,7 +310,7 @@ while True:
     # ================================================================================
     # Code to Construct Path to Folder of current Running file in "Final Iteration file" Folder
     # ================================================================================
-    start_time = time.time()   # Record start time
+    file_start_time = time.time()   # Record start time
     # Extract the selected file name from the full file path
     selected_file_name = os.path.basename(file_path.split("/")[-1])
 
@@ -327,7 +327,7 @@ while True:
     # ================================================================================
     # Check for missing required sheets and rename if necessary
     # ================================================================================
-    
+
     symbol = "="
     print(symbol*100)
 
@@ -483,7 +483,6 @@ while True:
     # ======================================================================
 
     print("\n\n🔍 Step 1: Checking if the file exists...")
-    
     def check_file_exists(file_path):
         if os.path.exists(file_path):
             filename = os.path.basename(file_path)
@@ -530,12 +529,10 @@ while True:
             # Remove duplicate rows if requested
             if remove_duplicates:
                 df = df.drop_duplicates()
-
             # Remove rows where all cells are NaN (blank rows)
             df = df.dropna(how='all')
             if sheet_name == "Opportunity":
                 df = df.dropna(subset=['opportunity_legacy_id_c'], how='all')
-                
             # Save the cleaned data back to the same file
             with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
@@ -550,7 +547,7 @@ while True:
             sys.exit()
 
     clean_sheet(file_path, opportunity_sheet_name, remove_duplicates=True)
-
+    
     # =========================================================
 
     # Function to check for duplicates in the 'opportunity_legacy_id_c' column of the 'Opportunity' sheet
@@ -591,12 +588,9 @@ while True:
     #   • Ensure required columns are present; prompt to continue or stop if any are missing.
     #   • Extra columns are listed but do not halt the process.
     #   • Identify blank values in critical columns, report their count, and prompt to proceed or stop.
-    
+
     # ======================================================================
-    
-    # ======================================================================
-    # Can be Deleted
-    # ======================================================================
+
 
     print("\n\n🔍 Step 3: Checking required columns and blank values...")
 
@@ -688,9 +682,6 @@ while True:
     else:
         print("\n    ✅ All required columns are present in the Opportunity sheet. ")
 
-    # ======================================================================
-    # Can be Deleted
-    # ======================================================================
 
     # ======================================================================
     # Step 4: Count the rows and columns in the beginning of the process
@@ -700,10 +691,10 @@ while True:
 
     print("\n\n🔍 Step 4: Counting the rows and columns...")
 
-    def count_row(file_path, sheet_name):
+    def count_row(file_path, opportunity_sheet_name):
 
         # Read the Excel file into a DataFrame
-        df = pd.read_excel(file_path, sheet_name=sheet_name)
+        df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
 
         # Get the number of rows and columns
         num_rows = df.shape[0]     # Number of rows in the DataFrame
@@ -1153,6 +1144,7 @@ while True:
 
     print("    ✅ New column with formatted DC values created and added to the sheet successfully.")
 
+
     # ======================================================================
     # Step 14: Concatenate the Values
     #   • Add apostrophes and commas to account IDs and emails to format them for Salesforce query use.
@@ -1316,7 +1308,7 @@ while True:
     remove_last_char_from_last_line('Delete/1_account_ids.txt')    
     remove_last_char_from_last_line('Delete/2_userid.txt')
         
-
+        
     # ==========================================================================================
     # Step 16: Copy Extracted Data to the Main Excel File
     # ------------------------------------------------------------------------------------------
@@ -1874,6 +1866,7 @@ while True:
         print(f"\n    ❌ File '{file_path}' not found.")
         sys.exit(1)
 
+
     # ======================================================================
     # Step 23: Final Row and Column Count
     #   • Recount rows after processing to ensure no extra rows were added mistakenly.
@@ -1911,7 +1904,7 @@ while True:
     check_row_count(oppty_initial_num_rows, oppty_final_num_rows, label = "Opportunity")
 
     # =========================================================================================================================================
-    #                                                PRODUCT SHEET EXECUTION
+    #                                                PRODCUT SHEET EXECUTION
     # =========================================================================================================================================
 
 
@@ -1947,42 +1940,46 @@ while True:
     print("\n\n🔍 Step 3: Verifying opportunities in the 'Opportunity' sheet...")
 
 
-    def verify_opportunity(sheet_name):
-        try:
-            opportunity_df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
-            df = pd.read_excel(file_path, sheet_name=sheet_name)
+    try:
+        # Load the sheets into DataFrames
+        opportunity_df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
+        product_df = pd.read_excel(file_path, sheet_name=product_sheet_name)
 
-            # Validate the required columns
-            if 'opportunity_legacy_id__c' not in opportunity_df.columns:
-                print(f"\n    ❌ Column 'opportunity_legacy_id__c' not found in the '{opportunity_sheet_name}' sheet. ")
-                sys.exit()
-            elif 'opportunityid' not in df.columns:
-                print(f"\n    ❌ Column 'opportunityid' not found in the '{sheet_name}' sheet. ")
-                sys.exit()
-
-            # Perform the comparison
-            df['existing'] = df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
-
-            # Calculate the number of false values
-            false_count = (~df['existing']).sum()
-
-            # Success message with false count
-            print(f"\n    ✅ Verification completed. 'existing' column has been added to the '{sheet_name}' sheet. ")
-        
-            if false_count > 0:
-                print(f"\n    ❗️ Number of False values in 'existing' column: {false_count}")
-            else:
-                print(f"\n    ✅ All Opportunities Exist In Opportunity Sheet")
-            
-            with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
-        
-        except Exception as e:
-            print(f"\n    ❌ Error: An unexpected error occurred. Details: {e}")
+        # Validate the required columns
+        if 'opportunity_legacy_id__c' not in opportunity_df.columns:
+            print(f"\n    ❌ Column 'opportunity_legacy_id__c' not found in the '{opportunity_sheet_name}' sheet. ")
+            sys.exit()
+        elif 'opportunityid' not in product_df.columns:
+            print(f"\n    ❌ Column 'opportunityid' not found in the '{product_sheet_name}' sheet. ")
             sys.exit()
 
-    # Call the function to verify opportunities
-    verify_opportunity(product_sheet_name) 
+        # Perform the comparison
+        product_df['existing'] = product_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
+
+        # Calculate the number of false values
+        false_count = (~product_df['existing']).sum()
+
+        # Save the updated data back to the Excel file
+        with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
+            product_df.to_excel(writer, sheet_name=product_sheet_name, index=False)
+
+        # Success message with false count
+        print(f"\n    ✅ Verification completed. 'existing' column has been added to the '{product_sheet_name}' sheet. ")
+        if false_count > 0:
+            print(f"\n    ❗️ Number of False values in 'existing' column: {false_count}")
+        else:
+            print(f"\n    ✅ All Opportunities Exist In Opportunity Sheet")
+
+
+    except FileNotFoundError:
+        # Handle file not found
+        print(f"\n    ❌ Error: File not found. ")
+        sys.exit()
+    except Exception as e:
+        # Handle any unexpected errors
+        print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ")
+        sys.exit()
+
 
     # ======================================================================
     # Step 4: Formatting the date column
@@ -2284,49 +2281,49 @@ while True:
         sys.exit()
 
 
-    # # ======================================================================
-    # # Step 10: To Concatenate the Currency and Product Family
-    # # ======================================================================
+    # ======================================================================
+    # Step 10: To Concatenate the Currency and Product Family
+    # ======================================================================
 
-    # print("\n\n🔍 Step 10: Concatenating 'Currency' and 'Product Family' columns...")
+    print("\n\n🔍 Step 10: Concatenating 'Currency' and 'Product Family' columns...")
 
-    # try:
-    #     # Load the sheet into a DataFrame
-    #     df = pd.read_excel(file_path, sheet_name=product_sheet_name)
+    try:
+        # Load the sheet into a DataFrame
+        df = pd.read_excel(file_path, sheet_name=product_sheet_name)
 
-    #     # Validate that required columns exist in the sheet
-    #     if "Product_Code_Family" not in df.columns:
-    #         print(f"\n    ❌ Error: Column 'Product_Code_Family' not found in '{product_sheet_name}' sheet. ")
-    #         sys.exit()
-    #     elif "opportunity currency" not in df.columns:
-    #         print(f"\n    ❌ Error: Column 'opportunity currency' not found in '{product_sheet_name}' sheet. ")
-    #         sys.exit()
+        # Validate that required columns exist in the sheet
+        if "Product_Code_Family" not in df.columns:
+            print(f"\n    ❌ Error: Column 'Product_Code_Family' not found in '{product_sheet_name}' sheet. ")
+            sys.exit()
+        elif "opportunity currency" not in df.columns:
+            print(f"\n    ❌ Error: Column 'opportunity currency' not found in '{product_sheet_name}' sheet. ")
+            sys.exit()
 
-    #     # Create a new column by wrapping values from 'Product_Code_Family' in single quotes followed by a comma
-    #     df["Concatenated Product Family"] = "'" + df["Product_Code_Family"] + "',"
+        # Create a new column by wrapping values from 'Product_Code_Family' in single quotes followed by a comma
+        df["Concatenated Product Family"] = "'" + df["Product_Code_Family"] + "',"
 
-    #     # Do the same for the 'opportunity currency' column
-    #     df["Concatenated Currency"] = "'" + df["opportunity currency"] + "',"
+        # Do the same for the 'opportunity currency' column
+        df["Concatenated Currency"] = "'" + df["opportunity currency"] + "',"
 
-    #     # Save the updated DataFrame back to the same sheet
-    #     with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
-    #         df.to_excel(writer, sheet_name=product_sheet_name, index=False)
+        # Save the updated DataFrame back to the same sheet
+        with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
+            df.to_excel(writer, sheet_name=product_sheet_name, index=False)
 
-    #     # Success message
-    #     print(f"\n    ✅ 'Concatenated Product Family' and 'Concatenated Currency' columns have been added successfully. ")
+        # Success message
+        print(f"\n    ✅ 'Concatenated Product Family' and 'Concatenated Currency' columns have been added successfully. ")
 
-    # except FileNotFoundError:
-    #     # Handle file not found error
-    #     print(f"\n    ❌ Error: File not found. ")
-    #     sys.exit()
-    # except KeyError:
-    #     # Handle missing sheet error
-    #     print(f"\n    ❌ Error: Sheet '{product_sheet_name}' not found in the file. ")
-    #     sys.exit()
-    # except Exception as e:
-    #     # Handle any unexpected errors
-    #     print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ")
-    #     sys.exit()
+    except FileNotFoundError:
+        # Handle file not found error
+        print(f"\n    ❌ Error: File not found. ")
+        sys.exit()
+    except KeyError:
+        # Handle missing sheet error
+        print(f"\n    ❌ Error: Sheet '{product_sheet_name}' not found in the file. ")
+        sys.exit()
+    except Exception as e:
+        # Handle any unexpected errors
+        print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ")
+        sys.exit()
 
 
     # ======================================================================
@@ -2385,128 +2382,128 @@ while True:
         sys.exit()
 
 
-    # # ======================================================================
-    # # Step 12: To extract the concatenated values
-    # # ======================================================================
+    # ======================================================================
+    # Step 12: To extract the concatenated values
+    # ======================================================================
 
-    # print("\n\n🔍 Step 12: Extracting concatenated values...")
+    print("\n\n🔍 Step 12: Extracting concatenated values...")
 
-    # def process_excel_file(file_path, sheet_name, required_columns, output_file):
-    #     # Check if the input file exists
-    #     if not os.path.exists(file_path):
-    #         print(f"\n    ❌ Error: The input file '{file_path}' does not exist. ")
-    #         return
+    def process_excel_file(file_path, sheet_name, required_columns, output_file):
+        # Check if the input file exists
+        if not os.path.exists(file_path):
+            print(f"\n    ❌ Error: The input file '{file_path}' does not exist. ")
+            return
 
-    #     try:
-    #         # Read the Excel file
-    #         df = pd.read_excel(file_path, sheet_name=sheet_name)
-    #     except Exception as e:
-    #         print(f"\n    ❌ Error: Failed to read the Excel file. Details: {e} ")
-    #         return
+        try:
+            # Read the Excel file
+            df = pd.read_excel(file_path, sheet_name=sheet_name)
+        except Exception as e:
+            print(f"\n    ❌ Error: Failed to read the Excel file. Details: {e} ")
+            return
 
-    #     # Dictionary to store cleaned (unique & non-blank) data for each column
-    #     cleaned_data_dict = {}
+        # Dictionary to store cleaned (unique & non-blank) data for each column
+        cleaned_data_dict = {}
 
-    #     # Process each required column
-    #     for column in required_columns:
-    #         if column in df.columns:
+        # Process each required column
+        for column in required_columns:
+            if column in df.columns:
 
-    #             # Remove empty (NaN) and duplicate values
-    #             cleaned_data = df[column].dropna().drop_duplicates().reset_index(drop=True)
-    #             cleaned_data_dict[column.replace("Concatenated", "").strip()] = cleaned_data
-    #         else:
-    #             print(f"\n    ❌ Error: Column '{column}' is missing. ")
+                # Remove empty (NaN) and duplicate values
+                cleaned_data = df[column].dropna().drop_duplicates().reset_index(drop=True)
+                cleaned_data_dict[column.replace("Concatenated", "").strip()] = cleaned_data
+            else:
+                print(f"\n    ❌ Error: Column '{column}' is missing. ")
 
-    #     # Initialize an output DataFrame and add each cleaned series
-    #     output_df = pd.DataFrame()
+        # Initialize an output DataFrame and add each cleaned series
+        output_df = pd.DataFrame()
 
-    #     # Add each cleaned column as a separate DataFrame and concatenate them
-    #     for key, cleaned_data in cleaned_data_dict.items():
-    #         output_df = pd.concat([output_df, pd.DataFrame({key: cleaned_data})], axis=1, ignore_index=False)
+        # Add each cleaned column as a separate DataFrame and concatenate them
+        for key, cleaned_data in cleaned_data_dict.items():
+            output_df = pd.concat([output_df, pd.DataFrame({key: cleaned_data})], axis=1, ignore_index=False)
 
-    #     # Write the processed data to a new Excel file if there's any data to write
-    #     if not output_df.empty:
-    #         try:
-    #             output_df.to_excel(output_file, index=False)
-    #             print(f"\n    ✅ Data written to '{output_file}'. ")
-    #         except Exception as e:
-    #             print(f"\n    ❌ Error: Failed to write the Excel file. Details: {e} ")
-    #     else:
-    #         print("\n    ❌ Error: No data to process. ")
+        # Write the processed data to a new Excel file if there's any data to write
+        if not output_df.empty:
+            try:
+                output_df.to_excel(output_file, index=False)
+                print(f"\n    ✅ Data written to '{output_file}'. ")
+            except Exception as e:
+                print(f"\n    ❌ Error: Failed to write the Excel file. Details: {e} ")
+        else:
+            print("\n    ❌ Error: No data to process. ")
 
-    # # Define sheet, columns, and destination file for extraction
-    # sheet_name = product_sheet_name  # Specify the sheet name
-    # required_columns = ["Concatenated Product Family", "Concatenated Currency"]
-    # output_file = "Extracts/ProductFamily_and_Currency_extract.xlsx"  # Specify the output file path
+    # Define sheet, columns, and destination file for extraction
+    sheet_name = product_sheet_name  # Specify the sheet name
+    required_columns = ["Concatenated Product Family", "Concatenated Currency"]
+    output_file = "Extracts/ProductFamily_and_Currency_extract.xlsx"  # Specify the output file path
 
-    # # Process the Excel file
-    # process_excel_file(file_path, sheet_name, required_columns, output_file)
+    # Process the Excel file
+    process_excel_file(file_path, sheet_name, required_columns, output_file)
 
 
-    # # ======================================================================
-    # # To extact product code to text file
-    # # ======================================================================
+    # ======================================================================
+    # To extact product code to text file
+    # ======================================================================
 
-    # import pandas as pd
-    # # Load the Excel file
-    # extract_file_path = "Extracts/ProductFamily_and_Currency_extract.xlsx"  # Change this to your actual file path
-    # df = pd.read_excel(extract_file_path)
+    import pandas as pd
+    # Load the Excel file
+    extract_file_path = "Extracts/ProductFamily_and_Currency_extract.xlsx"  # Change this to your actual file path
+    df = pd.read_excel(extract_file_path)
 
-    # # Extract the "accountid" column values
-    # if "Product Family" in df.columns:
-    #     Product_Family = df["Product Family"].dropna().astype(str)  # Drop NaN values and convert to string
+    # Extract the "accountid" column values
+    if "Product Family" in df.columns:
+        Product_Family = df["Product Family"].dropna().astype(str)  # Drop NaN values and convert to string
 
-    #     # Save to a text file
-    #     with open("Delete/3_product_code.txt", "w") as f:
-    #         f.write("\n".join(Product_Family))
+        # Save to a text file
+        with open("Delete/3_product_code.txt", "w") as f:
+            f.write("\n".join(Product_Family))
 
-    # else:
-    #     print(f"Column not found in the sheet.")
+    else:
+        print(f"Column not found in the sheet.")
 
-    # # ======================================================================
-    # # To extact currency code to text file
-    # # ======================================================================
+    # ======================================================================
+    # To extact currency code to text file
+    # ======================================================================
 
-    # # Specify the path of the Excel file containing the extracted data
-    # extract_file_path = "Extracts/ProductFamily_and_Currency_extract.xlsx"  # Change this to your actual file path
+    # Specify the path of the Excel file containing the extracted data
+    extract_file_path = "Extracts/ProductFamily_and_Currency_extract.xlsx"  # Change this to your actual file path
 
-    # # Load the Excel file into a DataFrame
-    # df = pd.read_excel(extract_file_path)
+    # Load the Excel file into a DataFrame
+    df = pd.read_excel(extract_file_path)
 
-    # # Check if the "Currency" column exists
-    # if "Currency" in df.columns:
-    #     currency_values = df["Currency"].dropna().astype(str)  # Drop NaN values and convert to string
+    # Check if the "Currency" column exists
+    if "Currency" in df.columns:
+        currency_values = df["Currency"].dropna().astype(str)  # Drop NaN values and convert to string
 
-    #     # Save to a text file
-    #     with open("Delete/4_currency.txt", "w") as f:
-    #         f.write("\n".join(currency_values))
+        # Save to a text file
+        with open("Delete/4_currency.txt", "w") as f:
+            f.write("\n".join(currency_values))
 
-    # else:
-    #     print(f"Column not found in the sheet.")
+    else:
+        print(f"Column not found in the sheet.")
     
-    # # ========================================================================  
+    # ========================================================================  
     
-    # # Remove the last character (e.g., trailing comma) from the last line of both files
-    # remove_last_char_from_last_line('Delete/3_product_code.txt')    
-    # remove_last_char_from_last_line('Delete/4_currency.txt')
+    # Remove the last character (e.g., trailing comma) from the last line of both files
+    remove_last_char_from_last_line('Delete/3_product_code.txt')    
+    remove_last_char_from_last_line('Delete/4_currency.txt')
     
-    # # ========================================================================  
-    # # Step: Read the cleaned text files and prepare SOQL query
-    # # ========================================================================  
+    # ========================================================================  
+    # Step: Read the cleaned text files and prepare SOQL query
+    # ========================================================================  
     
-    # # Read the entire contents of the product code text file as a string
-    # with open("Delete/3_product_code.txt", "r", encoding="utf-8") as file:
-    #     product_code_txt = file.read()  # Read all lines as a single string
+    # Read the entire contents of the product code text file as a string
+    with open("Delete/3_product_code.txt", "r", encoding="utf-8") as file:
+        product_code_txt = file.read()  # Read all lines as a single string
 
-    # # Read the entire contents of the currency text file as a string
-    # with open("Delete/4_currency.txt", "r", encoding="utf-8") as file:
-    #     currency_txt = file.read()  # Read all lines as a single string
+    # Read the entire contents of the currency text file as a string
+    with open("Delete/4_currency.txt", "r", encoding="utf-8") as file:
+        currency_txt = file.read()  # Read all lines as a single string
 
-    # # Construct the SOQL query using the extracted product codes and currency codes
-    # pricebook_query = f'select  Product2.Product_Code_Family__c,CurrencyIsoCode,id,isactive from PricebookEntry where Product2.Product_Code_Family__c in ({product_code_txt}) and CurrencyIsoCode in ({currency_txt})'
+    # Construct the SOQL query using the extracted product codes and currency codes
+    pricebook_query = f'select  Product2.Product_Code_Family__c,CurrencyIsoCode,id,isactive from PricebookEntry where Product2.Product_Code_Family__c in ({product_code_txt}) and CurrencyIsoCode in ({currency_txt})'
     
-    # # Copy the final query to the clipboard for easy use
-    # pyperclip.copy(pricebook_query)
+    # Copy the final query to the clipboard for easy use
+    pyperclip.copy(pricebook_query)
 
     # ======================================================================
     # Step 13:- To copy the data from CSV file
@@ -2784,10 +2781,6 @@ while True:
     show_title(title)
     # ======================================================================
 
-    end_time = time.time()   # Record start time
-    elapsed_time = end_time - start_time
-    print(f"\n    ✅ Total time taken: {elapsed_time:.2f} seconds")
-    time.sleep(200)
 
     # =========================================================================================================================================
     #                                                TEAM MEMBER SHEET EXECUTION
@@ -2986,66 +2979,66 @@ while True:
 
 
 
-            # # ======================================================================
-            # # Step 4: Concatenating Email Values
-            # # ======================================================================
+            # ======================================================================
+            # Step 4: Concatenating Email Values
+            # ======================================================================
 
-            # print("\n\n🔍 Step 4: Concatenating Email Values...")
+            print("\n\n🔍 Step 4: Concatenating Email Values...")
 
-            # # Load the workbook
-            # wb = openpyxl.load_workbook(file_path)
+            # Load the workbook
+            wb = openpyxl.load_workbook(file_path)
 
-            # # Access the 'Opportunity_team' sheet
-            # sheet = wb[Opportunity_team_sheet_name]
+            # Access the 'Opportunity_team' sheet
+            sheet = wb[Opportunity_team_sheet_name]
 
-            # # Locate the 'email' column index in the header row (row 1)
-            # email_column_index = None
-            # for col in sheet.iter_cols(min_row=1, max_row=1):
-            #     for cell in col:
-            #         if cell.value == 'email':
-            #             email_column_index = cell.column
-            #             break
-            #     if email_column_index is not None:
-            #         break
+            # Locate the 'email' column index in the header row (row 1)
+            email_column_index = None
+            for col in sheet.iter_cols(min_row=1, max_row=1):
+                for cell in col:
+                    if cell.value == 'email':
+                        email_column_index = cell.column
+                        break
+                if email_column_index is not None:
+                    break
 
-            # # If 'email' column is not found, raise an error and stop execution
-            # if email_column_index is None:
-            #     print("\n    ❌ ERROR: Column 'email' not found in the 'Opportunity_team' sheet.")
-            #     raise ValueError("Column 'email' not found.")
+            # If 'email' column is not found, raise an error and stop execution
+            if email_column_index is None:
+                print("\n    ❌ ERROR: Column 'email' not found in the 'Opportunity_team' sheet.")
+                raise ValueError("Column 'email' not found.")
 
-            # # Define the column header for the new column
-            # Concat_T_M_column_header = 'Concat_T_M'
+            # Define the column header for the new column
+            Concat_T_M_column_header = 'Concat_T_M'
 
-            # # Calculate the max row in the email column
-            # max_row = sheet.max_row
+            # Calculate the max row in the email column
+            max_row = sheet.max_row
 
-            # # Process each row starting from the second row (assuming the first row is the header)
-            # rows_processed = 0  # Counter for processed rows
+            # Process each row starting from the second row (assuming the first row is the header)
+            rows_processed = 0  # Counter for processed rows
             
-            # # Iterate through each row starting from the second row (skip header)
-            # for row in range(2, max_row + 1):
-            #     # Get the value from the email column
-            #     email_value = sheet.cell(row=row, column=email_column_index).value
+            # Iterate through each row starting from the second row (skip header)
+            for row in range(2, max_row + 1):
+                # Get the value from the email column
+                email_value = sheet.cell(row=row, column=email_column_index).value
 
-            #     # Check if the email_value is not None
-            #     if email_value is not None:
-            #         # Concatenate with inverted commas and comma
-            #         concatenated_value = f"'{email_value}',"
+                # Check if the email_value is not None
+                if email_value is not None:
+                    # Concatenate with inverted commas and comma
+                    concatenated_value = f"'{email_value}',"
 
-            #         # Write the concatenated value to the new column
-            #         Concat_T_M_cell = sheet.cell(row=row, column=email_column_index + 1)
-            #         Concat_T_M_cell.value = concatenated_value
+                    # Write the concatenated value to the new column
+                    Concat_T_M_cell = sheet.cell(row=row, column=email_column_index + 1)
+                    Concat_T_M_cell.value = concatenated_value
 
-            #         rows_processed += 1
+                    rows_processed += 1
 
-            # # Add the header for the new column
-            # sheet.cell(row=1, column=email_column_index + 1, value=Concat_T_M_column_header)
+            # Add the header for the new column
+            sheet.cell(row=1, column=email_column_index + 1, value=Concat_T_M_column_header)
 
-            # # Save the workbook
-            # wb.save(file_path)
+            # Save the workbook
+            wb.save(file_path)
 
-            # # Print completion message
-            # print(f"\n    ✅ Concatenated email values.")
+            # Print completion message
+            print(f"\n    ✅ Concatenated email values.")
 
 
             # ======================================================================
@@ -3054,85 +3047,117 @@ while True:
 
             print("\n\n🔍 Step 5: Checking if Opportunities Exist in the 'Opportunity' Sheet...")
 
-            # Call Function to verify opportunities
-            verify_opportunity(Opportunity_team_sheet_name) 
+            try:
+                # Load the sheets into DataFrames
+                opportunity_df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
+                Opportunity_team_df = pd.read_excel(file_path, sheet_name=Opportunity_team_sheet_name)
+
+                # Check for required columns
+                if 'opportunity_legacy_id__c' not in opportunity_df.columns:
+                    print(f"\n    ❌ ERROR: Column 'opportunity_legacy_id__c' not found in the '{opportunity_sheet_name}' sheet.")
+                elif 'opportunityid' not in Opportunity_team_df.columns:
+                    print(f"\n    ❌ ERROR: Column 'opportunityid' not found in the '{Opportunity_team_sheet_name}' sheet.")
+                else:
+                    # Add a new 'existing' column
+                    Opportunity_team_df['existing'] = Opportunity_team_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
+                    
+                    # Count rows where 'existing' is False
+                    false_count = len(Opportunity_team_df[~Opportunity_team_df['existing']])
+
+                    # Save the updated DataFrame back to the sheet
+                    with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
+                        Opportunity_team_df.to_excel(writer, sheet_name=Opportunity_team_sheet_name, index=False)
+                    
+                    # Display results
+                    print(f"\n    ✅ The 'existing' column has been added to the '{Opportunity_team_sheet_name}' sheet.")
+                    if false_count > 0:
+                        print(f"\n    ❗️ Number of Opportnities Missing in Team sheet: {false_count}")
+                    else:
+                        print(f"\n    ✅ All Opportunities Exist In Opportunity Sheet")
+
+            except FileNotFoundError:
+                print(f"\n    ❌ ERROR: File '{file_path}' not found.")
+            except KeyError as e:
+                print(f"\n    ❌ ERROR: {str(e)}")
+            except Exception as e:
+                print(f"\n    ❌ An unexpected error occurred: {str(e)}")
 
             # ======================================================================
             # Step 6 :- Extracting Concatenated Values
             # ======================================================================
 
-            # print("\n\n🔍 Step 6: Extracting Concatenated Values...")
+            print("\n\n🔍 Step 6: Extracting Concatenated Values...")
 
-            # # Check if the input file exists
-            # if not os.path.exists(file_path):
-            #     print(f"\n    ❌ ERROR: The input file '{file_path}' does not exist. Please check the file path and try again.")
-            #     exit()
+            # Check if the input file exists
+            if not os.path.exists(file_path):
+                print(f"\n    ❌ ERROR: The input file '{file_path}' does not exist. Please check the file path and try again.")
+                exit()
 
-            # try:
-            #     # Read the Excel file
-            #     df = pd.read_excel(file_path, sheet_name=Opportunity_team_sheet_name)
+            try:
+                # Read the Excel file
+                df = pd.read_excel(file_path, sheet_name=Opportunity_team_sheet_name)
 
-            #     # Specify the column to extract concatenated values from
-            #     column_name = "Concat_T_M"
+                # Specify the column to extract concatenated values from
+                column_name = "Concat_T_M"
 
-            #     # Check if the column exists in the dataframe
-            #     if column_name not in df.columns:
-            #         print(f"\n    ❌ ERROR: Column '{column_name}' is missing in the sheet '{Opportunity_team_sheet_name}' of the input file.")
-            #         exit()
+                # Check if the column exists in the dataframe
+                if column_name not in df.columns:
+                    print(f"\n    ❌ ERROR: Column '{column_name}' is missing in the sheet '{Opportunity_team_sheet_name}' of the input file.")
+                    exit()
 
-            #     # Remove blank values and drop duplicates
-            #     cleaned_data = df[column_name].dropna().drop_duplicates().reset_index(drop=True)
+                # Remove blank values and drop duplicates
+                cleaned_data = df[column_name].dropna().drop_duplicates().reset_index(drop=True)
 
-            #     # Create a new DataFrame for the output
-            #     output_df = pd.DataFrame({column_name: cleaned_data})
+                # Create a new DataFrame for the output
+                output_df = pd.DataFrame({column_name: cleaned_data})
 
-            #     # Define the output file path and name
-            #     output_file_path = "Extracts/Team_Member_extract.xlsx"
+                # Define the output file path and name
+                output_file_path = "Extracts/Team_Member_extract.xlsx"
 
-            #     # Write the processed data to a new Excel file
-            #     output_df.to_excel(output_file_path, index=False)
+                # Write the processed data to a new Excel file
+                output_df.to_excel(output_file_path, index=False)
 
-            #     # Success message
-            #     print(f"\n    ✅ Created 'Team_Member_extract' file and saved in Downloads")
+                # Success message
+                print(f"\n    ✅ Created 'Team_Member_extract' file and saved in Downloads")
 
-            # except Exception as e:
-            #     print(f"\n    ❌ ERROR: An unexpected error occurred: {str(e)}")
+            except Exception as e:
+                print(f"\n    ❌ ERROR: An unexpected error occurred: {str(e)}")
 
-            # # ==================================================================================================================
+            # ==================================================================================================================
             
-            # # Load the Excel file
-            # extract_file_path = "Extracts/Team_Member_extract.xlsx"  # Change this to your actual file path
+            # Load the Excel file
+            extract_file_path = "Extracts/Team_Member_extract.xlsx"  # Change this to your actual file path
             
-            # # Load the Excel file into a DataFrame
-            # df = pd.read_excel(extract_file_path)
+            # Load the Excel file into a DataFrame
+            df = pd.read_excel(extract_file_path)
 
-            # # Extract the "accountid" column values
-            # if "Concat_T_M" in df.columns:
-            #     account_ids = df["Concat_T_M"].dropna().astype(str)  # Drop NaN values and convert to string
+            # Extract the "accountid" column values
+            if "Concat_T_M" in df.columns:
+                account_ids = df["Concat_T_M"].dropna().astype(str)  # Drop NaN values and convert to string
 
-            #     # Save to a text file
-            #     with open("Delete/5_teammember.txt", "w") as f:
-            #         f.write("\n".join(account_ids))
+                # Save to a text file
+                with open("Delete/5_teammember.txt", "w") as f:
+                    f.write("\n".join(account_ids))
 
-            # else:
-            #     print("Column 'accountid' not found in the sheet.")
+            else:
+                print("Column 'accountid' not found in the sheet.")
 
 
-            # #---------- Clean-up: Remove the last character from the final line of the file (likely an extra comma)------
+            #---------- Clean-up: Remove the last character from the final line of the file (likely an extra comma)------
             
-            # remove_last_char_from_last_line('Delete/5_teammember.txt')
+            remove_last_char_from_last_line('Delete/5_teammember.txt')
             
-            # #---------- Read the cleaned-up text file and prepare a SOQL query to copy to clipboard ---------- 
+            #---------- Read the cleaned-up text file and prepare a SOQL query to copy to clipboard ---------- 
             
-            # # Open the file and read its contents as a single string
-            # with open("Delete/5_teammember.txt", "r", encoding="utf-8") as file:
-            #     cliptext = file.read()  # Read all lines as a single string
+            # Open the file and read its contents as a single string
+            with open("Delete/5_teammember.txt", "r", encoding="utf-8") as file:
+                cliptext = file.read()  # Read all lines as a single string
 
-            # # Construct a Salesforce SOQL query using the list of emails
-            # team_query = f"select email,id,Profile.Name,isactive from user where email in ({cliptext}) and Profile.Name != 'IBM Partner Community Login User' and IsActive = true"
+            # Construct a Salesforce SOQL query using the list of emails
+            team_query = f"select email,id,Profile.Name,isactive from user where email in ({cliptext}) and Profile.Name != 'IBM Partner Community Login User' and IsActive = true"
             
-            # # Copy the query to the clipboard for easy pasting
-            # pyperclip.copy(team_query)
+            # Copy the query to the clipboard for easy pasting
+            pyperclip.copy(team_query)
 
             # ======================================================================
             # 🔍 Step 7: Copying Data from CSV File
@@ -3941,8 +3966,42 @@ while True:
 
             print("\n\n🔍 Step 7: Adding 'existing' Column to 'Reporting_codes' Sheet...")
 
+            # Specify the file path of the Excel file
+            # file_path = os.path.expanduser("~/Downloads/your_excel_file.xlsx")
+
+            # Specify the sheet names
+            opportunity_sheet_name = 'Opportunity'
             reporting_codes_sheet_name = 'Reporting_codes'
-            verify_opportunity(reporting_codes_sheet_name) 
+
+            try:
+                # Read data from the specified sheets
+                opportunity_df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
+                reporting_codes_df = pd.read_excel(file_path, sheet_name=reporting_codes_sheet_name)
+
+                # Check if required columns exist
+                if 'opportunity_legacy_id__c' not in opportunity_df.columns:
+                    print(f"\n    ❌ Column 'opportunity_legacy_id__c' not found in 'Reporting codes' sheet.")
+                    sys.exit()
+                elif 'opportunityid' not in reporting_codes_df.columns:
+                    print(f"\n    ❌ Column 'opportunityid' not found in 'Reporting codes' sheet.")
+                    sys.exit()
+                else:
+                    # Create a new column 'existing' in reporting_codes_df
+                    reporting_codes_df['existing'] = reporting_codes_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
+
+                    # Write back to the Excel file
+                    with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
+                        reporting_codes_df.to_excel(writer, sheet_name=reporting_codes_sheet_name, index=False)
+
+                    # Notify the successful operation
+                    print(f"\n    ✅ 'existing' column has been successfully added to the 'Reporting codes' sheet.")
+
+            except FileNotFoundError:
+                print(f"    ❌ File not found.")
+                sys.exit()
+            except Exception as e:
+                print(f"    ❌ Error: {e}")
+                sys.exit()
 
 
             # ========================================================================
@@ -3951,8 +4010,40 @@ while True:
 
             print("\n\n🔍 Step 8: Adding 'existing' Column to 'Tags' Sheet...")
 
+
+            # Specify the sheet names
+            opportunity_sheet_name = 'Opportunity'
             tags_sheet_name = 'Tags'
-            verify_opportunity(tags_sheet_name)
+
+            try:
+                # Read data from the specified sheets
+                opportunity_df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
+                tags_df = pd.read_excel(file_path, sheet_name=tags_sheet_name)
+
+                # Check if required columns exist
+                if 'opportunity_legacy_id__c' not in opportunity_df.columns:
+                    print(f"\n    ❌ Column 'opportunity_legacy_id__c' not found in '{opportunity_sheet_name}' sheet.")
+                    sys.exit()
+                elif 'opportunityid' not in tags_df.columns:
+                    print(f"\n    ❌ Column 'opportunityid' not found in '{tags_sheet_name}' sheet.")
+                    sys.exit()
+                else:
+                    # Create a new column 'existing' in tags_df
+                    tags_df['existing'] = tags_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
+
+                    # Write back to the Excel file
+                    with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
+                        tags_df.to_excel(writer, sheet_name=tags_sheet_name, index=False)
+
+                    # Notify the successful operation
+                    print(f"\n    ✅ 'existing' column has been successfully added to the '{tags_sheet_name}' sheet.")
+
+            except FileNotFoundError:
+                print(f"    ❌ File '{file_path}' not found.")
+                sys.exit()
+            except Exception as e:
+                print(f"    ❌ Error: {e}")
+                sys.exit()
 
             # ========================================================================
             # Step 9: To Concatenate Values in 'Reporting_codes' Sheet
@@ -3993,167 +4084,167 @@ while True:
                 print(f"\n    ❌ Error: {e}")
                 sys.exit()
 
-            # # ========================================================================
-            # # Step 10:- To concatenate values in "Tags" sheet
-            # # ========================================================================
+            # ========================================================================
+            # Step 10:- To concatenate values in "Tags" sheet
+            # ========================================================================
 
-            # print("\n\n🔍 Step 10: Adding 'Concattags' Column to 'Tags' Sheet...")
+            print("\n\n🔍 Step 10: Adding 'Concattags' Column to 'Tags' Sheet...")
 
-            # # file_path = 'your_file_path.xlsx'
-            # sheet_name = 'Tags'
+            # file_path = 'your_file_path.xlsx'
+            sheet_name = 'Tags'
 
-            # # Check if the sheet exists in the workbook
-            # try:
-            #     xl = pd.ExcelFile(file_path)
-            #     sheet_names = xl.sheet_names
-            #     if sheet_name in sheet_names:
-            #         # Load the entire workbook
-            #         with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-            #             # Read the specified sheet into a DataFrame
-            #             df = pd.read_excel(file_path, sheet_name=sheet_name)
+            # Check if the sheet exists in the workbook
+            try:
+                xl = pd.ExcelFile(file_path)
+                sheet_names = xl.sheet_names
+                if sheet_name in sheet_names:
+                    # Load the entire workbook
+                    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+                        # Read the specified sheet into a DataFrame
+                        df = pd.read_excel(file_path, sheet_name=sheet_name)
 
-            #             # Check if 'tag' column exists (case-insensitive)
-            #             lowercase_columns = [col.lower() for col in df.columns]
-            #             if 'tag' in lowercase_columns:
-            #                 # Find the actual column name in the original case
-            #                 actual_tag_column = df.columns[lowercase_columns.index('tag')]
+                        # Check if 'tag' column exists (case-insensitive)
+                        lowercase_columns = [col.lower() for col in df.columns]
+                        if 'tag' in lowercase_columns:
+                            # Find the actual column name in the original case
+                            actual_tag_column = df.columns[lowercase_columns.index('tag')]
 
-            #                 # Create a new column 'Concattags' with concatenated values
-            #                 df['Concattags'] = df[actual_tag_column].apply(lambda x: f"'{x}'," if pd.notnull(x) else x)
+                            # Create a new column 'Concattags' with concatenated values
+                            df['Concattags'] = df[actual_tag_column].apply(lambda x: f"'{x}'," if pd.notnull(x) else x)
 
-            #                 # Write the modified DataFrame back to the specified sheet
-            #                 df.to_excel(writer, sheet_name=sheet_name, index=False)
+                            # Write the modified DataFrame back to the specified sheet
+                            df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-            #                 # Print a meaningful message
-            #                 print("\n    ✅ 'Concattags' column has been successfully added to the 'Tags' sheet.")
-            #             else:
-            #                 print(f"\n    ❗️ The '{sheet_name}' sheet does not contain a column named 'tag'. Please verify the column name.")
-            #     else:
-            #         print(f"\n    ❗️ The '{sheet_name}' sheet does not exist in the workbook. Please check the sheet name.")
-            #         sys.exit()
-            # except FileNotFoundError:
-            #     print(f"\n    ❌ The file '{file_path}' was not found. Please verify the file path.")
-            #     sys.exit()
-            # except Exception as e:
-            #     print(f"\n    ❌ An error occurred: {str(e)}")
-            #     sys.exit()
+                            # Print a meaningful message
+                            print("\n    ✅ 'Concattags' column has been successfully added to the 'Tags' sheet.")
+                        else:
+                            print(f"\n    ❗️ The '{sheet_name}' sheet does not contain a column named 'tag'. Please verify the column name.")
+                else:
+                    print(f"\n    ❗️ The '{sheet_name}' sheet does not exist in the workbook. Please check the sheet name.")
+                    sys.exit()
+            except FileNotFoundError:
+                print(f"\n    ❌ The file '{file_path}' was not found. Please verify the file path.")
+                sys.exit()
+            except Exception as e:
+                print(f"\n    ❌ An error occurred: {str(e)}")
+                sys.exit()
 
-            # # ========================================================================
-            # # Step 11:- To extract concatenated values
-            # # ========================================================================
+            # ========================================================================
+            # Step 11:- To extract concatenated values
+            # ========================================================================
 
 
-            # # Step 11:- Extracting Data from 'Reporting_codes' and 'Tags' Sheets
+            # Step 11:- Extracting Data from 'Reporting_codes' and 'Tags' Sheets
 
-            # print("\n\n🔍 Step 11: Extracting Data from 'Reporting_codes' and 'Tags' Sheets...")
+            print("\n\n🔍 Step 11: Extracting Data from 'Reporting_codes' and 'Tags' Sheets...")
 
-            # # Define the input file path and sheet names
-            # reporting_codes_sheet_name = "Reporting_codes"
-            # tags_sheet_name = "Tags"
+            # Define the input file path and sheet names
+            reporting_codes_sheet_name = "Reporting_codes"
+            tags_sheet_name = "Tags"
 
-            # # Define the columns to extract from each sheet
-            # reporting_codes_column = "Concatcodes"
-            # tags_column = "Concattags"
+            # Define the columns to extract from each sheet
+            reporting_codes_column = "Concatcodes"
+            tags_column = "Concattags"
 
-            # # Check if the input file exists
-            # if not os.path.exists(file_path):
-            #     print(f"\n    ❌ The input file '{file_path}' does not exist. Please verify the file path.")
-            #     exit()
+            # Check if the input file exists
+            if not os.path.exists(file_path):
+                print(f"\n    ❌ The input file '{file_path}' does not exist. Please verify the file path.")
+                exit()
 
-            # # Initialize flags to check if sheets are found
-            # reporting_codes_found = False
-            # tags_found = False
+            # Initialize flags to check if sheets are found
+            reporting_codes_found = False
+            tags_found = False
 
-            # # Read data from the Reporting_codes sheet if it exists
-            # if reporting_codes_sheet_name in pd.ExcelFile(file_path).sheet_names:
-            #     df_reporting_codes = pd.read_excel(file_path, sheet_name=reporting_codes_sheet_name)
-            #     reporting_codes_found = True
+            # Read data from the Reporting_codes sheet if it exists
+            if reporting_codes_sheet_name in pd.ExcelFile(file_path).sheet_names:
+                df_reporting_codes = pd.read_excel(file_path, sheet_name=reporting_codes_sheet_name)
+                reporting_codes_found = True
 
-            # else:
-            #     print(f"\n    ❗️ Sheet '{reporting_codes_sheet_name}' not found.")
-            #     sys.exit()
+            else:
+                print(f"\n    ❗️ Sheet '{reporting_codes_sheet_name}' not found.")
+                sys.exit()
             
-            # # Read data from the Tags sheet if it exists
-            # if tags_sheet_name in pd.ExcelFile(file_path).sheet_names:
-            #     df_tags = pd.read_excel(file_path, sheet_name=tags_sheet_name)
-            #     tags_found = True
-            # else:
-            #     print(f"    ❗️ Sheet '{tags_sheet_name}' not found.")
-            #     sys.exit()
+            # Read data from the Tags sheet if it exists
+            if tags_sheet_name in pd.ExcelFile(file_path).sheet_names:
+                df_tags = pd.read_excel(file_path, sheet_name=tags_sheet_name)
+                tags_found = True
+            else:
+                print(f"    ❗️ Sheet '{tags_sheet_name}' not found.")
+                sys.exit()
             
-            # # Extract the required columns if sheets are found
-            # concatcodes_values = []
-            # concattags_values = []
+            # Extract the required columns if sheets are found
+            concatcodes_values = []
+            concattags_values = []
 
-            # # Extract non-null, unique values from 'Concatcodes' column in 'Reporting_codes'
-            # if reporting_codes_found:
-            #     concatcodes_values = df_reporting_codes[reporting_codes_column].dropna().unique()
-            # else:
-            #     print(f"\n    ❗️ Column '{reporting_codes_column}' not found in '{reporting_codes_sheet_name}' sheet.")
+            # Extract non-null, unique values from 'Concatcodes' column in 'Reporting_codes'
+            if reporting_codes_found:
+                concatcodes_values = df_reporting_codes[reporting_codes_column].dropna().unique()
+            else:
+                print(f"\n    ❗️ Column '{reporting_codes_column}' not found in '{reporting_codes_sheet_name}' sheet.")
 
-            # # Extract non-null, unique values from 'Concattags' column in 'Tags'
-            # if tags_found:
-            #     concattags_values = df_tags[tags_column].dropna().unique()
-            # else:
-            #     print(f"\n    ❗️ Column '{tags_column}' not found in '{tags_sheet_name}' sheet.")
+            # Extract non-null, unique values from 'Concattags' column in 'Tags'
+            if tags_found:
+                concattags_values = df_tags[tags_column].dropna().unique()
+            else:
+                print(f"\n    ❗️ Column '{tags_column}' not found in '{tags_sheet_name}' sheet.")
 
-            # # Ensure both lists are the same length by padding with None
-            # max_length = max(len(concatcodes_values), len(concattags_values))
+            # Ensure both lists are the same length by padding with None
+            max_length = max(len(concatcodes_values), len(concattags_values))
             
-            # if len(concatcodes_values) < max_length:
-            #     concatcodes_values = list(concatcodes_values) + [None] * (max_length - len(concatcodes_values))
-            # if len(concattags_values) < max_length:
-            #     concattags_values = list(concattags_values) + [None] * (max_length - len(concattags_values))
+            if len(concatcodes_values) < max_length:
+                concatcodes_values = list(concatcodes_values) + [None] * (max_length - len(concatcodes_values))
+            if len(concattags_values) < max_length:
+                concattags_values = list(concattags_values) + [None] * (max_length - len(concattags_values))
 
-            # # Create a new DataFrame for the extracted values
-            # output_df = pd.DataFrame({
-            #     reporting_codes_column: concatcodes_values,
-            #     tags_column: concattags_values
-            # })
+            # Create a new DataFrame for the extracted values
+            output_df = pd.DataFrame({
+                reporting_codes_column: concatcodes_values,
+                tags_column: concattags_values
+            })
 
-            # # Define the output file path and name
-            # output_file_path = "Extracts/Reporting_codes_and_Tags_extract.xlsx"
+            # Define the output file path and name
+            output_file_path = "Extracts/Reporting_codes_and_Tags_extract.xlsx"
 
-            # # Write the extracted data to a new Excel file
-            # output_df.to_excel(output_file_path, index=False)
+            # Write the extracted data to a new Excel file
+            output_df.to_excel(output_file_path, index=False)
 
-            # # Final success message
-            # print(f"\n    ✅ Extracted data has been successfully written to '{output_file_path}'.")
+            # Final success message
+            print(f"\n    ✅ Extracted data has been successfully written to '{output_file_path}'.")
 
-            # # ==================================================================================================================
-            # # To extract tags and code to text file
-            # # ==================================================================================================================
+            # ==================================================================================================================
+            # To extract tags and code to text file
+            # ==================================================================================================================
             
-            # # Load the Extract file
-            # extract_file_path = "Extracts/Reporting_codes_and_Tags_extract.xlsx"  # Change this to your actual file path
+            # Load the Extract file
+            extract_file_path = "Extracts/Reporting_codes_and_Tags_extract.xlsx"  # Change this to your actual file path
 
-            # df = pd.read_excel(extract_file_path)
+            df = pd.read_excel(extract_file_path)
 
-            # # Extract values from 'ownerid' and 'concatenatedcreatedby' (even if their lengths differ)
-            # Concatcodes_values = df["Concatcodes"].dropna().astype(str).tolist() if "Concatcodes" in df.columns else []
-            # Concattags_values = df["Concattags"].dropna().astype(str).tolist() if "Concattags" in df.columns else []
+            # Extract values from 'ownerid' and 'concatenatedcreatedby' (even if their lengths differ)
+            Concatcodes_values = df["Concatcodes"].dropna().astype(str).tolist() if "Concatcodes" in df.columns else []
+            Concattags_values = df["Concattags"].dropna().astype(str).tolist() if "Concattags" in df.columns else []
 
-            # # Combine both lists while maintaining all values
-            # all_values = Concatcodes_values + Concattags_values  # Concatenating both lists
+            # Combine both lists while maintaining all values
+            all_values = Concatcodes_values + Concattags_values  # Concatenating both lists
 
-            # # Save to a text file
-            # with open("Delete/6_strategy.txt", "w") as f:
-            #     f.write("\n".join(all_values))
+            # Save to a text file
+            with open("Delete/6_strategy.txt", "w") as f:
+                f.write("\n".join(all_values))
             
-            # # ========================================================================  
+            # ========================================================================  
             
-            # # Remove the last character from the last line of the text file (e.g., trailing comma)
-            # remove_last_char_from_last_line('Delete/6_strategy.txt')
+            # Remove the last character from the last line of the text file (e.g., trailing comma)
+            remove_last_char_from_last_line('Delete/6_strategy.txt')
 
-            # # Open the cleaned text file and read its contents as a single string
-            # with open("Delete/6_strategy.txt", "r", encoding="utf-8") as file:
-            #     cliptext = file.read()  # Read all lines as a single string
+            # Open the cleaned text file and read its contents as a single string
+            with open("Delete/6_strategy.txt", "r", encoding="utf-8") as file:
+                cliptext = file.read()  # Read all lines as a single string
 
-            # # Construct the SOQL query using the cleaned list of strategy names
-            # tags_query = f'Select id,name,Record_Type_Name__c from Strategy__c where name in ({cliptext})'
+            # Construct the SOQL query using the cleaned list of strategy names
+            tags_query = f'Select id,name,Record_Type_Name__c from Strategy__c where name in ({cliptext})'
             
-            # # Copy the constructed query to the clipboard for immediate use
-            # pyperclip.copy(tags_query)
+            # Copy the constructed query to the clipboard for immediate use
+            pyperclip.copy(tags_query)
 
             # ========================================================================
             # Step 12:- Processing CSV File and Adding Filtered Data to Excel
@@ -4575,8 +4666,59 @@ while True:
 
                 print("\n🔍 Step 2: Verifying opportunities in the 'Opportunity' sheet...")
 
+                opportunity_sheet_name = 'Opportunity'
                 contact_sheet_name = 'Contact Roles'
-                verify_opportunity(contact_sheet_name)
+
+                try:
+                    # Load the sheets into DataFrames
+                    all_sheets = pd.read_excel(file_path, sheet_name=None)  # Load all sheets into a dictionary
+                    sheet_names = [sheet.lower() for sheet in all_sheets.keys()]  # Convert sheet names to lowercase
+
+                    # Check if the required sheets exist (case-insensitive)
+                    if opportunity_sheet_name.lower() not in sheet_names:
+                        print(f"\n    ❌ Sheet '{opportunity_sheet_name}' not found. ❌")
+                        sys.exit()
+                    if contact_sheet_name.lower() not in sheet_names:
+                        print(f"\n    ❌ Sheet '{contact_sheet_name}' not found. ❌")
+                        sys.exit()
+
+                    # Load the relevant sheets into DataFrames (case-insensitive)
+                    opportunity_df = all_sheets[list(all_sheets.keys())[sheet_names.index(opportunity_sheet_name.lower())]]
+                    contact_df = all_sheets[list(all_sheets.keys())[sheet_names.index(contact_sheet_name.lower())]]
+
+                    # Validate the required columns (case-insensitive)
+                    opportunity_columns = [col.lower() for col in opportunity_df.columns]
+                    product_columns = [col.lower() for col in contact_df.columns]
+
+                    if 'opportunity_legacy_id__c'.lower() not in opportunity_columns:
+                        print(f"\n    ❌ Column 'opportunity_legacy_id__c' not found in the '{opportunity_sheet_name}' sheet. ❌")
+                        sys.exit()
+                    elif 'opportunityid'.lower() not in product_columns:
+                        print(f"\n    ❌ Column 'opportunityid' not found in the '{contact_sheet_name}' sheet. ❌")
+                        sys.exit()
+
+                    # Perform the comparison
+                    contact_df['existing'] = contact_df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
+
+                    # Calculate the number of false values
+                    false_count = (~contact_df['existing']).sum()
+
+                    # Save the updated data back to the Excel file
+                    with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
+                        contact_df.to_excel(writer, sheet_name=contact_sheet_name, index=False)
+
+                    # Success message with false count
+                    print(f"\n    ✅ Verification completed. 'existing' column has been added to the '{contact_sheet_name}' sheet. ✅")
+                    print(f"\n    ❗️ Number of False values in 'existing' column: {false_count}")
+
+                except FileNotFoundError:
+                    # Handle file not found
+                    print(f"\n    ❌ Error: File not found. ❌")
+                    sys.exit()
+                except Exception as e:
+                    # Handle any unexpected errors
+                    print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ❌")
+                    sys.exit()
 
                 # =================================
 
@@ -4618,7 +4760,6 @@ while True:
     # ========================================================================
     # Rearranging the sheets!
     # ========================================================================
-    
     print("\n")
     title = "📝 Rearranging the sheets 📝"
     show_title(title)
@@ -5017,12 +5158,15 @@ while True:
     # ---------------------- Save Cleaned Opportunity Data ----------------------
 
     def save_dataframe(df, file_path, label):
-        try:
-            df.to_csv(file_path, index=False)
-            shortened = "/".join(file_path.split("/")[-4:])
-            print(f"\n    ✅ {label} data saved to:\n\n        📂 {shortened}")
-        except Exception as e:
-            print(f"\n    ❌ Error saving the {label.lower()} file: {e}")
+        if not df.empty:
+            try:
+                df.to_csv(file_path, index=False)
+                shortened = "/".join(file_path.split("/")[-4:])
+                print(f"\n    ✅ {label} data saved to:\n\n        📂 {shortened}")
+            except Exception as e:
+                print(f"\n    ❌ Error saving the {label.lower()} file: {e}")
+        else:
+            print(f"\n    ❌ {label} file is empty. Skipped The file")
     
     save_dataframe(opportunity_df, opppty_processed_file, "Opportunity")
 
@@ -5666,7 +5810,9 @@ while True:
     print("\n")
     title = "✅ File Prepared: {filename} ✅"
     show_title(title)
-    
+    file_end_time = time.time()   # Record start time
+    elapsed_time = file_end_time - file_start_time
+    print(f"\n⏱️ Elapsed time for a file: {elapsed_time:.2f} seconds")
 
     files_in_copy_folder.remove(files_in_copy_folder[selected_index])
 
@@ -5693,4 +5839,7 @@ while True:
         print(f"\n     🔚 End of Script\n")
         print("=" * 100)
         print("\n")
+        end_time = time.time()   # Record start time
+        elapsed_time = end_time - start_time
+        print(f"\n⏱️ Elapsed time for a file: {elapsed_time:.2f} seconds")
         break  # Exit the inner loop

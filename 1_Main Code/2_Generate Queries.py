@@ -557,6 +557,15 @@ while not break_outer_loop:
     else:
         print("\n   ❗️ Invalid Choice")
 
+import shutil
+
+# Source and destination file paths
+source_file = '/Users/avirajmore/Downloads/userid.csv'
+destination_file = '/Users/avirajmore/Downloads/teammember.csv'
+
+# Check if source file exists
+if os.path.exists(source_file):
+    shutil.copy(source_file, destination_file)
 
 title = "📝  Merge CSV Files 📝"
 show_title(title)
@@ -590,6 +599,11 @@ for prefix, files in prefix_groups.items():
 
 print("\n   ✅ All merging complete!")
 
+
+# Check if source file exists
+if not os.path.exists(destination_file): 
+    if os.path.exists(source_file):
+        shutil.copy(source_file, destination_file)
 # ======================
 
 title = "📝  Missing Accounts and Tags 📝"
@@ -838,15 +852,6 @@ while True:
     else:
         print('\n   ❗️ Invalid Choice')
 
-import shutil
-
-# Source and destination file paths
-source_file = '/Users/avirajmore/Downloads/userid.csv'
-destination_file = '/Users/avirajmore/Downloads/teammember.csv'
-
-# Check if source file exists
-if os.path.exists(source_file):
-    shutil.copy(source_file, destination_file)
 
 print("\n👋 Exiting the script. Goodbye!")
 title = "📝  Script Completed 📝"
