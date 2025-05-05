@@ -324,6 +324,8 @@ sheet_to_cell_mapping = {
     "Reporting Code Failure": "F8",
     "Tag Success": "E9",
     "Tag Failure": "F9",
+    "Contact Success":"E10",
+    "Contact Failure":"F10"
 }
 
 # Define the cell ranges for summation in the "Summary" sheet
@@ -333,6 +335,8 @@ sum_mappings = {
     ("E7", "F7"): "G7",
     ("E8", "F8"): "G8",
     ("E9", "F9"): "G9",
+    ("E10", "F10"): "G10",
+
 }
 
 # Ask user for the summary file path
