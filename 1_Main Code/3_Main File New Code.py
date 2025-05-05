@@ -304,12 +304,11 @@ while True:
     csv_file_dir = os.path.join(output, "CSV Files") # Folder for storing CSV Files
     removed_rows_dir = os.path.join(output, "Removed Rows") # Folder for storing Removed Rows Files
 
+    symbol = "="
+    print(symbol*100)
     # # ================================================================================
     # # Check for missing required sheets and rename if necessary
     # # ================================================================================
-
-    # symbol = "="
-    # print(symbol*100)
 
     # print("\n\n🔍 Check if all the Required Sheets are present or not")
  
