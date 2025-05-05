@@ -304,151 +304,151 @@ while True:
     csv_file_dir = os.path.join(output, "CSV Files") # Folder for storing CSV Files
     removed_rows_dir = os.path.join(output, "Removed Rows") # Folder for storing Removed Rows Files
 
-    # ================================================================================
-    # Check for missing required sheets and rename if necessary
-    # ================================================================================
+    # # ================================================================================
+    # # Check for missing required sheets and rename if necessary
+    # # ================================================================================
 
-    symbol = "="
-    print(symbol*100)
+    # symbol = "="
+    # print(symbol*100)
 
-    print("\n\n🔍 Check if all the Required Sheets are present or not")
+    # print("\n\n🔍 Check if all the Required Sheets are present or not")
  
-    # Load the Excel workbook 
-    '''
-        Info:
-        We use openpyxl here instead of pandas because:
-        - openpyxl gives access to sheet names, cell formatting, and workbook structure.
-        - pandas is mainly for working with data tables (DataFrames), not the workbook structure.
-    '''
-    wb = openpyxl.load_workbook(file_path)
-    # 📌 [NEW] Auto-Rename Known Variants to Correct Names
+    # # Load the Excel workbook 
+    # '''
+    #     Info:
+    #     We use openpyxl here instead of pandas because:
+    #     - openpyxl gives access to sheet names, cell formatting, and workbook structure.
+    #     - pandas is mainly for working with data tables (DataFrames), not the workbook structure.
+    # '''
+    # wb = openpyxl.load_workbook(file_path)
+    # # 📌 [NEW] Auto-Rename Known Variants to Correct Names
 
-    # Define the list of required sheet names
-    # 'Tags' is considered optional and will not be treated as missing if absent
-    required_sheets = ['Opportunity', 'Opportunity_product','Opportunity_Team ', 'Reporting_codes', 'Tags']
+    # # Define the list of required sheet names
+    # # 'Tags' is considered optional and will not be treated as missing if absent
+    # required_sheets = ['Opportunity', 'Opportunity_product','Opportunity_Team ', 'Reporting_codes', 'Tags']
     
-    variant_mapping = {
-        'Opportunity_products': 'Opportunity_product',
-        'Opportunity_Team': 'Opportunity_Team '  # note the trailing space
-    }
+    # variant_mapping = {
+    #     'Opportunity_products': 'Opportunity_product',
+    #     'Opportunity_Team': 'Opportunity_Team '  # note the trailing space
+    # }
 
-    for sheet_name in wb.sheetnames:
-        if sheet_name in variant_mapping:
-            ws = wb[sheet_name]
-            correct_name = variant_mapping[sheet_name]
-            ws.title = correct_name
-            print(f"\n    ✅  Renamed '{sheet_name}' to '{correct_name}' automatically.")
+    # for sheet_name in wb.sheetnames:
+    #     if sheet_name in variant_mapping:
+    #         ws = wb[sheet_name]
+    #         correct_name = variant_mapping[sheet_name]
+    #         ws.title = correct_name
+    #         print(f"\n    ✅  Renamed '{sheet_name}' to '{correct_name}' automatically.")
 
-    # Get the list of sheet names present in the current workbook
-    sheets_in_file = wb.sheetnames
+    # # Get the list of sheet names present in the current workbook
+    # sheets_in_file = wb.sheetnames
 
-    # Identify missing required sheets (excluding 'Tags' which is optional)
-    missing_sheets = [] # Initialize Missing Sheet List
+    # # Identify missing required sheets (excluding 'Tags' which is optional)
+    # missing_sheets = [] # Initialize Missing Sheet List
 
-    for sheet in required_sheets:
-        # Check if the sheet is not 'Tags' and is not in the list of sheets in the file
-        if sheet != 'Tags' and sheet not in sheets_in_file:
-            missing_sheets.append(sheet)
+    # for sheet in required_sheets:
+    #     # Check if the sheet is not 'Tags' and is not in the list of sheets in the file
+    #     if sheet != 'Tags' and sheet not in sheets_in_file:
+    #         missing_sheets.append(sheet)
 
-    # Check if all required sheets are present
-    if not missing_sheets:
-        # All required sheets are present — no further action needed
-        print("\n    ✅ All required sheets are already present! 🎉")
+    # # Check if all required sheets are present
+    # if not missing_sheets:
+    #     # All required sheets are present — no further action needed
+    #     print("\n    ✅ All required sheets are already present! 🎉")
 
-    else:
-        print("\n    ❌ The following required sheets are missing: ")
+    # else:
+    #     print("\n    ❌ The following required sheets are missing: ")
 
-        # Print the missing sheets
-        for i, sheet in enumerate(missing_sheets, 1):
-            print(f"\n        {i}. {sheet}")
+    #     # Print the missing sheets
+    #     for i, sheet in enumerate(missing_sheets, 1):
+    #         print(f"\n        {i}. {sheet}")
 
-        # Identify extra sheets in the workbook that are NOT in the required list
-        available_sheets = [] # Initialize Available Sheet List
+    #     # Identify extra sheets in the workbook that are NOT in the required list
+    #     available_sheets = [] # Initialize Available Sheet List
 
-        for s in sheets_in_file:
-            # Check if the sheet is not in the list of required sheets
-            if s not in required_sheets:
-                available_sheets.append(s)
+    #     for s in sheets_in_file:
+    #         # Check if the sheet is not in the list of required sheets
+    #         if s not in required_sheets:
+    #             available_sheets.append(s)
 
-        # If there are available sheets, prompt user to rename them
-        if available_sheets:
-            print("\n    📋 Here are the available sheets to rename: ")
-            # Display the available sheets as a numbered list
-            for i, s in enumerate(available_sheets, 1):
-                print(f"\n        {i}. {s}")
+    #     # If there are available sheets, prompt user to rename them
+    #     if available_sheets:
+    #         print("\n    📋 Here are the available sheets to rename: ")
+    #         # Display the available sheets as a numbered list
+    #         for i, s in enumerate(available_sheets, 1):
+    #             print(f"\n        {i}. {s}")
         
-        used_indices = []  # keep track of already used sheet indices
+    #     used_indices = []  # keep track of already used sheet indices
 
-        # Loop through each missing sheet and ask the user if they want to rename one of the available sheets
-        for sheet in missing_sheets:
-            if len(used_indices) == len(available_sheets):
-                print(f"\n    ⏭️  No sheets available to rename. Automatically skipping '{sheet}'!")
-                continue
+    #     # Loop through each missing sheet and ask the user if they want to rename one of the available sheets
+    #     for sheet in missing_sheets:
+    #         if len(used_indices) == len(available_sheets):
+    #             print(f"\n    ⏭️  No sheets available to rename. Automatically skipping '{sheet}'!")
+    #             continue
 
-            while True:
-                choice = input(f"\n    🔸 Enter the index of the sheet to rename to '{sheet}' or type 'skip': ")
+    #         while True:
+    #             choice = input(f"\n    🔸 Enter the index of the sheet to rename to '{sheet}' or type 'skip': ")
 
-                if choice.lower() == 'skip':
-                    print(f"\n        ⏭️  Skipped renaming '{sheet}'!")
-                    break
+    #             if choice.lower() == 'skip':
+    #                 print(f"\n        ⏭️  Skipped renaming '{sheet}'!")
+    #                 break
 
-                try:
-                    choice = int(choice)
-                    if 1 <= choice <= len(available_sheets):
-                        if choice in used_indices:
-                            print("\n        ❗ That sheet has already been used. Choose a different one.")
-                            continue
+    #             try:
+    #                 choice = int(choice)
+    #                 if 1 <= choice <= len(available_sheets):
+    #                     if choice in used_indices:
+    #                         print("\n        ❗ That sheet has already been used. Choose a different one.")
+    #                         continue
 
-                        rename_sheet = available_sheets[choice - 1]
-                        ws = wb[rename_sheet]
-                        ws.title = sheet
+    #                     rename_sheet = available_sheets[choice - 1]
+    #                     ws = wb[rename_sheet]
+    #                     ws.title = sheet
 
-                        print(f"\n        ✅ Sheet '{rename_sheet}' renamed to '{sheet}' successfully! 🎉")
+    #                     print(f"\n        ✅ Sheet '{rename_sheet}' renamed to '{sheet}' successfully! 🎉")
 
-                        used_indices.append(choice)
-                        break
+    #                     used_indices.append(choice)
+    #                     break
 
-                    else:
-                        print("\n        ❗ Invalid number selected. Please choose a valid option.")
-                except ValueError:
-                    print("\n        ❗ Invalid input, please enter a valid number or 'skip'.")
-        # Save the modified workbook (if any renaming was done)
-        wb.save(file_path)
-        print("\n    💾 Workbook saved with changes!")
+    #                 else:
+    #                     print("\n        ❗ Invalid number selected. Please choose a valid option.")
+    #             except ValueError:
+    #                 print("\n        ❗ Invalid input, please enter a valid number or 'skip'.")
+    #     # Save the modified workbook (if any renaming was done)
+    #     wb.save(file_path)
+    #     print("\n    💾 Workbook saved with changes!")
     
     
-    # ==========================================
-    # To Handle Sheets with Similar Names but Different Casing
-    # ==========================================
+    # # ==========================================
+    # # To Handle Sheets with Similar Names but Different Casing
+    # # ==========================================
 
-    # Create a mapping of sheet names that may have different cases to their standard names
-    sheet_name_mapping = {
-        'Opportunity1': 'Opportunity',
-        'Opportunity_product1': 'Opportunity_product',
-        'Opportunity_team1': 'Opportunity_team',
-        'Reporting_codes1': 'Reporting_codes'
-    }
+    # # Create a mapping of sheet names that may have different cases to their standard names
+    # sheet_name_mapping = {
+    #     'Opportunity1': 'Opportunity',
+    #     'Opportunity_product1': 'Opportunity_product',
+    #     'Opportunity_team1': 'Opportunity_team',
+    #     'Reporting_codes1': 'Reporting_codes'
+    # }
 
-    # Load the Excel file
-    wb = openpyxl.load_workbook(file_path)
+    # # Load the Excel file
+    # wb = openpyxl.load_workbook(file_path)
 
-    # Iterate through all sheets in the workbook
-    for sheet in wb.sheetnames:
+    # # Iterate through all sheets in the workbook
+    # for sheet in wb.sheetnames:
 
-        # Check if the sheet's name is present in the mapping dictionary
-        if sheet in sheet_name_mapping:
+    #     # Check if the sheet's name is present in the mapping dictionary
+    #     if sheet in sheet_name_mapping:
 
-            # If a match is found, get the corresponding new name
-            new_name = sheet_name_mapping[sheet]
+    #         # If a match is found, get the corresponding new name
+    #         new_name = sheet_name_mapping[sheet]
             
-            # Access the worksheet with the current name
-            ws = wb[sheet]
+    #         # Access the worksheet with the current name
+    #         ws = wb[sheet]
 
-            # Rename the sheet to the mapped new name
-            ws.title = new_name
+    #         # Rename the sheet to the mapped new name
+    #         ws.title = new_name
 
-    # Save the workbook with the renamed sheets (the content will remain unchanged)
-    wb.save(file_path)
+    # # Save the workbook with the renamed sheets (the content will remain unchanged)
+    # wb.save(file_path)
     
     # ==========================================
     # Convert all column headers to lowercase

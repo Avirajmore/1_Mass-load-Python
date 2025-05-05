@@ -765,8 +765,8 @@ while True:
         valid_count = len(valid_values)
 
         # If there are invalid values, write them to a new Excel file
+        invalid_df = pd.DataFrame(invalid_values, columns=['Invalid Accounts'])
         if invalid_count > 0:
-            invalid_df = pd.DataFrame(invalid_values, columns=['Invalid Accounts'])
             invalid_df.to_excel(os.path.expanduser("~/Downloads/Invalid_Accounts.xlsx"), index=False)
 
 
@@ -824,11 +824,11 @@ while True:
                 if not file_valid and not file_invalid:
                     files_with_no_matches.append(file_name)
                         # Append to cumulative DataFrames
+                valid_df = pd.concat([valid_df, pd.DataFrame(file_valid, columns=['Accounts'])], ignore_index=True)
                 if file_valid:
-                    valid_df = pd.concat([valid_df, pd.DataFrame(file_valid, columns=['Accounts'])], ignore_index=True)
                     total_valid += len(file_valid)
+                invalid_df = pd.concat([invalid_df, pd.DataFrame(file_invalid, columns=['Invalid Accounts'])], ignore_index=True)
                 if file_invalid:
-                    invalid_df = pd.concat([invalid_df, pd.DataFrame(file_invalid, columns=['Invalid Accounts'])], ignore_index=True)
                     total_invalid += len(file_invalid)
                 
         # Final summary
