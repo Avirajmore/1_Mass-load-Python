@@ -242,6 +242,9 @@ for f in os.listdir(copy_file_path):
 if not files_in_copy_folder:
     print("\n     🚫 No files found in 'Copy files' folder. ")
     sys.exit()
+
+count_of_files_copy_folder = len(files_in_copy_folder)
+
 # =========================================================================================================================================
 #                                                OPPORTUNITY SHEET EXECUTION
 # =========================================================================================================================================
@@ -613,19 +616,23 @@ while True:
     # Set paths
     legacy_csv = os.path.expanduser("~/Downloads/legacyid.csv") 
 
-    while not os.path.exists(legacy_csv):
+    # while not os.path.exists(legacy_csv):
 
+    #     print(f"\n    ❌ File 'legacyid.csv' does not exist. Did you query the Legacy Id?")
+
+    #     legacy_choice = input("\n        🔸 Do you want to try again? (yes/exit): ").strip().lower()
+
+    #     while legacy_choice not in ['yes', 'exit']:
+    #         print("\n          ❗️ Invalid input. Please enter 'yes' or 'exit'.")
+    #         legacy_choice = input("\n        🔸 Do you want to try again? (yes/exit): ").strip().lower()
+
+    #     if legacy_choice != 'yes':
+    #         print ("\n           🚫 Skipping this Step")
+    #         break
+    
+    if not os.path.exists(legacy_csv):
+        
         print(f"\n    ❌ File 'legacyid.csv' does not exist. Did you query the Legacy Id?")
-
-        legacy_choice = input("\n        🔸 Do you want to try again? (yes/exit): ").strip().lower()
-
-        while legacy_choice not in ['yes', 'exit']:
-            print("\n          ❗️ Invalid input. Please enter 'yes' or 'exit'.")
-            legacy_choice = input("\n        🔸 Do you want to try again? (yes/exit): ").strip().lower()
-
-        if legacy_choice != 'yes':
-            print ("\n           🚫 Skipping this Step")
-            break
     
     if os.path.exists(legacy_csv):
         # Read CSV file
@@ -3092,7 +3099,6 @@ while True:
                 # ---------------------- columns that are dropped ----------------------
 
                 dropped_columns_codes = [] 
-
                 
                 # ---------------------- Remove all Rows If all Codes are not found ----------------------
 
@@ -3474,6 +3480,6 @@ while True:
         print("\n")
         end_time = time.time()   # Record start time
         elapsed_time = end_time - start_time
-        print(f"\n    ✅ Total time taken: {elapsed_time:.2f} seconds")
+        print(f"\n    ✅ Total time taken for {count_of_files_copy_folder} files: {elapsed_time:.2f} seconds\n")
 
         break  # Exit the inner loop

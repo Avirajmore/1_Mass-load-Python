@@ -231,8 +231,8 @@ files_and_sheets = {
 
 # Define column mapping (CSV column name -> Summary sheet column name)
 column_mapping = {
-    "Reason": "ERRORS",  # Example: Map 'Reason' in CSV to 'Error' in the summary sheet
-    # Add more mappings if needed
+    "Reason": "ERRORS",  
+    "ERROR": "ERRORS"
 }
 
 # Define the folder path where the CSV files are stored
@@ -276,7 +276,16 @@ for csv_filename, sheet_name in files_and_sheets.items():
 
     # Get the header of the sheet (summary file)
     sheet_header = next(sheet.iter_rows(min_row=1, max_row=1, values_only=True), None)
-
+    
+    # ✅ Rename sheet headers if needed (e.g., ERROR → ERRORS)
+    if sheet_header:
+        sheet_header = list(sheet_header)
+        for col_idx, col_name in enumerate(sheet_header):
+            if col_name in column_mapping:
+                new_name = column_mapping[col_name]
+                sheet.cell(row=1, column=col_idx + 1, value=new_name)
+                sheet_header[col_idx] = new_name  # Update local list
+    
     # If the sheet is empty, populate it with CSV headers
     if not sheet_header or all(h is None for h in sheet_header):
         sheet_header = list(csv_data.columns)  # Convert pandas Index to a list
@@ -405,19 +414,19 @@ from tabulate import tabulate
 # Group data by high-level categories
 categories = defaultdict(lambda: {"Success": 0, "Failures": 0, "Total": 0})
 
-# Assuming `sheet_to_cell_mapping` is already defined as provided
-sheet_to_cell_mapping = {
-    "Opportunity Success": "E5",
-    "Opportunity Failures": "F5",
-    "Opportunity Product Success": "E6",
-    "Opportunity Product Failures": "F6",
-    "Team Member Success": "E7",
-    "Team Member Failure": "F7",
-    "Reporting Code Success": "E8",
-    "Reporting Code Failure": "F8",
-    "Tag Success": "E9",
-    "Tag Failure": "F9"
-}
+# # Assuming `sheet_to_cell_mapping` is already defined as provided
+# sheet_to_cell_mapping = {
+#     "Opportunity Success": "E5",
+#     "Opportunity Failures": "F5",
+#     "Opportunity Product Success": "E6",
+#     "Opportunity Product Failures": "F6",
+#     "Team Member Success": "E7",
+#     "Team Member Failure": "F7",
+#     "Reporting Code Success": "E8",
+#     "Reporting Code Failure": "F8",
+#     "Tag Success": "E9",
+#     "Tag Failure": "F9"
+# }
 
 # Example summary_sheet (assuming it's already loaded)
 # summary_sheet = your_loaded_summary_sheet_object

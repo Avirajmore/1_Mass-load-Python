@@ -132,42 +132,34 @@ for file in os.listdir(DOWNLOAD_DIR):
                     if not subset.empty:
                         collected_data.setdefault(out_sheet, []).append(subset)
 
-        # Special handling for 'Reporting_codes' → collect Tags + reporting_codes
+        # Special handling for 'Reporting_codes' to extract 'Tags'
         if 'Reporting_codes' in xls:
-            df = xls['Reporting_codes'].copy()
-            df.columns = df.columns.str.strip()
+            df = xls['Reporting_codes']
+            df.columns = df.columns.str.strip()  # Clean column names
 
-            # Locate the columns (case‑insensitive)
-            tags_cols = [c for c in df.columns if c.lower() == 'tags']
-            rc_cols   = [c for c in df.columns if c.lower() == 'reporting_codes']
+            tags_columns = [col for col in df.columns if col.lower() == 'tags']
+            reporting_codes_columns = [col for col in df.columns if col.lower() == 'reporting_codes']
 
-            # Nothing to do if neither column exists
-            if tags_cols or rc_cols:
-                series_list = []
+            if reporting_codes_columns:
+                reporting_codes_column = reporting_codes_columns[0]
 
-                if tags_cols:
-                    series_list.append(df[tags_cols[0]])
+                # If 'Tags' doesn't exist, create it using 'reporting_codes'
+                if not tags_columns:
+                    df['Tags'] = df[reporting_codes_column]
+                    tags_column = 'Tags'
+                else:
+                    tags_column = tags_columns[0]
+                    # If 'Tags' exists but is all NaN or empty strings
+                    if df[tags_column].isna().all() or (df[tags_column].astype(str).str.strip() == '').all():
+                        df[tags_column] = df[reporting_codes_column]
 
-                if rc_cols:
-                    series_list.append(df[rc_cols[0]])
+                # Now extract 'Tags' values (drop NaNs and blanks)
+                strategy_data = df[tags_column].dropna().astype(str).str.strip()
+                strategy_data = strategy_data[strategy_data != '']  # remove empty strings
 
-                # Combine both columns top‑to‑bottom, drop blanks/NaNs, trim spaces
-                strategy_series = (
-                    pd.concat(series_list, ignore_index=True)
-                    .replace({'': pd.NA})          # turn empty strings into NaN
-                    .dropna()
-                    .astype(str)
-                    .str.strip()
-                )
-
-                if not strategy_series.empty:
-                    strategy_df = (
-                        strategy_series
-                        .to_frame(name='Strategy')
-                        .drop_duplicates()           # avoid duplicates across both columns
-                    )
+                if not strategy_data.empty:
+                    strategy_df = strategy_data.to_frame(name='Strategy')
                     collected_data.setdefault('Strategy', []).append(strategy_df)
-        # ────────────────────────────────────────────────────────────────
 
         # Append or create a new extracted data Excel file
         file_exists = os.path.exists(EXTRACT_OUTPUT_FILE)
