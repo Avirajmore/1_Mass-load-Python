@@ -368,12 +368,18 @@ for file in os.listdir(folder_path):
             if df.empty:
                 # if no rows, consider all columns as blank
                 return column_names
+            
             for col in column_names:
                 if col in df.columns:
-                    blanks_found = df[col].isnull().any() or (df[col].apply(lambda x: isinstance(x, str) and x.strip() == '')).any()
-                    if blanks_found:
+                    # Convert everything to string, strip, and check for blanks or NaN
+                    series = df[col].astype(str).str.strip()
+                    if (series == "").any() or df[col].isnull().any():
                         blank_columns.append(col)
+                else:
+                    blank_columns.append(f"{col} (missing column)")
+            
             return blank_columns
+
 
         if 'Opportunity' in xls.sheet_names:
             try:
