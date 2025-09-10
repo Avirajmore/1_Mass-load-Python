@@ -47,19 +47,7 @@ for file in os.listdir(folder_path):
 
         # Initialize status for the file
         file_status = "✅ All Good"
-
-        def update_status(current_status, new_status):
-            # If critical is already found, never downgrade
-            if current_status == "❌ Issues Found":
-                return current_status
-            if new_status == "❌ Issues Found":
-                return new_status
-            if current_status == "⚠️ Potential Issues":
-                return current_status
-            if new_status == "⚠️ Potential Issues":
-                return new_status
-            return current_status
-
+        
         # ------------------------------------ Setup Validation Parameters ------------------------------------
 
         # --- List of Valid API Names ---
@@ -104,29 +92,22 @@ for file in os.listdir(folder_path):
             ]
         }
 
-        # Optional sheet (special rules)
-        optional_columns = {
-            "Opportunity_Team ": [
-                "OpportunityId", "OpportunityAccessLevel", "TeamMemberRole", "Email"
-            ],
-            "Reporting_codes": [
-                "Opportunity_id", "reporting_codes", "Tags"
-            ]
-}
-
         # --- Columns That Must Have Values from the Valid API List ---
         columns_to_validate = [
             "sales_stage", "OI_Source", "Classification Type", "Type", "Renewal type", "Renewal Status","product_type",
             "Won Reason","Lost Category","Lost Reason"
         ]
 
-        # Columns to Check for Missing (Blank) Values
+        # --- Columns to Check for Missing (Blank) Values ---
         blank_values_columns = {
-            "Opportunity": ["opportunity_legacy_id_c", "name", "accountid", "sales_stage","expected_close_date", "currency_code", "ownerid", "OI_Source"],
-            "Opportunity_product": ["Product", "product_type", "unitprice", "Classification Type"],
-            "Opportunity_Team ": ["OpportunityId", "OpportunityAccessLevel", "TeamMemberRole", "Email"],
-            "Reporting_codes": ["Opportunity_id", "reporting_codes", "Tags"]
+            "Opportunity": [
+                "opportunity_legacy_id_c", "name", "accountid", "sales_stage", "expected_close_date", "currency_code", "ownerid", "OI_Source"
+            ],
+            "Opportunity_product": [
+                "Product", "product_type", "unitprice", "Classification Type"
+            ]
         }
+
         # ---------------------- Step 1:- Check if all required sheets are present ----------------------
 
 
@@ -234,36 +215,15 @@ for file in os.listdir(folder_path):
                 df_columns_lower = [col.strip().lower() for col in df.columns]
                 missing = [col for col in columns if col.lower() not in df_columns_lower]
                 if missing:
-                    file_status = update_status(file_status, "❌ Issues Found")
+                    file_status = "❌ Issues Found"
                     print(f"\n    ❌ Missing columns in '{sheet}':")
                     for col in missing:
                         print(f"\n        🔸 {col}")
                 else:
                     print(f"\n    ✅ All required columns present in '{sheet}'")
             else:
-                file_status = update_status(file_status, "❌ Issues Found")
+                file_status = "❌ Issues Found"
                 print(f"\n    ❌ Sheet '{sheet}' not found.")
-
-        # --- Check optional sheet (Opportunity_Team ) ---
-        for sheet, columns in optional_columns.items():
-            if sheet in xls.sheet_names:
-                df = pd.read_excel(xls, sheet_name=sheet)
-                if df.empty:  # No data rows
-                    file_status = update_status(file_status, "⚠️ Potential Issues")
-                    print(f"\n    ⚠️ Sheet '{sheet}' is present but has no data.")
-                else:
-                    df_columns_lower = [col.strip().lower() for col in df.columns]
-                    missing = [col for col in columns if col.lower() not in df_columns_lower]
-                    if missing:
-                        file_status = update_status(file_status, "❌ Issues Found")
-                        print(f"\n    ❌ Missing columns in optional sheet '{sheet}':")
-                        for col in missing:
-                            print(f"\n        🔸 {col}")
-                    else:
-                        print(f"\n    ✅ All required columns present in optional sheet '{sheet}'")
-            else:
-                file_status = update_status(file_status, "⚠️ Potential Issues")
-                print(f"\n    ⚠️ Optional sheet '{sheet}' not found (may be okay).")                
 
         # ----------------------  Check for Columns with Invalid API names ---------------------
 
@@ -297,7 +257,7 @@ for file in os.listdir(folder_path):
             if invalid_report:
 
                 for sheet, columns in invalid_report.items():
-                    file_status = update_status(file_status, "❌ Issues Found")
+                    file_status = "❌ Issues Found"
                     print(f"\n    ❗️ Sheet: {sheet}")
                     for col, values in columns.items():
                         print(f"\n        🔹 Column: {col}")
@@ -309,7 +269,7 @@ for file in os.listdir(folder_path):
             else:
                 print("\n    🎉 All API values are valid in both sheets.")
         else:
-            file_status = update_status(file_status, "❌ Issues Found")
+            file_status = "❌ Issues Found"
             print(f"\n    ❌ One or both sheets 'Opportunity' and 'Opportunity_product' not found.")
 
         # ----------------------  Check for missing Lost Catergory, Loss reason and won reason ---------------------
@@ -344,7 +304,7 @@ for file in os.listdir(folder_path):
 
                 # Reporting
                 if not missing_won_reason.empty:
-                    file_status = update_status(file_status, "❌ Issues Found")
+                    file_status = "❌ Issues Found"
                     print(f"\n    ❗️ Missing 'Won Reason' where sales_stage = 'Won'")
                     # table_str = tabulate(
                     #     missing_won_reason[['Excel Row'] + identifier_cols + ['sales_stage', 'Won Reason']],
@@ -356,7 +316,7 @@ for file in os.listdir(folder_path):
                     print("\n    ✅ No missing 'Won Reason' for any rows with sales_stage = 'Won'.")
 
                 if not missing_lost_info.empty:
-                    file_status = update_status(file_status, "❌ Issues Found")
+                    file_status = "❌ Issues Found"
                     print(f"\n    ❗️ Missing 'Lost Category' or 'Lost Reason' for these rows where sales_stage = 'Lost'")
                     # table_str = tabulate(
                     #     missing_lost_info[['Excel Row'] + identifier_cols + ['sales_stage', 'Lost Category', 'Lost Reason']],
@@ -369,7 +329,7 @@ for file in os.listdir(folder_path):
 
                 # 🔴 Invalid values in Lost fields for 'Won' stage
                 if not invalid_lost_fields_in_won.empty:
-                    file_status = update_status(file_status, "❌ Issues Found")
+                    file_status = "❌ Issues Found"
                     print(f"\n    ❗️ Invalid 'Lost Category' or 'Lost Reason' present for these rows where sales_stage = 'Won'")
                     table_str = tabulate(
                         invalid_lost_fields_in_won[['Excel Row'] + identifier_cols + ['sales_stage', 'Lost Category', 'Lost Reason']],
@@ -382,7 +342,7 @@ for file in os.listdir(folder_path):
 
                 # 🔴 Invalid 'Won Reason' in 'Lost' stage
                 if not invalid_won_reason_in_lost.empty:
-                    file_status = update_status(file_status, "❌ Issues Found")
+                    file_status = "❌ Issues Found"
                     print(f"\n    ❗️ Invalid 'Won Reason' present for these rows (sales_stage = 'Lost'):\n")
                     table_str = tabulate(
                         invalid_won_reason_in_lost[['Excel Row'] + identifier_cols + ['sales_stage', 'Won Reason']],
@@ -393,11 +353,11 @@ for file in os.listdir(folder_path):
                 else:
                     print("\n    ✅ No invalid 'Won Reason' for any rows with sales_stage = 'Lost'.")
             except Exception as e:
-                file_status = update_status(file_status, "❌ Issues Found")
+                file_status = "❌ Issues Found"
                 print(f"\n    ❗️ Error: {e}")
 
         else:
-            file_status = update_status(file_status, "❌ Issues Found")
+            file_status = "❌ Issues Found"
             print(f"\n    ❌ Sheet 'Opportunity' not found.")
 
         # ----------------------  Check for Blank values in Important Columns ---------------------
@@ -429,17 +389,17 @@ for file in os.listdir(folder_path):
                 df_opportunity = df_opportunity.dropna(subset=['opportunity_legacy_id_c'], how='all')
                 blank_cols_opp = check_blank_values(df_opportunity, blank_values_columns["Opportunity"])
                 if blank_cols_opp:
-                    file_status = update_status(file_status, "❌ Issues Found")
+                    file_status = "❌ Issues Found"
                     print("\n    ❗️ Blank values found in columns of 'Opportunity':")
                     for col in blank_cols_opp:
                         print(f'\n        🔸 {col}')
                 else:
                     print("\n    ✅ No blank values in required columns of 'Opportunity'.")
             except Exception as e:
-                file_status = update_status(file_status, "❌ Issues Found")
+                file_status = "❌ Issues Found"
                 print(f"\n    ❗️ Error: {e}")
         else:
-            file_status = update_status(file_status, "❌ Issues Found")
+            file_status = "❌ Issues Found"
             print(f"\n    ❌ Sheet 'Opportunity' not found.")
 
         if 'Opportunity_product' in xls.sheet_names:
@@ -448,75 +408,18 @@ for file in os.listdir(folder_path):
                 df_opportunity_product = pd.read_excel(xls, sheet_name='Opportunity_product')
                 blank_cols_prod = check_blank_values(df_opportunity_product, blank_values_columns["Opportunity_product"])
                 if blank_cols_prod:
-                    file_status = update_status(file_status, "❌ Issues Found")
+                    file_status = "❌ Issues Found"
                     print("\n    ❗️ Blank values found in columns of 'Opportunity_product':")
                     for col in blank_cols_prod:
                         print(f'\n        🔸 {col}')
                 else:
                     print("\n    ✅ No blank values in required columns of 'Opportunity_product'.")
             except Exception as e:
-                file_status = update_status(file_status, "❌ Issues Found")
+                file_status = "❌ Issues Found"
                 print(f"\n    ❗️ Error: {e}")        
         else:  
-            file_status = update_status(file_status, "❌ Issues Found")
+            file_status = "❌ Issues Found"
             print(f"\n    ❌ Sheet 'Opportunity_product' not found.")
-
-        # --- Check Opportunity_Team  (Optional) ---
-        if 'Opportunity_Team ' in xls.sheet_names:   # note trailing space
-            try:
-                df_opportunity_team = pd.read_excel(xls, sheet_name='Opportunity_Team ')
-                if df_opportunity_team.empty:
-                    file_status = update_status(file_status, "⚠️ Potential Issues")
-                    print("\n    ⚠️ Sheet 'Opportunity_Team ' is present but has no data.")
-                else:
-                    blank_cols_team = check_blank_values(df_opportunity_team, blank_values_columns["Opportunity_Team "])
-                    if blank_cols_team:
-                        file_status = update_status(file_status, "❌ Issues Found")
-                        print("\n    ❗️ Blank values found in columns of 'Opportunity_Team ':")
-                        for col in blank_cols_team:
-                            print(f'\n        🔸 {col}')
-                    else:
-                        print("\n    ✅ No blank values in required columns of 'Opportunity_Team '.")
-            except Exception as e:
-                file_status = update_status(file_status, "❌ Issues Found")
-                print(f"\n    ❗️ Error while checking 'Opportunity_Team ': {e}")
-        else:
-            file_status = update_status(file_status, "⚠️ Potential Issues")
-            print(f"\n    ⚠️ Optional sheet 'Opportunity_Team ' not found (may be okay).")
-
-        # --- Check Reporting_codes (Special Rules) ---
-        if 'Reporting_codes' in xls.sheet_names:
-            try:
-                df_reporting_codes = pd.read_excel(xls, sheet_name='Reporting_codes')
-                df_reporting_codes = df_reporting_codes.dropna(axis=0, how='all')  # remove fully empty rows
-                df_reporting_codes = df_reporting_codes.dropna(axis=1, how='all')  # remove fully empty cols
-
-                if df_reporting_codes.empty:
-                    file_status = update_status(file_status, "⚠️ Potential Issues")
-                    print("\n    ⚠️ Sheet 'Reporting_codes' is present but has no data.")
-                else:
-                    blank_cols_reporting = check_blank_values(
-                        df_reporting_codes, 
-                        blank_values_columns["Reporting_codes"]
-                    )
-
-                    if len(blank_cols_reporting) == len(blank_values_columns["Reporting_codes"]):
-                        # All three required columns are blank
-                        file_status = update_status(file_status, "⚠️ Potential Issues")
-                        print("\n    ⚠️ All required columns in 'Reporting_codes' are blank.")
-                    elif blank_cols_reporting:
-                        file_status = update_status(file_status, "❌ Issues Found")
-                        print("\n    ❗️ Blank values found in some columns of 'Reporting_codes':")
-                        for col in blank_cols_reporting:
-                            print(f"\n        🔸 {col}")
-                    else:
-                        print("\n    ✅ No blank values in required columns of 'Reporting_codes'.")
-            except Exception as e:
-                file_status = update_status(file_status, "❌ Issues Found")
-                print(f"\n    ❗️ Error while checking 'Reporting_codes': {e}")
-        else:
-            file_status = update_status(file_status, "⚠️ Potential Issues")
-            print("\n    ⚠️ Sheet 'Reporting_codes' not found (may be okay).")
 
         # ----------------------- Check for Duplicate Oppty Legacy Id -----------------------
 
@@ -527,16 +430,16 @@ for file in os.listdir(folder_path):
                 df_opportunity = df_opportunity.drop_duplicates()
                 df_opportunity = df_opportunity.dropna(how='all')
                 if df_opportunity['opportunity_legacy_id_c'].duplicated().any():
-                    file_status = update_status(file_status, "❌ Issues Found")
+                    file_status = "❌ Issues Found"
                     duplicated_values = df_opportunity[df_opportunity['opportunity_legacy_id_c'].duplicated(keep=False)]
                     print("\n   ❗️ Duplicate values found in 'opportunity_legacy_id_c'")
                 else:
                     print("\n   ✅ No duplicate values found in 'opportunity_legacy_id_c'.")
             except Exception as e:  
-                file_status = update_status(file_status, "❌ Issues Found")
+                file_status = "❌ Issues Found"
                 print(f"\n    ❗️ Error: {e}")                     
         else:
-            file_status = update_status(file_status, "❌ Issues Found")
+            file_status = "❌ Issues Found"
             print(f"\n    ❌ Sheet 'Opportunity' not found.")
 
         # Append file result to summary

@@ -560,8 +560,13 @@ while True:
 
             # Remove rows where all cells are NaN (blank rows)
             df = df.dropna(how='all')
+
+            # Specific check for Opportunity sheet
             if sheet_name == "Opportunity":
                 df = df.dropna(subset=['opportunity_legacy_id_c'], how='all')
+
+            # Trim whitespace from all string columns
+            df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
             if remove_duplicates:
                 print(f"\n    ✅ Removed duplicate and blank rows from '{sheet_name}' sheet. ")

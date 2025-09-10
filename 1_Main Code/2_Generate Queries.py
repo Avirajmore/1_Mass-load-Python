@@ -82,7 +82,7 @@ for file in os.listdir(DOWNLOAD_DIR):
         # Process 'Opportunity_product' sheet if it exists
         if 'Opportunity_product' in xls:
             df = xls['Opportunity_product']
-            df['product_family'] = df['Product'].astype(str) + '-' + df['product_type'].astype(str)
+            df['product_family'] = df['Product'].astype(str).str.strip() + '-' + df['product_type'].astype(str).str.strip()
 
         # Define how columns should be extracted and grouped from various sheets
         sheet_config = {
@@ -398,14 +398,6 @@ Email_output_txt = 'Extracted_Files/Queries/2_Userid_query.txt'
 userid_query = "select email,id,Profile.Name,isactive from user where email in ({values}) and Profile.Name != 'IBM Partner Community Login User' and IsActive = true"
 generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Email_id', 'Email_id', userid_query,Email_output_txt)
 
-strategy_output_txt = 'Extracted_Files/Queries/4_Strategy_query.txt'
-strategy_query = "Select id,name,Record_Type_Name__c from Strategy__c where name in ({values})"
-generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Strategy', 'Strategy', strategy_query,strategy_output_txt)
-
-legacy_output_txt = 'Extracted_Files/Queries/5_Legacy_query.txt'
-legacy_query = "SELECT Opportunity_Legacy_Id__c, Id,Name,Owned_By_Name__c,OwnerId FROM Opportunity WHERE Opportunity_Legacy_Id__c IN ({values})"
-generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Legacy_Ids', 'opportunity_legacy_id_c', legacy_query,legacy_output_txt)
-
 # ============================
 # Function to generate query using two sheets and columns
 # ============================
@@ -432,6 +424,9 @@ def generate_query_from_two_sheets(EXTRACT_OUTPUT_FILE, sheet1, column1, sheet2,
     # Write query to file
     with open(output_txt, "w") as file:
         file.write(query)
+    
+    # ✅ Print confirmation
+    print(f"\n       📁 Generated 1 query file(s) for {os.path.basename(output_txt)}")
 
 
 # Product & currency query generation
@@ -443,6 +438,15 @@ product_query = "SELECT Product2.Product_Code_Family__c, CurrencyIsoCode, id, is
 product_output_txt = 'Extracted_Files/Queries/3_PricebookEntry_query.txt'
 
 generate_query_from_two_sheets(EXTRACT_OUTPUT_FILE, sheet1, column1, sheet2, column2, product_query, product_output_txt)
+
+strategy_output_txt = 'Extracted_Files/Queries/4_Strategy_query.txt'
+strategy_query = "Select id,name,Record_Type_Name__c from Strategy__c where name in ({values})"
+generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Strategy', 'Strategy', strategy_query,strategy_output_txt)
+
+legacy_output_txt = 'Extracted_Files/Queries/5_Legacy_query.txt'
+legacy_query = "SELECT Opportunity_Legacy_Id__c, Id,Name,Owned_By_Name__c,OwnerId FROM Opportunity WHERE Opportunity_Legacy_Id__c IN ({values})"
+generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Legacy_Ids', 'opportunity_legacy_id_c', legacy_query,legacy_output_txt)
+
 
 print("\n   ✅ Queries Generated")
 
