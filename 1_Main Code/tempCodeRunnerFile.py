@@ -249,7 +249,7 @@ for sheet_name in sheets_to_process:
         # Create a new DataFrame from the expanded rows
         all_sheets[sheet_name] = pd.DataFrame(new_rows, columns=df.columns)
     else:
-        print(f"\n   ⚠️ Sheet '{sheet_name}' not found in the Excel file.")
+        print(f"Sheet '{sheet_name}' not found in the Excel file.")
 
 # Write all sheets back to the same Excel file
 with pd.ExcelWriter(EXTRACT_OUTPUT_FILE, engine='openpyxl', mode='w') as writer:
@@ -338,61 +338,55 @@ print(f"\n   ✅ Concated values saved in {CONCATENATE_OUTPUT_FILE}")
 
 print("\n🔍 Step 4: Generating Queries")
 def generate_query_from_sheet(EXTRACT_OUTPUT_FILE, sheet_name, column_name, query_template, output_txt_base):
-    try:
-            
-        # Read specific sheet
-        df = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=sheet_name, dtype=str)
+    # Read specific sheet
+    df = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=sheet_name, dtype=str)
 
-        # Drop empty values and clean
-        values = df[column_name].dropna().astype(str).str.strip().tolist()
+    # Drop empty values and clean
+    values = df[column_name].dropna().astype(str).str.strip().tolist()
 
-        # Query parts length
+    # Query parts length
 
-        base_query_length = len(query_template.replace("{values}", ""))
-        max_query_length = 80000
+    base_query_length = len(query_template.replace("{values}", ""))
+    max_query_length = 80000
 
-        # Estimate max value chunk size per query
-        value_strings = [f"'{val}'" for val in values]
+    # Estimate max value chunk size per query
+    value_strings = [f"'{val}'" for val in values]
 
-        chunks = []
-        current_chunk = []
-        current_length = base_query_length
+    chunks = []
+    current_chunk = []
+    current_length = base_query_length
 
-        for val in value_strings:
-            val_length = len(val) + 1  # for comma and newline
-            if current_length + val_length > max_query_length:
-                # Save current chunk
-                chunks.append(current_chunk)
-                # Start new chunk
-                current_chunk = [val]
-                current_length = base_query_length + val_length
-            else:
-                current_chunk.append(val)
-                current_length += val_length
-
-        if current_chunk:
+    for val in value_strings:
+        val_length = len(val) + 1  # for comma and newline
+        if current_length + val_length > max_query_length:
+            # Save current chunk
             chunks.append(current_chunk)
+            # Start new chunk
+            current_chunk = [val]
+            current_length = base_query_length + val_length
+        else:
+            current_chunk.append(val)
+            current_length += val_length
 
-        # Ensure output folder exists
-        os.makedirs(os.path.dirname(output_txt_base), exist_ok=True)
+    if current_chunk:
+        chunks.append(current_chunk)
 
-        # Write each query to separate file
-        for idx, chunk in enumerate(chunks, start=1):
-            formatted_values = ",\n".join(chunk)
-            query = query_template.replace("{values}", formatted_values)
-            if len(chunks) == 1:
-                    output_txt = output_txt_base
-            else:
-                output_txt = output_txt_base.replace(".txt", f"_part{idx}.txt")
-            with open(output_txt, "w") as file:
-                file.write(query)
-        
-        query_file = output_txt_base.split("/")[-1]
-        print(f"\n       📁 Generated {len(chunks)} query file(s) for {query_file}.")
-    except ValueError:
-        print(f"\n       ⚠️ Skipping query for '{sheet_name}' because the sheet was not found.")
-        return
-        
+    # Ensure output folder exists
+    os.makedirs(os.path.dirname(output_txt_base), exist_ok=True)
+
+    # Write each query to separate file
+    for idx, chunk in enumerate(chunks, start=1):
+        formatted_values = ",\n".join(chunk)
+        query = query_template.replace("{values}", formatted_values)
+        if len(chunks) == 1:
+                output_txt = output_txt_base
+        else:
+            output_txt = output_txt_base.replace(".txt", f"_part{idx}.txt")
+        with open(output_txt, "w") as file:
+            file.write(query)
+    
+    query_file = output_txt_base.split("/")[-1]
+    print(f"\n       📁 Generated {len(chunks)} query file(s) for {query_file}.")
 
 # Queries generation (various sheets & templates)
 
