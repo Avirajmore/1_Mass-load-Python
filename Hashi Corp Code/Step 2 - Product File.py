@@ -1,18 +1,29 @@
 import pandas as pd
 import os
-import time
+import sys
+
+try:
+    os.remove(os.path.expanduser("~/Downloads/Account export.csv"))
+    os.remove(os.path.expanduser("~/Downloads/Accounts to import.xlsx"))
+except Exception as e:
+    print(f"\n Files not Found")
 
 # ---------- CONFIG ----------
 WORKING_DIR = os.path.expanduser("~/Downloads")
-HASHI_FILE = os.path.expanduser("~/Downloads/Hashi lineitem.csv")
+HASHI_FILE = os.path.expanduser("~/Downloads/hashi lineitem.csv")
 RENAMED_FILE = os.path.expanduser("~/Downloads/Source id file.csv")
 OUTPUT_FILE = os.path.expanduser("~/Downloads/Hashi lineitem .csv")
-WAIT_TIME = 3
+
 # ----------------------------
 
 # -------- STEP 1: WAIT & RENAME --------
-print(f"⏳ Waiting {WAIT_TIME} seconds...")
-time.sleep(WAIT_TIME)
+choice =input("\n⚠️ Did you extract the file❓ (y/n)")
+
+if choice.lower()=='y':
+    pass
+else:
+    print("❌ Operation cancelled.")
+    sys.exit()
 
 bulk_files = [
     f for f in os.listdir(WORKING_DIR)
@@ -75,6 +86,7 @@ merged_df.drop(columns=["SOURCE_ID__C_std", "Source_ID__c_std"], inplace=True)
 # -------- STEP 6: SAVE OUTPUT --------
 
 os.remove(HASHI_FILE)
+os.remove(RENAMED_FILE)
 merged_df.to_csv(OUTPUT_FILE, index=False)
 
 print("✅ Comparison completed successfully")
