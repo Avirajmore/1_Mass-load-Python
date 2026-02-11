@@ -82,7 +82,7 @@ for file in os.listdir(DOWNLOAD_DIR):
         # Process 'Opportunity_product' sheet if it exists
         if 'Opportunity_product' in xls:
             df = xls['Opportunity_product']
-            df['product_family'] = df['Product'].astype(str) + '-' + df['product_type'].astype(str)
+            df['product_family'] = df['Product'].astype(str).str.strip() + '-' + df['product_type'].astype(str).str.strip()
 
         # Define how columns should be extracted and grouped from various sheets
         sheet_config = {

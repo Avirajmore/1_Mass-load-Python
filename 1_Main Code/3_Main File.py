@@ -24,7 +24,7 @@ start_time = time.time()   # Record start time
 
 # Path of the folder Where you want to save the Mass Load Files. 
 # ❗️ Change this path if you want to store files in a different location
-BASE_DIR = os.path.expanduser("~/Documents/Office Docs/Massload Files/2025") 
+BASE_DIR = os.path.expanduser("~/Documents/Office Docs/Massload Files/2026") 
 
 # for Example :-  os.path.expanduser("~/Downloads") == "/Users/avirajmore/Downloads" 
 
@@ -2029,66 +2029,70 @@ while True:
     original_codes_sheet_name = 'Reporting_codes'
     tag_sheet_name = 'Tags'
 
+    try:
 
-    codes_df = pd.read_excel(file_path, sheet_name = original_codes_sheet_name)
-    
-    # Check if the 'Reporting_codes' sheet is empty or contains only headers
-    is_empty, preview = is_sheet_empty(codes_df, original_codes_sheet_name)
-
-    if is_empty:
-        # If the sheet is empty or contains only headers, skip execution
-        print(f"\n📂 The sheet '{original_codes_sheet_name}' is empty or contains only headers.\n")
-        choice = 'no'
-
-    elif is_empty is None:
-        # If an error occurred while processing the sheet
-        print("\n❗️ Could not process the sheet due to an error.\n")
-        choice = 'no'
-
-    else:
-        # Sheet contains data, proceed with processing
-        choice = 'yes'
+        codes_df = pd.read_excel(file_path, sheet_name = original_codes_sheet_name)
         
-        # ----------------------------- Code to create Tags Column if missing --------------------------------- 
-        
-        tag_column = 'tags'
-        
-        # Ensure 'tags' column exists; if not, create it with empty values
-        if tag_column not in codes_df.columns:
-            codes_df['tags'] = None  # Create an empty 'tags' column
+        # Check if the 'Reporting_codes' sheet is empty or contains only headers
+        is_empty, preview = is_sheet_empty(codes_df, original_codes_sheet_name)
 
-        # Check if 'tags' column exists (case-insensitive)
-        tags_column = [col for col in codes_df.columns if col.strip().lower() == 'tags']
+        if is_empty:
+            # If the sheet is empty or contains only headers, skip execution
+            print(f"\n📂 The sheet '{original_codes_sheet_name}' is empty or contains only headers.\n")
+            choice = 'no'
 
-        # Check if 'Reporting Codes' column exists (case-insensitive)
-        reporting_codes_column = [col for col in codes_df.columns if col.strip().lower() == 'reporting_codes']
+        elif is_empty is None:
+            # If an error occurred while processing the sheet
+            print("\n❗️ Could not process the sheet due to an error.\n")
+            choice = 'no'
 
-        # Check if 'Opportunity_id' column exists (case-insensitive)
-        opportunity_id_column = [col for col in codes_df.columns if col.strip().lower() == 'opportunity_id']
+        else:
+            # Sheet contains data, proceed with processing
+            choice = 'yes'
+            
+            # ----------------------------- Code to create Tags Column if missing --------------------------------- 
+            
+            tag_column = 'tags'
+            
+            # Ensure 'tags' column exists; if not, create it with empty values
+            if tag_column not in codes_df.columns:
+                codes_df['tags'] = None  # Create an empty 'tags' column
 
-        # If 'tags' column doesn't exist or is empty, add or update the 'tags' column
-        if reporting_codes_column and opportunity_id_column:
-            reporting_codes_column = reporting_codes_column[0]
-            opportunity_id_column = opportunity_id_column[0]
+            # Check if 'tags' column exists (case-insensitive)
+            tags_column = [col for col in codes_df.columns if col.strip().lower() == 'tags']
 
-            # If the 'tags' column doesn't exist or is completely empty
-            if not tags_column or codes_df[tags_column[0]].isna().all():
-                # Convert 'tags' column to string type to avoid issues when assigning text
-                codes_df['tags'] = codes_df['tags'].astype(str)  # Convert to string type to avoid dtype mismatch
-                
-                # Populate 'tags' column by copying 'Reporting Codes' values for each unique opportunity_id
-                for opportunity_id in codes_df[opportunity_id_column].unique():
+            # Check if 'Reporting Codes' column exists (case-insensitive)
+            reporting_codes_column = [col for col in codes_df.columns if col.strip().lower() == 'reporting_codes']
+
+            # Check if 'Opportunity_id' column exists (case-insensitive)
+            opportunity_id_column = [col for col in codes_df.columns if col.strip().lower() == 'opportunity_id']
+
+            # If 'tags' column doesn't exist or is empty, add or update the 'tags' column
+            if reporting_codes_column and opportunity_id_column:
+                reporting_codes_column = reporting_codes_column[0]
+                opportunity_id_column = opportunity_id_column[0]
+
+                # If the 'tags' column doesn't exist or is completely empty
+                if not tags_column or codes_df[tags_column[0]].isna().all():
+                    # Convert 'tags' column to string type to avoid issues when assigning text
+                    codes_df['tags'] = codes_df['tags'].astype(str)  # Convert to string type to avoid dtype mismatch
                     
-                    # Get all rows for the current opportunity_id
-                    opportunity_rows = codes_df[codes_df[opportunity_id_column] == opportunity_id]
-                    
-                    # Assign corresponding 'Reporting Codes' values to the 'tags' column
-                    codes_df.loc[codes_df[opportunity_id_column] == opportunity_id, 'tags'] = opportunity_rows[reporting_codes_column].values
+                    # Populate 'tags' column by copying 'Reporting Codes' values for each unique opportunity_id
+                    for opportunity_id in codes_df[opportunity_id_column].unique():
+                        
+                        # Get all rows for the current opportunity_id
+                        opportunity_rows = codes_df[codes_df[opportunity_id_column] == opportunity_id]
+                        
+                        # Assign corresponding 'Reporting Codes' values to the 'tags' column
+                        codes_df.loc[codes_df[opportunity_id_column] == opportunity_id, 'tags'] = opportunity_rows[reporting_codes_column].values
+            
+            print(f"\n✅ The sheet '{original_codes_sheet_name}' contains data. Here are the first 4 rows:\n")
+            preview = codes_df.head(4)
+            print(tabulate(preview, headers='keys', tablefmt='fancy_grid', showindex=False))
+    except ValueError:
+        print(f"\n⚠️ The sheet '{original_codes_sheet_name}' is not present in the Excel file.\n")
+        choice = 'no'
         
-        print(f"\n✅ The sheet '{original_codes_sheet_name}' contains data. Here are the first 4 rows:\n")
-        preview = codes_df.head(4)
-        print(tabulate(preview, headers='keys', tablefmt='fancy_grid', showindex=False))
-
     while True:
 
         print(f"\n    🔹 Do you want to execute the Strategy Sheet ? (yes/no): {choice}")
