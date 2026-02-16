@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 
+dir_path = os.path.expanduser("~/Downloads/csv_files")
 
 class CompareCsv():
     def csv_compare(self):
@@ -16,7 +17,7 @@ class CompareCsv():
         input_path1 = os.path.join(input_directory, input_csv_file_name1)
         input_path2 = os.path.join(input_directory, input_csv_file_name2)
         output_path1 = os.path.join(output_directory, output_csv_file_name1)
-        output_path2 = os.path.join(output_directory, output_csv_file_name2)
+        output_path2 = os.path.join(dir_path, output_csv_file_name2)
 
         # record compare
         df = pd.read_csv(input_path1)
@@ -50,14 +51,6 @@ class CompareCsv():
         lmd_mismatched_records.to_csv(output_path2, index=False)
         print("Last Modified date mismatch file generated.")
 
-
-
-        dir_path = os.path.expanduser("~/Downloads/csv_files")
-
-        # Create directory if it doesn't exist
-        os.makedirs(dir_path, exist_ok=True)
-
-        print(f"📁 Directory ready: {dir_path}")
 
         # Write run stat
         csv_file_path = os.path.expanduser("~/Downloads/csv_files/Run_Stat.csv")

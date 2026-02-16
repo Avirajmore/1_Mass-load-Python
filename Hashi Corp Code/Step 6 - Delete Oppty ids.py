@@ -4,6 +4,7 @@ import pyperclip
 from tkinter import filedialog, Tk
 
 # ---------- PRODUCT ----------
+DOWNLOAD_FOLDER = os.path.expanduser("~/Downloads")
 product_df = pd.read_csv(os.path.expanduser("~/Downloads/product_Record_Mismatch.csv"))
 
 product_delete = (
@@ -11,7 +12,7 @@ product_delete = (
     .rename(columns={"Id": "Delete Product"})
 )
 
-product_delete.to_csv(os.path.expanduser("~/Downloads/PreDelete_Product.csv", index=False))
+product_delete.to_csv(os.path.expanduser("~/Downloads/PreDelete_Product.csv"), index=False)
 
 print("✅ Delete_Product.csv created")
 
@@ -24,7 +25,7 @@ oppty_delete = (
     .rename(columns={"Id": "Delete Oppty"})
 )
 
-oppty_delete.to_csv(os.path.expanduser("~/Downloads/PreDelete_Oppty.csv", index=False))
+oppty_delete.to_csv(os.path.expanduser("~/Downloads/PreDelete_Oppty.csv"), index=False)
 
 print("✅ Delete_Oppty.csv created")
 

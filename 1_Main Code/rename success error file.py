@@ -21,6 +21,10 @@ RENAME_RULES = {
     "opportunity strategy insert":{
         "success":"tagssuccess",
         "error":"tagserror"
+    },
+    "opportunity code insert":{
+        "success":"codessuccess",
+        "error":"codeserror"
     }
 }
 # -------------------------------

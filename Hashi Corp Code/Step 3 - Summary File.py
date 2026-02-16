@@ -5,12 +5,16 @@ from datetime import date
 from openpyxl import load_workbook
 
 # ---------- CONFIG ----------
+# Folder to move processed CSV files
+PROCESSED_FOLDER = os.path.expanduser("~/Downloads/Success and Error files")
+os.makedirs(PROCESSED_FOLDER, exist_ok=True)
+
 CSV_DIR = os.path.expanduser("~/Downloads")   # folder containing CSV files
-TEMPLATE_FILE = os.path.expanduser("~/Documents/Office Docs/Massload Files/Reference File/Hashicorp_production_load_summary_file.xlsx")
+TEMPLATE_FILE = os.path.expanduser("~/Documents/Office Docs/Massload Files/Reference File/SUMMARY_FILE_Hashicorp_production.xlsx")
 # ----------------------------
 
 today = date.today().strftime("%Y-%m-%d")
-OUTPUT_FILE = os.path.expanduser(f"~/Downloads/Hashi_production_load_summary_{today}.xlsx")
+OUTPUT_FILE = os.path.expanduser(f"~/Downloads/SUMMARY FILE - HASHI PROD ({today}).xlsx")
 
 # ---------- COPY TEMPLATE ----------
 shutil.copy(TEMPLATE_FILE, OUTPUT_FILE)
@@ -19,12 +23,14 @@ print(f"📄 Template copied → {OUTPUT_FILE}")
 # ---------- FILE DEFINITIONS ----------
 FILES = {
     "opp_success": {
-        "sheet": "Opportunity success",
-        "keywords": ["opportunity", "upsert", "success"]
+    "sheet": "Opportunity success",
+    "keywords": ["opportunity", "upsert", "success"],
+    "exclude": ["product"]
     },
     "opp_error": {
-        "sheet": "Opportunity failures",
-        "keywords": ["opportunity", "upsert", "error"]
+    "sheet": "Opportunity failures",
+    "keywords": ["opportunity", "upsert", "error"],
+    "exclude": ["product"]
     },
     "prod_success": {
         "sheet": "Product success",
@@ -46,12 +52,17 @@ SUMMARY_CELLS = {
 }
 
 
-def find_csv(keywords):
+def find_csv(keywords, exclude=None):
     for file in os.listdir(CSV_DIR):
         name = file.lower()
-        if name.endswith(".csv") and all(k in name for k in keywords):
+        if (
+            name.endswith(".csv")
+            and all(k in name for k in keywords)
+            and (not exclude or not any(e in name for e in exclude))
+        ):
             return os.path.join(CSV_DIR, file)
     return None
+
 
 
 row_counts = {}
@@ -65,13 +76,19 @@ with pd.ExcelWriter(
 ) as writer:
 
     for key, info in FILES.items():
-        csv_path = find_csv(info["keywords"])
+        csv_path = find_csv(info["keywords"], info.get("exclude"))
 
         if csv_path:
             df = pd.read_csv(csv_path)
             df.to_excel(writer, sheet_name=info["sheet"], index=False)
+           
             row_counts[key] = len(df)
             print(f"✅ {info['sheet']} → {len(df)} rows")
+
+            # Move processed file
+            destination_path = os.path.join(PROCESSED_FOLDER, os.path.basename(csv_path))
+            shutil.move(csv_path, destination_path)
+            print(f"📂 Moved → {destination_path}")
         else:
             # Empty sheet if missing
             pd.DataFrame().to_excel(writer, sheet_name=info["sheet"], index=False)
