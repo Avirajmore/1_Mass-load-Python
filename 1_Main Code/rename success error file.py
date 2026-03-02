@@ -30,6 +30,10 @@ RENAME_RULES = {
         "success":"tagssuccess",
         "error":"tagserror"
     },
+    "team member insert":{
+        "success":"teamsuccess",
+        "error":"teamerror"
+    }
 }
 # -------------------------------
 

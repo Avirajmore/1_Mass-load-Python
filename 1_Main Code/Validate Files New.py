@@ -228,43 +228,45 @@ for file in os.listdir(folder_path):
         xls = pd.ExcelFile(file_path)
         
         print(f"\n🔍 Step 2: Checking Required Columns: ")
-        for sheet, columns in required_columns.items():
-            if sheet in xls.sheet_names:
-                df = pd.read_excel(xls, sheet_name=sheet)
-                df_columns_lower = [col.strip().lower() for col in df.columns]
-                missing = [col for col in columns if col.lower() not in df_columns_lower]
-                if missing:
-                    file_status = update_status(file_status, "❌ Issues Found")
-                    print(f"\n    ❌ Missing columns in '{sheet}':")
-                    for col in missing:
-                        print(f"\n        🔸 {col}")
-                else:
-                    print(f"\n    ✅ All required columns present in '{sheet}'")
-            else:
-                file_status = update_status(file_status, "❌ Issues Found")
-                print(f"\n    ❌ Sheet '{sheet}' not found.")
-
-        # --- Check optional sheet (Opportunity_Team ) ---
-        for sheet, columns in optional_columns.items():
-            if sheet in xls.sheet_names:
-                df = pd.read_excel(xls, sheet_name=sheet)
-                if df.empty:  # No data rows
-                    file_status = update_status(file_status, "⚠️ Potential Issues")
-                    print(f"\n    ⚠️ Sheet '{sheet}' is present but has no data.")
-                else:
+        try:
+            for sheet, columns in required_columns.items():
+                if sheet in xls.sheet_names:
+                    df = pd.read_excel(xls, sheet_name=sheet)
                     df_columns_lower = [col.strip().lower() for col in df.columns]
                     missing = [col for col in columns if col.lower() not in df_columns_lower]
                     if missing:
                         file_status = update_status(file_status, "❌ Issues Found")
-                        print(f"\n    ❌ Missing columns in optional sheet '{sheet}':")
+                        print(f"\n    ❌ Missing columns in '{sheet}':")
                         for col in missing:
                             print(f"\n        🔸 {col}")
                     else:
-                        print(f"\n    ✅ All required columns present in optional sheet '{sheet}'")
-            else:
-                file_status = update_status(file_status, "⚠️ Potential Issues")
-                print(f"\n    ⚠️ Optional sheet '{sheet}' not found (may be okay).")                
+                        print(f"\n    ✅ All required columns present in '{sheet}'")
+                else:
+                    file_status = update_status(file_status, "❌ Issues Found")
+                    print(f"\n    ❌ Sheet '{sheet}' not found.")
 
+            # --- Check optional sheet (Opportunity_Team ) ---
+            for sheet, columns in optional_columns.items():
+                if sheet in xls.sheet_names:
+                    df = pd.read_excel(xls, sheet_name=sheet)
+                    if df.empty:  # No data rows
+                        file_status = update_status(file_status, "⚠️ Potential Issues")
+                        print(f"\n    ⚠️ Sheet '{sheet}' is present but has no data.")
+                    else:
+                        df_columns_lower = [col.strip().lower() for col in df.columns]
+                        missing = [col for col in columns if col.lower() not in df_columns_lower]
+                        if missing:
+                            file_status = update_status(file_status, "❌ Issues Found")
+                            print(f"\n    ❌ Missing columns in optional sheet '{sheet}':")
+                            for col in missing:
+                                print(f"\n        🔸 {col}")
+                        else:
+                            print(f"\n    ✅ All required columns present in optional sheet '{sheet}'")
+                else:
+                    file_status = update_status(file_status, "⚠️ Potential Issues")
+                    print(f"\n    ⚠️ Optional sheet '{sheet}' not found (may be okay).")                
+        except Exception as e:
+            print("Unexpected Error:", e)    
         # ----------------------  Check for Columns with Invalid API names ---------------------
 
         print(f"\n🔍 Step 3: Checking for Invalid API names:")
@@ -550,3 +552,4 @@ title = "📊 Final Summary 📊"
 show_title(title)
 
 print(tabulate(summary_list, headers="keys", tablefmt="fancy_grid"))
+

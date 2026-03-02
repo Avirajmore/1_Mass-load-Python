@@ -15,55 +15,88 @@ print(title.center(line_width))
 print(f"{line}\n")
 # =======================================================================================================
 
+print("\n🔔 Is this the FINAL summary file for this batch?")
+print("1) No (Intermediate run)")
+print("2) Yes (Final run - MPP must be completed)")
+
+while True:
+    final_run = input("\nEnter choice (yes/no): ").strip()
+    if final_run in ["yes", "no"]:
+        break
+    print("Invalid input. Please enter yes or no.")
+
+# ============================================================
+# MPP Mandatory Confirmation (Final Run Only)
+# ============================================================
+
+if final_run == "yes":
+    print("\n⚠️ FINAL SUMMARY CHECK ⚠️")
+    
+    while True:
+        mpp_check = input(
+            "\nHave all MPP post-load steps been completed in ISC? (yes/no): "
+        ).strip().lower()
+
+        if mpp_check == "yes":
+            print("\n✅ MPP confirmation recorded. Proceeding with final summary...")
+            break
+        elif mpp_check == "no":
+            print("\n❌ Please complete the MPP steps before generating the final summary.")
+            exit()
+        else:
+            print("Invalid input. Please enter 'yes' or 'no'.")
+
+
 # Copying all the success and error files as backup
 print("\n\n🔍 Step 1: Select CSV files and a destination folder to copy.")
+try:
+    root = Tk()
+    root.withdraw()  # Hide the root window
+    root.attributes('-topmost', True)  # Bring dialog to front
 
-root = Tk()
-root.withdraw()  # Hide the root window
-root.attributes('-topmost', True)  # Bring dialog to front
+    # Select CSV files
+    csv_files = root.tk.splitlist(filedialog.askopenfilenames(
+        title="📂 Select CSV Files to Copy",
+        filetypes=[("CSV Files", "*.csv")],
+        initialdir=os.path.expanduser("~/Downloads")
+    ))
 
-# Select CSV files
-csv_files = root.tk.splitlist(filedialog.askopenfilenames(
-    title="📂 Select CSV Files to Copy",
-    filetypes=[("CSV Files", "*.csv")],
-    initialdir=os.path.expanduser("~/Downloads")
-))
-
-# Handle no files selected
-if not csv_files:
-    print("\n    ❗️ No files selected. Skipping to the next step.")
-else:
-    # Select destination folder
-    destination_folder = filedialog.askdirectory(
-        title="📁 Select Destination Folder to Paste Success/Error Files"
-    )
-
-    # Handle no destination folder selected
-    if not destination_folder:
-        print("\n    ❗️ No destination folder selected. Skipping file copy.")
+    # Handle no files selected
+    if not csv_files:
+        print("\n    ❗️ No files selected. Skipping to the next step.")
     else:
-        success_files = []
-        failed_files = []
+        # Select destination folder
+        destination_folder = filedialog.askdirectory(
+            title="📁 Select Destination Folder to Paste Success/Error Files"
+        )
 
-        # Copy each CSV file to the selected folder
-        for file in csv_files:
-            try:
-                shutil.move(file, destination_folder)
-                success_files.append(os.path.basename(file))
-            except Exception:
-                failed_files.append(os.path.basename(file))
+        # Handle no destination folder selected
+        if not destination_folder:
+            print("\n    ❗️ No destination folder selected. Skipping file copy.")
+        else:
+            success_files = []
+            failed_files = []
 
-        # Print results for copied files
-        if success_files:
-            print("\n    ✅ Successfully Copied Files:")
-            for file in success_files:
-                print(f"\n        📄 {file}")
+            # Copy each CSV file to the selected folder
+            for file in csv_files:
+                try:
+                    shutil.move(file, destination_folder)
+                    success_files.append(os.path.basename(file))
+                except Exception:
+                    failed_files.append(os.path.basename(file))
 
-        if failed_files:
-            print("\n    ❌ Failed to Copy Files:")
-            for file in failed_files:
-                print(f"\n        ❗️ {file}")
+            # Print results for copied files
+            if success_files:
+                print("\n    ✅ Successfully Copied Files:")
+                for file in success_files:
+                    print(f"\n        📄 {file}")
 
+            if failed_files:
+                print("\n    ❌ Failed to Copy Files:")
+                for file in failed_files:
+                    print(f"\n        ❗️ {file}")
+except Exception as e:
+    print(f"Error:{e}")
 
 # =======================================================================================================
 # Selecting a summary file and adding CSV data
