@@ -3,7 +3,7 @@ import pandas as pd
 from tabulate import tabulate
 import openpyxl
 
-# ------------hi------------------------ Function to Display Section Titles Nicely ------------------------------------
+# ------------------------------------ Function to Display Section Titles Nicely ------------------------------------
 
 def show_title(title):
 
