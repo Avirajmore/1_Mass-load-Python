@@ -1,7 +1,7 @@
 import os
 
 # -------- CONFIG --------
-FOLDER_PATH = "/Users/avirajmore/Downloads"   # <-- change this
+FOLDER_PATH = os.path.expanduser("~/Downloads")   # <-- change this
 # ------------------------
 
 # -------- RENAME RULES --------
