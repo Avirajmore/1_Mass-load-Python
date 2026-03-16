@@ -31,7 +31,11 @@ class CompareCsv():
         isc_record_count = isc_data.shape[0]
         isced_record_count = isced_data.shape[0]
         outer_join = pd.merge(isc_data, isced_data, on='Id', how='outer', indicator=True)
-        record_mismatch = outer_join[outer_join['_merge'].isin(['left_only', 'right_only'])].replace({'left_only': 'Not_in_ISCED', 'right_only': 'Not_in_ISC'})
+        record_mismatch = outer_join[outer_join['_merge'].isin(['left_only', 'right_only'])].copy()
+        record_mismatch['_merge'] = record_mismatch['_merge'].astype(str).replace({
+            'left_only': 'Not_in_ISCED',
+            'right_only': 'Not_in_ISC'
+        })
         record_mismatch.to_csv(output_path1, index=False)
         record_mismatch_count = record_mismatch.shape[0]
         print("Record mismatch file generated.")

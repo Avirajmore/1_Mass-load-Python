@@ -615,60 +615,60 @@ while True:
     # =============================
     # Step 4:- Check for Already Existing Opportunities in ISC
     # =============================
-    
-    print("\n\n🔍 Step 4: Looking for Already existing Oppties")
+    try:
+        print("\n\n🔍 Step 4: Looking for Already existing Oppties")
 
-    # Set paths
-    legacy_csv = os.path.expanduser("~/Downloads/legacyid.csv") 
+        # Set paths
+        legacy_csv = os.path.expanduser("~/Downloads/legacyid.csv") 
 
-    # while not os.path.exists(legacy_csv):
+        # while not os.path.exists(legacy_csv):
 
-    #     print(f"\n    ❌ File 'legacyid.csv' does not exist. Did you query the Legacy Id?")
+        #     print(f"\n    ❌ File 'legacyid.csv' does not exist. Did you query the Legacy Id?")
 
-    #     legacy_choice = input("\n        🔸 Do you want to try again? (yes/exit): ").strip().lower()
+        #     legacy_choice = input("\n        🔸 Do you want to try again? (yes/exit): ").strip().lower()
 
-    #     while legacy_choice not in ['yes', 'exit']:
-    #         print("\n          ❗️ Invalid input. Please enter 'yes' or 'exit'.")
-    #         legacy_choice = input("\n        🔸 Do you want to try again? (yes/exit): ").strip().lower()
+        #     while legacy_choice not in ['yes', 'exit']:
+        #         print("\n          ❗️ Invalid input. Please enter 'yes' or 'exit'.")
+        #         legacy_choice = input("\n        🔸 Do you want to try again? (yes/exit): ").strip().lower()
 
-    #     if legacy_choice != 'yes':
-    #         print ("\n           🚫 Skipping this Step")
-    #         break
-    
-    if not os.path.exists(legacy_csv):
+        #     if legacy_choice != 'yes':
+        #         print ("\n           🚫 Skipping this Step")
+        #         break
         
-        print(f"\n    ❌ File 'legacyid.csv' does not exist. Did you query the Legacy Id?")
-    
-    if os.path.exists(legacy_csv):
-        # Read CSV file
-        csv_df = pd.read_csv(legacy_csv)
-        csv_ids = set(csv_df['Opportunity_Legacy_Id__c'].dropna().astype(str))
-
-        try:
+        if not os.path.exists(legacy_csv):
             
-            if 'opportunity_legacy_id_c' in opportunity_df.columns:
-                # Ensure the column is string for safe comparison
-                opportunity_df['opportunity_legacy_id_c'] = opportunity_df['opportunity_legacy_id_c'].astype(str)
+            print(f"\n    ❌ File 'legacyid.csv' does not exist. Did you query the Legacy Id?")
+        
+        if os.path.exists(legacy_csv):
+            # Read CSV file
+            csv_df = pd.read_csv(legacy_csv)
+            csv_ids = set(csv_df['Opportunity_Legacy_Id__c'].dropna().astype(str))
+
+            try:
                 
-                # Add Found/Not Found column
-                opportunity_df['Already Exist'] = opportunity_df['opportunity_legacy_id_c'].apply(
-                    lambda x: 'Already Exist in ISC' if x in csv_ids else 'Does not Exist in ISC'
-                )
+                if 'opportunity_legacy_id_c' in opportunity_df.columns:
+                    # Ensure the column is string for safe comparison
+                    opportunity_df['opportunity_legacy_id_c'] = opportunity_df['opportunity_legacy_id_c'].astype(str)
+                    
+                    # Add Found/Not Found column
+                    opportunity_df['Already Exist'] = opportunity_df['opportunity_legacy_id_c'].apply(
+                        lambda x: 'Already Exist in ISC' if x in csv_ids else 'Does not Exist in ISC'
+                    )
 
-                count_not_exist = (opportunity_df['Already Exist'] == 'Already Exist in ISC').sum()
+                    count_not_exist = (opportunity_df['Already Exist'] == 'Already Exist in ISC').sum()
 
-                print(f"\n    ✅ Added 'Already Exist' column ")
-                if count_not_exist > 0:
-                    print(f"\n    ❗️ Count of Already Exsisting Opportunities in ISC' : {count_not_exist}")
+                    print(f"\n    ✅ Added 'Already Exist' column ")
+                    if count_not_exist > 0:
+                        print(f"\n    ❗️ Count of Already Exsisting Opportunities in ISC' : {count_not_exist}")
+                    else:
+                        print(f"\n    ✅ All Opptys are new")
+                    
                 else:
-                    print(f"\n    ✅ All Opptys are new")
-                
-            else:
-                print(f"\n    ❌ 'opportunity_legacy_id_c' not found ")
-        except Exception as e:
-            print(f"\n    ❌ Error processing : {e}")
-    
-    
+                    print(f"\n    ❌ 'opportunity_legacy_id_c' not found ")
+            except Exception as e:
+                print(f"\n    ❌ Error processing : {e}")
+    except Exception as e:
+        print(e)
     # ======================================================================
     # Step 5: Convert the email ids to lowercase and fill missing values with a default value
     # ======================================================================
@@ -1268,8 +1268,9 @@ while True:
     print("\n\n🔍 Step 2: Removing blank rows...")
 
     product_df = clean_sheet(product_df, product_sheet_name, remove_duplicates=False)
-
-
+    for col in ["product", "product_type"]:
+        product_df[col] = product_df[col].astype(str).str.strip()
+    
     # ======================================================================
     # Step 3 :- Add Exsising column, To check if the given Opportunities are present in the Opportunity Sheet 
     # ======================================================================
@@ -1306,7 +1307,6 @@ while True:
 
     # Call the function to verify opportunities
     product_df = verify_opportunity(product_df,product_sheet_name) 
-
     
 
     # ======================================================================
@@ -1463,7 +1463,11 @@ while True:
             sys.exit()
 
         # Create new column by concatenating product and product_type
-        product_df["Product_Code_Family"] = product_df["product"] + "-" + product_df["product_type"]
+        product_df["Product_Code_Family"] = (
+        product_df["product"].astype(str).str.strip() +
+        "-" +
+        product_df["product_type"].astype(str).str.strip()
+    )
         
         # Success message
         print(f"\n    ✅ The 'Product_Code_Family' column has been created and saved. ")
@@ -1501,7 +1505,11 @@ while True:
                 sys.exit()
 
         # Create new column by concatenating product, product_type, and opportunity currency
-        product_df["Practise_Multiple country"] = product_df["product"] + "-" + product_df["product_type"] + "-" + product_df["opportunity currency"]
+        product_df["Practise_Multiple country"] = (
+        product_df["product"].astype(str).str.strip() + "-" +
+        product_df["product_type"].astype(str).str.strip() + "-" +
+        product_df["opportunity currency"].astype(str).str.strip()
+)
 
         # Success message
         print(f"\n    ✅ The 'Practise_Multiple country' column has been created and saved in the '{product_sheet_name}' sheet. ")
