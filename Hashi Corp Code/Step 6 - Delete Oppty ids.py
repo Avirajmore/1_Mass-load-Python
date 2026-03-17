@@ -125,5 +125,39 @@ if choice == 'y':
             new_path = os.path.join(DOWNLOAD_FOLDER, NEW_FILE_NAME)
             os.rename(old_path, new_path)
 
-shutil.move(os.path.expanduser("~Downloads/DELETE OPPTY.csv"), os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE OPPTY.csv"))
+shutil.move(os.path.expanduser("~/Downloads/DELETE OPPTY.csv"), os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE OPPTY.csv"))
 shutil.move(os.path.expanduser("~/Downloads/DELETE PRODUCT.csv"), os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE PRODUCT.csv"))
+
+import os
+from datetime import datetime
+
+def get_day_suffix(day):
+    if 11 <= day <= 13:
+        return "th"
+    return {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+
+# Get today's date
+now = datetime.now()
+day = now.day
+month = now.strftime("%B")
+
+suffix = get_day_suffix(day)
+
+# Final folder name
+new_folder_name = f"Hashi Load ({day}{suffix} {month})"
+
+# Path where your folder exists
+base_path = os.path.expanduser("~/Downloads")
+
+# Old folder name (change this)
+old_folder_name = "Hashi Load"
+
+old_path = os.path.join(base_path, old_folder_name)
+new_path = os.path.join(base_path, new_folder_name)
+
+# Rename folder
+if os.path.exists(old_path):
+    os.rename(old_path, new_path)
+    print(f"Folder renamed to: {new_folder_name}")
+else:
+    print("Folder not found!")
