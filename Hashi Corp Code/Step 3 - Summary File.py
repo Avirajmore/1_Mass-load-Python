@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 
 # ---------- CONFIG ----------
 # Folder to move processed CSV files
-PROCESSED_FOLDER = os.path.expanduser("~/Downloads/Success and Error files")
+PROCESSED_FOLDER = os.path.expanduser("~/Downloads/Hashi Load/Success and Error files")
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
 CSV_DIR = os.path.expanduser("~/Downloads")   # folder containing CSV files
@@ -14,7 +14,7 @@ TEMPLATE_FILE = os.path.expanduser("~/Documents/Office Docs/Massload Files/Refer
 # ----------------------------
 
 today = date.today().strftime("%Y-%m-%d")
-OUTPUT_FILE = os.path.expanduser(f"~/Downloads/SUMMARY FILE - HASHI PROD ({today}).xlsx")
+OUTPUT_FILE = os.path.expanduser(f"~/Downloads/Hashi Load/SUMMARY FILE - HASHI PROD ({today}).xlsx")
 
 # ---------- COPY TEMPLATE ----------
 shutil.copy(TEMPLATE_FILE, OUTPUT_FILE)

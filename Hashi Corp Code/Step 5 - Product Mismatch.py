@@ -1,7 +1,7 @@
 import pandas as pd
 import os
-
-dir_path = os.path.expanduser("~/Downloads/csv_files")
+import shutil
+dir_path = os.path.expanduser("~/Downloads/Hashi Load/Unimportant")
 
 class CompareCsv():
     def csv_compare(self):
@@ -57,7 +57,7 @@ class CompareCsv():
 
 
         # Write run stat
-        csv_file_path = os.path.expanduser("~/Downloads/csv_files/Run_Stat.csv")
+        csv_file_path = os.path.expanduser("~/Downloads/Hashi Load/Unimportant/Run_Stat.csv")
         data = {'Object_Name': [isced_obj],
                 'ISC_Record_Count': [isc_record_count],
                 'ISCED_Record_Count': [isced_record_count],
@@ -74,3 +74,8 @@ class CompareCsv():
 if __name__ == "__main__":
     class_instance = CompareCsv()
     class_instance.csv_compare()
+
+
+shutil.move(os.path.expanduser("~/Downloads/product_isc.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/product_isc.csv"))
+shutil.move(os.path.expanduser("~/Downloads/product_isced.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/product_isced.csv"))
+shutil.move(os.path.expanduser("~/Downloads/product_Record_Mismatch.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/product_Record_Mismatch.csv"))

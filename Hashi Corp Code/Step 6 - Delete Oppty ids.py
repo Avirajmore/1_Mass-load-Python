@@ -2,38 +2,38 @@ import os
 import pandas as pd
 import pyperclip
 from tkinter import filedialog, Tk
-
+import shutil
 # ---------- PRODUCT ----------
 DOWNLOAD_FOLDER = os.path.expanduser("~/Downloads")
-product_df = pd.read_csv(os.path.expanduser("~/Downloads/product_Record_Mismatch.csv"))
+product_df = pd.read_csv(os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/product_Record_Mismatch.csv"))
 
 product_delete = (
     product_df[product_df["_merge"] == "Not_in_ISCED"][["Id"]]
     .rename(columns={"Id": "Delete Product"})
 )
 
-product_delete.to_csv(os.path.expanduser("~/Downloads/PreDelete_Product.csv"), index=False)
+product_delete.to_csv(os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/PreDelete_Product.csv"), index=False)
 
 print("✅ Delete_Product.csv created")
 
 
 # ---------- OPPORTUNITY ----------
-oppty_df = pd.read_csv(os.path.expanduser("~/Downloads/oppty_Record_Mismatch.csv"))
+oppty_df = pd.read_csv(os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/oppty_Record_Mismatch.csv"))
 
 oppty_delete = (
     oppty_df[oppty_df["_merge"] == "Not_in_ISCED"][["Id"]]
     .rename(columns={"Id": "Delete Oppty"})
 )
 
-oppty_delete.to_csv(os.path.expanduser("~/Downloads/PreDelete_Oppty.csv"), index=False)
+oppty_delete.to_csv(os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/PreDelete_Oppty.csv"), index=False)
 
 print("✅ Delete_Oppty.csv created")
 
 
 
-oppty_file_path = os.path.expanduser("~/Downloads/PreDelete_Oppty.csv")
+oppty_file_path = os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/PreDelete_Oppty.csv")
 
-product_file_path = os.path.expanduser("~/Downloads/PreDelete_Product.csv")
+product_file_path = os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/PreDelete_Product.csv")
 
 # Read CSV
 df = pd.read_csv(oppty_file_path)
@@ -124,3 +124,6 @@ if choice == 'y':
             old_path = os.path.join(DOWNLOAD_FOLDER, latest_file)
             new_path = os.path.join(DOWNLOAD_FOLDER, NEW_FILE_NAME)
             os.rename(old_path, new_path)
+
+shutil.move(os.path.expanduser("~Downloads/DELETE OPPTY.csv"), os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE OPPTY.csv"))
+shutil.move(os.path.expanduser("~/Downloads/DELETE PRODUCT.csv"), os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE PRODUCT.csv"))

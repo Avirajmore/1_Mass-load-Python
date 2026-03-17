@@ -1,18 +1,13 @@
 import pandas as pd
 import os
 import sys
-
-try:
-    os.remove(os.path.expanduser("~/Downloads/Account export.csv"))
-    os.remove(os.path.expanduser("~/Downloads/Accounts to import.xlsx"))
-except Exception as e:
-    print(f"\n Files not Found")
+import shutil
 
 # ---------- CONFIG ----------
 WORKING_DIR = os.path.expanduser("~/Downloads")
 HASHI_FILE = os.path.expanduser("~/Downloads/hashi lineitem.csv")
 RENAMED_FILE = os.path.expanduser("~/Downloads/Source id file.csv")
-OUTPUT_FILE = os.path.expanduser("~/Downloads/Hashi lineitem .csv")
+OUTPUT_FILE = os.path.expanduser("~/Downloads/Hashi Load/Main Files/Hashi lineitem.csv")
 
 # ----------------------------
 
@@ -25,24 +20,26 @@ else:
     print("❌ Operation cancelled.")
     sys.exit()
 
-bulk_files = [
-    f for f in os.listdir(WORKING_DIR)
-    if f.lower().endswith(".csv") and "bulkquery_result_" in f.lower()
+if os.path.exists(RENAMED_FILE):
+    pass
+else:
+    bulk_files = [
+        f for f in os.listdir(WORKING_DIR)
+        if f.lower().endswith(".csv") and "bulkquery_result_" in f.lower()
 ]
+    if not bulk_files:
+        raise FileNotFoundError("❌ No bulkQuery_result_ CSV file found")
 
-if not bulk_files:
-    raise FileNotFoundError("❌ No bulkQuery_result_ CSV file found")
+    latest_bulk_file = max(
+        bulk_files,
+        key=lambda f: os.path.getmtime(os.path.join(WORKING_DIR, f))
+    )
 
-latest_bulk_file = max(
-    bulk_files,
-    key=lambda f: os.path.getmtime(os.path.join(WORKING_DIR, f))
-)
+    old_path = os.path.join(WORKING_DIR, latest_bulk_file)
+    new_path = os.path.join(WORKING_DIR, RENAMED_FILE)
 
-old_path = os.path.join(WORKING_DIR, latest_bulk_file)
-new_path = os.path.join(WORKING_DIR, RENAMED_FILE)
-
-os.rename(old_path, new_path)
-print(f"✅ Renamed: {latest_bulk_file} → {RENAMED_FILE}")
+    os.rename(old_path, new_path)
+    print(f"✅ Renamed: {latest_bulk_file} → {RENAMED_FILE}")
 
 # -------- STEP 2: READ FILES --------
 source_df = pd.read_csv(RENAMED_FILE)
@@ -84,9 +81,18 @@ merged_df["EXPIRATION_DATE__C"] = pd.to_datetime(
 merged_df.drop(columns=["SOURCE_ID__C_std", "Source_ID__c_std"], inplace=True)
 
 # -------- STEP 6: SAVE OUTPUT --------
+if os.path.exists(HASHI_FILE):
+        shutil.move(HASHI_FILE, os.path.expanduser("~/Downloads/Hashi Load/Unimportant"))
+        print(f"Moved: {HASHI_FILE} → Unimportant")
+else:
+    print(f"File not found: {HASHI_FILE} (skipping)")
 
-os.remove(HASHI_FILE)
-os.remove(RENAMED_FILE)
+if os.path.exists(RENAMED_FILE):
+        shutil.move(RENAMED_FILE, os.path.expanduser("~/Downloads/Hashi Load/Unimportant"))
+        print(f"Moved: {RENAMED_FILE} → Unimportant")
+else:
+    print(f"File not found: {RENAMED_FILE} (skipping)")
+
 merged_df.to_csv(OUTPUT_FILE, index=False)
 
 print("✅ Comparison completed successfully")

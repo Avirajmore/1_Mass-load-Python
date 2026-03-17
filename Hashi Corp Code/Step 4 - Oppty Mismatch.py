@@ -1,8 +1,8 @@
 import pandas as pd
 import os
+import shutil
 
-
-dir_path = os.path.expanduser("~/Downloads/csv_files")
+dir_path = os.path.expanduser("~/Downloads/Hashi Load/Unimportant")
 
 # Create directory if it doesn't exist
 os.makedirs(dir_path, exist_ok=True)
@@ -61,7 +61,7 @@ class CompareCsv():
         lmd_mismatched_records.to_csv(output_path2, index=False)
         print("Last Modified date mismatch file generated.")
         # Write run stat
-        csv_file_path = os.path.expanduser("~/Downloads/csv_files/oppty_Run_Stat.csv")
+        csv_file_path = os.path.expanduser("~/Downloads/Hashi Load/Unimportant/oppty_Run_Stat.csv")
         data = {'Object_Name': [isced_obj],
                 'ISC_Record_Count': [isc_record_count],
                 'ISCED_Record_Count': [isced_record_count],
@@ -77,4 +77,7 @@ if __name__ == "__main__":
     class_instance = CompareCsv()
     class_instance.csv_compare()
 
-# Hi
+os.mkdir(os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files"))
+shutil.move(os.path.expanduser("~/Downloads/oppty_isc.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/oppty_isc.csv"))
+shutil.move(os.path.expanduser("~Downloads/oppty_isced.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/oppty_isced.csv"))
+shutil.move(os.path.expanduser("~/Downloads/oppty_Record_Mismatch.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/oppty_Record_Mismatch.csv"))

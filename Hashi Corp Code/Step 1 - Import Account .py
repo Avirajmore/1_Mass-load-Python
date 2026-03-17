@@ -1,13 +1,38 @@
-import pandas as pd
-import pyperclip
 import os
-
+import pyperclip
+import pandas as pd
+from datetime import datetime
 # ---------- CONFIG ----------
 DOWNLOAD_FOLDER = os.path.expanduser("~/Downloads")
 CSV_FILE_PATH = os.path.expanduser("~/Downloads/Hashi oppty.csv")
 COLUMN_NAME = "ACCOUNTID"
 NEW_FILE_NAME = os.path.expanduser("~/Downloads/Account export.csv")
 # ----------------------------
+def get_day_suffix(day):
+    if 11 <= day <= 13:
+        return "th"
+    return {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+
+
+# Folder name
+folder_name = "Hashi Load"
+
+# Full path
+folder_path = os.path.join(DOWNLOAD_FOLDER, folder_name)
+
+# Create main folder
+os.makedirs(folder_path, exist_ok=True)
+
+# ✅ Create subfolders
+main_files_folder = os.path.join(folder_path, "Main Files")
+unimportant_folder = os.path.join(folder_path, "Unimportant")
+
+os.makedirs(main_files_folder, exist_ok=True)
+os.makedirs(unimportant_folder, exist_ok=True)
+
+print(f"Folder created at: {folder_path}")
+print("Subfolders created: Main Files, Unimportant")
+
 
 # Read CSV
 df = pd.read_csv(CSV_FILE_PATH)
@@ -113,3 +138,23 @@ if choice.lower() == 'y':
         print(f"\n🔢 Total missing accounts: {len(missing_accounts)}")
 else:
     print("\nSkipped")
+
+def move_file(file_name, source_dir, destination_dir):
+    import os
+    import shutil
+
+    src = os.path.join(source_dir, file_name)
+    dst = os.path.join(destination_dir, file_name)
+
+    if os.path.exists(src):
+        shutil.move(src, dst)
+        print(f"Moved: {file_name} → {destination_dir}")
+    else:
+        print(f"File not found: {file_name} (skipping)")
+
+# Move files
+for file in ["hashi oppty.csv"]:
+    move_file(file, DOWNLOAD_FOLDER, main_files_folder)
+
+for file in ["Account export.csv", "Accounts to import.xlsx"]:
+    move_file(file, DOWNLOAD_FOLDER, unimportant_folder)
