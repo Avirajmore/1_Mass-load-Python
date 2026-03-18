@@ -5,7 +5,6 @@ import shutil
 import openpyxl
 import threading
 import pyperclip
-import itertools
 import pandas as pd
 import tkinter as tk
 from tkinter import ttk
@@ -72,48 +71,23 @@ for file in os.listdir(DOWNLOAD_DIR):
                 ws.title = correct_name
                 print(f"\n   🔄 Renamed '{sheet_name}' to '{correct_name}' automatically.")
         # Save the workbook with the new sheet names
-        temp_path = file_path.replace(".xlsx", "_temp.xlsx")
-
-        wb.save(temp_path)        # Save safely to temp file
-        wb.close()                # Close workbook (important)
-
-        os.replace(temp_path, file_path)  # Replace original file safely
+        wb.save(file_path)
 
         # Load all sheets from the current Excel file
         xls = pd.read_excel(file_path, sheet_name=None, engine='openpyxl')
 
         collected_data = {}
 
-        # Process 'Opportunity_product' sheet if it exists
-        if 'Opportunity_product' in xls:
-            df = xls['Opportunity_product']
-            df['product_family'] = df['Product'].astype(str).str.strip() + '-' + df['product_type'].astype(str).str.strip()
-
         # Define how columns should be extracted and grouped from various sheets
         sheet_config = {
             "Opportunity": {
-                "columns": ["accountid", "ownerid", "created_by", "currency_code", "opportunity_legacy_id_c"],
+                "columns": ["accountid", "opportunity_legacy_id_c"],
                 "output": {
                     "Accounts": ["accountid"],
-                    "Email_id": ["ownerid", "created_by"],
-                    "Currency": ["currency_code"],
                     "Legacy_Ids": ["opportunity_legacy_id_c"]
-                }
-            },
-            "Opportunity_product": {
-                "columns": ["product_family"],
-                "output": {
-                    "Product": ["product_family"]
-                }
-            },
-            "Opportunity_Team ": {
-                "columns": ["Email"],
-                "output": {
-                    "Email_id": ["Email"]
                 }
             }
         }
-
         # Process all other sheets as per config
         for sheet_key, config in sheet_config.items():
             if sheet_key not in xls:
@@ -128,67 +102,68 @@ for file in os.listdir(DOWNLOAD_DIR):
                 if not valid_cols:
                     continue
 
-                if out_sheet == "Email_id":
-                    stacked = pd.concat([df[col].dropna().astype(str) for col in valid_cols], ignore_index=True).to_frame(name="Email_id")
-                    collected_data.setdefault(out_sheet, []).append(stacked)
-
+                subset = df[valid_cols].dropna(how='all')
+                if not subset.empty:
+                    collected_data.setdefault(out_sheet, []).append(subset)
                 else:
                     subset = df[valid_cols].dropna(how='all')
                     if not subset.empty:
                         collected_data.setdefault(out_sheet, []).append(subset)
 
-        # Special handling for 'Reporting_codes' to extract 'Tags'
+        # Special handling for 'Reporting_codes' → collect Tags + reporting_codes
         if 'Reporting_codes' in xls:
-            df = xls['Reporting_codes']
-            df.columns = df.columns.str.strip()  # Clean column names
+            df = xls['Reporting_codes'].copy()
+            df.columns = df.columns.str.strip()
 
-            tags_columns = [col for col in df.columns if col.lower() == 'tags']
-            reporting_codes_columns = [col for col in df.columns if col.lower() == 'reporting_codes']
+            # Locate the columns (case‑insensitive)
+            tags_cols = [c for c in df.columns if c.lower() == 'tags']
+            rc_cols   = [c for c in df.columns if c.lower() == 'reporting_codes']
 
-            if reporting_codes_columns:
-                reporting_codes_column = reporting_codes_columns[0]
+            # Nothing to do if neither column exists
+            if tags_cols or rc_cols:
+                series_list = []
 
-                # If 'Tags' doesn't exist, create it using 'reporting_codes'
-                if not tags_columns:
-                    df['Tags'] = df[reporting_codes_column]
-                    tags_column = 'Tags'
-                else:
-                    tags_column = tags_columns[0]
-                    # If 'Tags' exists but is all NaN or empty strings
-                    if df[tags_column].isna().all() or (df[tags_column].astype(str).str.strip() == '').all():
-                        df[tags_column] = df[reporting_codes_column]
+                if tags_cols:
+                    series_list.append(df[tags_cols[0]])
 
-                # Now extract 'Tags' values (drop NaNs and blanks)
-                strategy_data = df[tags_column].dropna().astype(str).str.strip()
-                strategy_data = strategy_data[strategy_data != '']  # remove empty strings
+                if rc_cols:
+                    series_list.append(df[rc_cols[0]])
 
-                if not strategy_data.empty:
-                    strategy_df = strategy_data.to_frame(name='Strategy')
+                # Combine both columns top‑to‑bottom, drop blanks/NaNs, trim spaces
+                strategy_series = (
+                    pd.concat(series_list, ignore_index=True)
+                    .replace({'': pd.NA})          # turn empty strings into NaN
+                    .dropna()
+                    .astype(str)
+                    .str.strip()
+                )
+
+                if not strategy_series.empty:
+                    strategy_df = (
+                        strategy_series
+                        .to_frame(name='Strategy')
+                        .drop_duplicates()           # avoid duplicates across both columns
+                    )
                     collected_data.setdefault('Strategy', []).append(strategy_df)
+        # ────────────────────────────────────────────────────────────────
 
         # Append or create a new extracted data Excel file
-        all_data = {}
-        for sheet_name, dfs in collected_data.items():
-            combined = pd.concat(dfs, ignore_index=True)
-            all_data.setdefault(sheet_name, []).append(combined)
-        
-        # Combine all collected data
-        final_data = {}
+        file_exists = os.path.exists(EXTRACT_OUTPUT_FILE)
 
-        for sheet_name, dfs in all_data.items():
-            final_data[sheet_name] = pd.concat(dfs, ignore_index=True)
+        with pd.ExcelWriter(EXTRACT_OUTPUT_FILE, engine="openpyxl", mode="a" if file_exists else "w", if_sheet_exists="overlay" if file_exists else None) as writer:
+            for sheet_name, dfs in collected_data.items():
+                combined = pd.concat(dfs, ignore_index=True)
 
-        # ✅ Safe write (ONLY ONCE)
-        temp_file = EXTRACT_OUTPUT_FILE.replace(".xlsx", "_temp.xlsx")
+                if file_exists:
+                    try:
+                        existing = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=sheet_name)
+                        combined = pd.concat([existing, combined], ignore_index=True)
+                    except Exception:
+                        pass  # Sheet doesn't exist, just write new
 
-        with pd.ExcelWriter(temp_file, engine='openpyxl', mode='w') as writer:
-            for sheet_name, df in final_data.items():
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                combined.to_excel(writer, sheet_name=sheet_name, index=False)
 
-        # Replace original file safely
-        os.replace(temp_file, EXTRACT_OUTPUT_FILE)
-
-        print(f"\n   ✅ Data Extracted and stored in {EXTRACT_OUTPUT_FILE}:")
+print(f"\n   ✅ Data Extracted and stored in {EXTRACT_OUTPUT_FILE}:")
 
 # ============================
 # Trim whitespace in all cells and column names
@@ -223,43 +198,6 @@ def trim_columns_all_sheets(EXTRACT_OUTPUT_FILE):
 trim_columns_all_sheets(EXTRACT_OUTPUT_FILE)
 
 print("\n   ✅ Trimmed Data")
-
-# ============================
-# Expand comma-separated values into separate rows via cartesian product
-# ============================
-
-# Load the Excel file
-sheets_to_process = ['Email_id', 'Strategy']
-
-# Read all sheets
-all_sheets = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=None)
-
-# Process the Email_id and Strategy sheets
-for sheet_name in sheets_to_process:
-    if sheet_name in all_sheets:
-        df = all_sheets[sheet_name]
-        new_rows = []
-
-        for _, row in df.iterrows():
-            # Split values in each cell by comma, strip whitespace
-            split_row = [str(cell).split(',') if isinstance(cell, str) and ',' in cell else [cell] for cell in row]
-            split_row = [[val.strip() for val in values] for values in split_row]
-
-            # Create cartesian product (every combination from split lists)
-            for combination in itertools.product(*split_row):
-                new_rows.append(combination)
-
-        # Create a new DataFrame from the expanded rows
-        all_sheets[sheet_name] = pd.DataFrame(new_rows, columns=df.columns)
-    else:
-        print(f"Sheet '{sheet_name}' not found in the Excel file.")
-
-# Write all sheets back to the same Excel file
-with pd.ExcelWriter(EXTRACT_OUTPUT_FILE, engine='openpyxl', mode='w') as writer:
-    for sheet_name, df in all_sheets.items():
-        df.to_excel(writer, sheet_name=sheet_name, index=False)
-
-print("\n   ✅ Separated Values based on Comma")
 
 # ============================
 # Process Account IDs - strip extra parts from values starting with 'DC'
@@ -341,73 +279,67 @@ print(f"\n   ✅ Concated values saved in {CONCATENATE_OUTPUT_FILE}")
 
 print("\n🔍 Step 4: Generating Queries")
 def generate_query_from_sheet(EXTRACT_OUTPUT_FILE, sheet_name, column_name, query_template, output_txt_base):
-    # Read specific sheet
-    df = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=sheet_name, dtype=str)
+    try:
+            
+        # Read specific sheet
+        df = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=sheet_name, dtype=str)
 
-    # Drop empty values and clean
-    values = df[column_name].dropna().astype(str).str.strip().tolist()
+        # Drop empty values and clean
+        values = df[column_name].dropna().astype(str).str.strip().tolist()
 
-    # Query parts length
+        # Query parts length
 
-    base_query_length = len(query_template.replace("{values}", ""))
-    max_query_length = 80000
+        base_query_length = len(query_template.replace("{values}", ""))
+        max_query_length = 80000
 
-    # Estimate max value chunk size per query
-    value_strings = [f"'{val}'" for val in values]
+        # Estimate max value chunk size per query
+        value_strings = [f"'{val}'" for val in values]
 
-    chunks = []
-    current_chunk = []
-    current_length = base_query_length
+        chunks = []
+        current_chunk = []
+        current_length = base_query_length
 
-    for val in value_strings:
-        val_length = len(val) + 1  # for comma and newline
-        if current_length + val_length > max_query_length:
-            # Save current chunk
+        for val in value_strings:
+            val_length = len(val) + 1  # for comma and newline
+            if current_length + val_length > max_query_length:
+                # Save current chunk
+                chunks.append(current_chunk)
+                # Start new chunk
+                current_chunk = [val]
+                current_length = base_query_length + val_length
+            else:
+                current_chunk.append(val)
+                current_length += val_length
+
+        if current_chunk:
             chunks.append(current_chunk)
-            # Start new chunk
-            current_chunk = [val]
-            current_length = base_query_length + val_length
-        else:
-            current_chunk.append(val)
-            current_length += val_length
 
-    if current_chunk:
-        chunks.append(current_chunk)
+        # Ensure output folder exists
+        os.makedirs(os.path.dirname(output_txt_base), exist_ok=True)
 
-    # Ensure output folder exists
-    os.makedirs(os.path.dirname(output_txt_base), exist_ok=True)
-
-    # Write each query to separate file
-    for idx, chunk in enumerate(chunks, start=1):
-        formatted_values = ",\n".join(chunk)
-        query = query_template.replace("{values}", formatted_values)
-        if len(chunks) == 1:
-                output_txt = output_txt_base
-        else:
-            output_txt = output_txt_base.replace(".txt", f"_part{idx}.txt")
-        with open(output_txt, "w") as file:
-            file.write(query)
-    
-    query_file = output_txt_base.split("/")[-1]
-    print(f"\n       📁 Generated {len(chunks)} query file(s) for {query_file}.")
+        # Write each query to separate file
+        for idx, chunk in enumerate(chunks, start=1):
+            formatted_values = ",\n".join(chunk)
+            query = query_template.replace("{values}", formatted_values)
+            if len(chunks) == 1:
+                    output_txt = output_txt_base
+            else:
+                output_txt = output_txt_base.replace(".txt", f"_part{idx}.txt")
+            with open(output_txt, "w") as file:
+                file.write(query)
+        
+        query_file = output_txt_base.split("/")[-1]
+        print(f"\n       📁 Generated {len(chunks)} query file(s) for {query_file}.")
+    except ValueError:
+        print(f"\n       ⚠️ Skipping query for '{sheet_name}' because the sheet was not found.")
+        return
+        
 
 # Queries generation (various sheets & templates)
 
 account_output_txt = 'Extracted_Files/Queries/1_Account_query.txt'
 account_query = "SELECT AccountNumber, id FROM Account WHERE AccountNumber IN ({values})"
 generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Accounts', 'accountid', account_query,account_output_txt)
-
-Email_output_txt = 'Extracted_Files/Queries/2_Userid_query.txt'
-userid_query = "select email,id,Profile.Name,isactive from user where email in ({values}) and Profile.Name != 'IBM Partner Community Login User' and IsActive = true"
-generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Email_id', 'Email_id', userid_query,Email_output_txt)
-
-strategy_output_txt = 'Extracted_Files/Queries/4_Strategy_query.txt'
-strategy_query = "Select id,name,Record_Type_Name__c from Strategy__c where name in ({values})"
-generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Strategy', 'Strategy', strategy_query,strategy_output_txt)
-
-legacy_output_txt = 'Extracted_Files/Queries/5_Legacy_query.txt'
-legacy_query = "SELECT Opportunity_Legacy_Id__c, Id,Name,Owned_By_Name__c,OwnerId FROM Opportunity WHERE Opportunity_Legacy_Id__c IN ({values})"
-generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Legacy_Ids', 'opportunity_legacy_id_c', legacy_query,legacy_output_txt)
 
 # ============================
 # Function to generate query using two sheets and columns
@@ -435,17 +367,20 @@ def generate_query_from_two_sheets(EXTRACT_OUTPUT_FILE, sheet1, column1, sheet2,
     # Write query to file
     with open(output_txt, "w") as file:
         file.write(query)
+    
+    # ✅ Print confirmation
+    print(f"\n       📁 Generated 1 query file(s) for {os.path.basename(output_txt)}")
 
 
-# Product & currency query generation
-sheet1 = 'Product'
-column1 = 'product_family'
-sheet2 = 'Currency'
-column2 = 'currency_code'
-product_query = "SELECT Product2.Product_Code_Family__c, CurrencyIsoCode, id, isactive FROM PricebookEntry WHERE Product2.Product_Code_Family__c IN ({product}) AND CurrencyIsoCode IN ({currency})"
-product_output_txt = 'Extracted_Files/Queries/3_PricebookEntry_query.txt'
 
-generate_query_from_two_sheets(EXTRACT_OUTPUT_FILE, sheet1, column1, sheet2, column2, product_query, product_output_txt)
+strategy_output_txt = 'Extracted_Files/Queries/4_Strategy_query.txt'
+strategy_query = "Select id,name,Record_Type_Name__c from Strategy__c where name in ({values})"
+generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Strategy', 'Strategy', strategy_query,strategy_output_txt)
+
+legacy_output_txt = 'Extracted_Files/Queries/5_Legacy_query.txt'
+legacy_query = "SELECT Opportunity_Legacy_Id__c, Id,Name,Owned_By_Name__c,OwnerId FROM Opportunity WHERE Opportunity_Legacy_Id__c IN ({values})"
+generate_query_from_sheet(EXTRACT_OUTPUT_FILE, 'Legacy_Ids', 'opportunity_legacy_id_c', legacy_query,legacy_output_txt)
+
 
 print("\n   ✅ Queries Generated")
 
@@ -454,10 +389,8 @@ print("\n   ✅ Queries Generated")
 
 file_mapping = {
     "1_Account_query.txt": "accounts.csv",
-    "2_Userid_query.txt": "userid.csv",
-    "3_PricebookEntry_query.txt": "productfamily.csv",
     "4_Strategy_query.txt": "tags.csv",
-    "5_Legacy_query.txt":"legacyid.csv"
+    "5_Legacy_query.txt": "legacyid.csv"
 }
 # ============================
 # Function to find & rename 'bulkQuery' CSV file
@@ -571,8 +504,8 @@ while not break_outer_loop:
 import shutil
 
 # Source and destination file paths
-source_file = '/Users/avirajmore/Downloads/userid.csv'
-destination_file = '/Users/avirajmore/Downloads/teammember.csv'
+source_file = os.path.expanduser("~/Downloads/userid.csv")
+destination_file = os.path.expanduser("~/Downloads/teammember.csv")
 
 # Check if source file exists
 if os.path.exists(source_file):
@@ -841,18 +774,77 @@ while True:
                 invalid_df = pd.concat([invalid_df, pd.DataFrame(file_invalid, columns=['Invalid Accounts'])], ignore_index=True)
                 if file_invalid:
                     total_invalid += len(file_invalid)
-                
+        
+        if os.path.exists(os.path.expanduser("~//Downloads/legacyid.csv")):
+            LEGACY_FILE = os.path.join(DOWNLOAD_DIR, "legacyid.csv")
+
+            # ---------- LOAD LEGACY ----------
+            legacy_df = pd.read_csv(LEGACY_FILE, dtype=str)
+            legacy_df.columns = legacy_df.columns.str.strip().str.lower()
+
+            legacy_col = next((c for c in legacy_df.columns if "opportunity" in c and "legacy" in c), None)
+            if not legacy_col:
+                print("❌ Legacy column not found")
+                exit()
+
+            legacy_ids = set(legacy_df[legacy_col].str.strip().str.lower().dropna())
+
+
+            # ---------- PROCESS FILES ----------
+            results = []
+
+            for file in os.listdir(DOWNLOAD_DIR):
+                if not file.endswith(".xlsx"):
+                    continue
+
+                path = os.path.join(DOWNLOAD_DIR, file)
+
+                try:
+                    xls = pd.ExcelFile(path)
+                    sheet = next((s for s in xls.sheet_names if s.strip().lower() == "opportunity"), None)
+                    if not sheet:
+                        continue
+
+                    df = pd.read_excel(path, sheet_name=sheet, dtype=str)
+                    df.columns = df.columns.str.strip().str.lower()
+
+                    col = next((c for c in df.columns if "opportunity" in c and "legacy" in c), None)
+                    if not col:
+                        continue
+
+                    # Clean column
+                    df[col] = df[col].str.strip().str.lower()
+
+                    # ✅ USING isin (your style)
+                    matched = df[df[col].isin(legacy_ids)][col].dropna().unique()
+
+                    match_count = len(matched)
+
+                    if match_count:
+                        results.append((file, match_count))
+
+                except:
+                    pass
+
+
         # Final summary
         print("\n   ✅ Processing Complete!")
         print(f"\n       ❗️ Total tags to be inserted: {len(Strategy_not_found)}")
         print(f"\n       ❗️ Total Accounts to Be Imported: {valid_count}")
         print(f"\n       ❗️ Invalid Accounts: {invalid_count}")
+        
+        if os.path.exists(os.path.expanduser("~//Downloads/legacyid.csv")):
+            print("\n    ❗️ Files with Existing Legacy Ids:")
+            if results:
+                for f, count in results:
+                    print(f"\n       📄 {f} → {count} matches")
+
+        print("\n    ✅ Files with No Missing Accounts:")
         if files_with_no_matches:
-            print("\n    ✅ Files with No Missing Accounts:")
             for fname in files_with_no_matches:
                 print(f"\n       📄 {fname}")
         else:
-            print("\n    ✅ All files had some valid or invalid accounts.\n")
+            print("\n       ❗️ All files have some missing accounts.\n")
  
         break
 
@@ -862,7 +854,6 @@ while True:
 
     else:
         print('\n   ❗️ Invalid Choice')
-
 
 print("\n👋 Exiting the script. Goodbye!")
 title = "📝  Script Completed 📝"

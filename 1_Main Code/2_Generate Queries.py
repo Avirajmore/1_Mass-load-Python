@@ -578,8 +578,8 @@ while not break_outer_loop:
 import shutil
 
 # Source and destination file paths
-source_file = '/Users/avirajmore/Downloads/userid.csv'
-destination_file = '/Users/avirajmore/Downloads/teammember.csv'
+source_file = os.path.expanduser("~/Downloads/userid.csv")
+destination_file = os.path.expanduser("~/Downloads/teammember.csv")
 
 # Check if source file exists
 if os.path.exists(source_file):
@@ -848,18 +848,77 @@ while True:
                 invalid_df = pd.concat([invalid_df, pd.DataFrame(file_invalid, columns=['Invalid Accounts'])], ignore_index=True)
                 if file_invalid:
                     total_invalid += len(file_invalid)
-                
+        
+        if os.path.exists(os.path.expanduser("~//Downloads/legacyid.csv")):
+            LEGACY_FILE = os.path.join(DOWNLOAD_DIR, "legacyid.csv")
+
+            # ---------- LOAD LEGACY ----------
+            legacy_df = pd.read_csv(LEGACY_FILE, dtype=str)
+            legacy_df.columns = legacy_df.columns.str.strip().str.lower()
+
+            legacy_col = next((c for c in legacy_df.columns if "opportunity" in c and "legacy" in c), None)
+            if not legacy_col:
+                print("❌ Legacy column not found")
+                exit()
+
+            legacy_ids = set(legacy_df[legacy_col].str.strip().str.lower().dropna())
+
+
+            # ---------- PROCESS FILES ----------
+            results = []
+
+            for file in os.listdir(DOWNLOAD_DIR):
+                if not file.endswith(".xlsx"):
+                    continue
+
+                path = os.path.join(DOWNLOAD_DIR, file)
+
+                try:
+                    xls = pd.ExcelFile(path)
+                    sheet = next((s for s in xls.sheet_names if s.strip().lower() == "opportunity"), None)
+                    if not sheet:
+                        continue
+
+                    df = pd.read_excel(path, sheet_name=sheet, dtype=str)
+                    df.columns = df.columns.str.strip().str.lower()
+
+                    col = next((c for c in df.columns if "opportunity" in c and "legacy" in c), None)
+                    if not col:
+                        continue
+
+                    # Clean column
+                    df[col] = df[col].str.strip().str.lower()
+
+                    # ✅ USING isin (your style)
+                    matched = df[df[col].isin(legacy_ids)][col].dropna().unique()
+
+                    match_count = len(matched)
+
+                    if match_count:
+                        results.append((file, match_count))
+
+                except:
+                    pass
+
+
         # Final summary
         print("\n   ✅ Processing Complete!")
         print(f"\n       ❗️ Total tags to be inserted: {len(Strategy_not_found)}")
         print(f"\n       ❗️ Total Accounts to Be Imported: {valid_count}")
         print(f"\n       ❗️ Invalid Accounts: {invalid_count}")
+        
+        if os.path.exists(os.path.expanduser("~//Downloads/legacyid.csv")):
+            print("\n    ❗️ Files with Existing Legacy Ids:")
+            if results:
+                for f, count in results:
+                    print(f"\n       📄 {f} → {count} matches")
+
+        print("\n    ✅ Files with No Missing Accounts:")
         if files_with_no_matches:
-            print("\n    ✅ Files with No Missing Accounts:")
             for fname in files_with_no_matches:
                 print(f"\n       📄 {fname}")
         else:
-            print("\n    ✅ All files had some valid or invalid accounts.\n")
+            print("\n       ❗️ All files have some missing accounts.\n")
  
         break
 
@@ -869,7 +928,6 @@ while True:
 
     else:
         print('\n   ❗️ Invalid Choice')
-
 
 print("\n👋 Exiting the script. Goodbye!")
 title = "📝  Script Completed 📝"
