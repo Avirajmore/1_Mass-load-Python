@@ -72,7 +72,12 @@ for file in os.listdir(DOWNLOAD_DIR):
                 ws.title = correct_name
                 print(f"\n   🔄 Renamed '{sheet_name}' to '{correct_name}' automatically.")
         # Save the workbook with the new sheet names
-        wb.save(file_path)
+        temp_path = file_path.replace(".xlsx", "_temp.xlsx")
+
+        wb.save(temp_path)        # Save safely to temp file
+        wb.close()                # Close workbook (important)
+
+        os.replace(temp_path, file_path)  # Replace original file safely
 
         # Load all sheets from the current Excel file
         xls = pd.read_excel(file_path, sheet_name=None, engine='openpyxl')
