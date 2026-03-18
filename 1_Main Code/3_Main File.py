@@ -1679,7 +1679,7 @@ while True:
 
     # Dictionary mapping old column names to new column names
     column_rename_mapping = {
-        'opportunityid': 'Legacy_Opportunity_Split_Id__c',
+        'opportunityid': 'opportunityid',
         'quantity': 'Quantity',
         'product_code_family': 'Product_Family__c',
         'pricebookentryid': 'PricebookEntryId',
@@ -1704,7 +1704,7 @@ while True:
 
     # Specify the desired order of columns
     desired_column_order = [
-        'Legacy_Opportunity_Split_Id__c','existing','Quantity','product','product_type','PricebookEntryId',
+        'opportunityid','existing','Quantity','product','product_type','PricebookEntryId',
         'Product_Family__c','opportunity currency','practise_multiple country'
     ]
 
@@ -2338,40 +2338,13 @@ while True:
                 # Get Ids for tags
                 tags_df = merge_strategy_ids(tags_df, tag_copy_df, base_key='tag', label='Tags')
 
+                codes_df.rename(columns={'opportunityid': 'opportunity__c'}, inplace=True)
+                codes_df.rename(columns={'StrategyId': 'Strategy__c'}, inplace=True)
+                tags_df.rename(columns={'opportunityid': 'opportunity__c'}, inplace=True)
+                tags_df.rename(columns={'StrategyId': 'Strategy__c'}, inplace=True)
                 # ========================================================================
-                # Step :- If any Tags are not Found, Create Tags to Be inserted Csv file
+
                 # ========================================================================
-                
-                output_for_tags = csv_file_dir + "/Tags_to_be_inserted.csv" # Change to your desired output file path
-
-                def process_excel(df,output_for_tags):
-                    
-                    # Check if required columns exist
-                    required_columns = {'opportunityid', 'tag', 'existing', 'StrategyId'}
-                    if required_columns.issubset(df.columns):
-                        
-                        # Filter rows where StrategyId has 'Not found'
-                        filtered_df = df[df['StrategyId'] == 'Not found']
-
-                        # Drop duplicate tags
-                        filtered_df = filtered_df.drop_duplicates(subset='tag')
-                        
-                        # Create the output DataFrame
-                        output_df = pd.DataFrame({
-                            'Name': filtered_df['tag'],
-                            'Strategy_Full_Name__c': '',
-                            'RecordTypeId': '0123h000000kqchAAA',
-                            'Record_Type_Name__c': 'Tags',
-                            'IsDeleted': False,
-                            'Active__c': True
-                        })
-                        
-                        # Save to new Excel file
-                        if not output_df.empty:
-                            output_df.to_csv(output_for_tags, index=False)
-                        return
-                    
-                process_excel(tags_df, output_for_tags)
 
                 with pd.ExcelWriter(file_path, mode='a', if_sheet_exists='replace') as writer:
                     codes_df.to_excel(writer, sheet_name=original_codes_sheet_name, index=False)
@@ -2844,7 +2817,7 @@ while True:
         # Identify invalid rows based on PricebookEntryId
         invalid_pricebook_ids = opportunity_product_df[
             opportunity_product_df['PricebookEntryId'].isin(['Not Active', 'No Pricebookid found'])
-        ]['Legacy_Opportunity_Split_Id__c'].unique()
+        ]['opportunityid'].unique()
 
         rows_to_remove_invalid_pricebook = opportunity_df[
             opportunity_df['opportunity_legacy_id__c'].isin(invalid_pricebook_ids)
@@ -2977,7 +2950,7 @@ while True:
     'Type__c','Renewal_Type__c','Renewal_Status__c','Expiration_Date__c','Expiring_Term__c','Expiring_Amount__c',
     'External_IDs__c','month 1 revenue','month 2 revenue','month 3 revenue','next quarter revenue','first 12 months revenue',
     'pre-contract planned revenue','pre-contract start date','pre-contract end date','loss reason/attition reason',
-    'Legacy_Opportunity_Split_Id__c','PricebookEntryId','UnitPrice','Term__c','Classification__c','Quantity'
+    'opportunityid','PricebookEntryId','UnitPrice','Term__c','Classification__c','Quantity'
     ]
 
     try:
@@ -3020,7 +2993,7 @@ while True:
                     df = df[~df[column_match].astype(str).isin(opportunity_ids_set)]  # Keep only unmatched rows
             return df, removed_rows_df, rows_dropped_legacy_count
 
-        product_df,removed_rows_product_df,rows_dropped_legacy_count = load_removed_rows_oppty(removed_rows_oppty, product_df, removed_rows_product_df, "Legacy_Opportunity_Split_Id__c")
+        product_df,removed_rows_product_df,rows_dropped_legacy_count = load_removed_rows_oppty(removed_rows_oppty, product_df, removed_rows_product_df, "opportunityid")
         
         # ---------------------- Remove Predefined Columns ----------------------
 
@@ -3181,7 +3154,7 @@ while True:
             predefined_columns_Reportingcode = [ 'existing', 'concatcodes',"reporting_codes"]
 
             # Columns excluded from user deletion selection
-            excluded_columns_codes = ['opportunityid','StrategyId']
+            excluded_columns_codes = ['opportunity__c','Strategy__c']
 
 
             try:
@@ -3202,10 +3175,10 @@ while True:
                 
                 # ---------------------- Remove all Rows If all Codes are not found ----------------------
 
-                # Check if all StrategyId values are 'Not Found'
+                # Check if all Strategy__c values are 'Not Found'
                 def remove_if_strategy_not_found(df, removed_rows_df, removed_rows_path,reason,predefined_columns):                    
-                    if 'StrategyId' in df.columns:
-                        strategy_values = df['StrategyId'].astype(str).str.lower().dropna()
+                    if 'Strategy__c' in df.columns:
+                        strategy_values = df['Strategy__c'].astype(str).str.lower().dropna()
 
                         if not strategy_values.empty and strategy_values.nunique() == 1 and strategy_values.iloc[0] == 'not found':
                             df['Reason'] = reason
@@ -3229,7 +3202,7 @@ while True:
                 # ---------------------- Remove Rows Based on Removed Oppties ----------------------
 
 
-                codes_df,removed_rows_code_df,rows_dropped_legacy_count = load_removed_rows_oppty(removed_rows_oppty, codes_df, removed_rows_code_df, "opportunityid")
+                codes_df,removed_rows_code_df,rows_dropped_legacy_count = load_removed_rows_oppty(removed_rows_oppty, codes_df, removed_rows_code_df, "opportunity__c")
                 
                 # ---------------------- Remove Predefined Columns ----------------------
                 
@@ -3295,7 +3268,7 @@ while True:
             
             predefined_columns_tags = ['existing', 'concattags','tag']
             
-            excluded_columns_tags = ['opportunityid','StrategyId']
+            excluded_columns_tags = ['opportunity__c','Strategy__c']
 
 
             try:
@@ -3317,7 +3290,7 @@ while True:
                 dropped_columns_tags = [] 
 
                 # ---------------------- Remove all Rows If all Tags are not found ----------------------
-                
+
                 tags_df,removed_rows_tag_df,should_break =  remove_if_strategy_not_found(tags_df, removed_rows_tag_df, removed_rows_tags,'Tag not found',predefined_columns_tags)
 
                 if should_break:
@@ -3329,7 +3302,7 @@ while True:
 
                 # ---------------------- Remove Rows Based on Removed Oppties ----------------------
                 
-                tags_df,removed_rows_tag_df,rows_dropped_legacy_count = load_removed_rows_oppty(removed_rows_oppty, tags_df, removed_rows_tag_df, "opportunityid")
+                tags_df,removed_rows_tag_df,rows_dropped_legacy_count = load_removed_rows_oppty(removed_rows_oppty, tags_df, removed_rows_tag_df, "opportunity__c")
                 
                 # ---------------------- Remove Predefined Columns ----------------------
                 
