@@ -167,22 +167,28 @@ for file in os.listdir(DOWNLOAD_DIR):
                     collected_data.setdefault('Strategy', []).append(strategy_df)
 
         # Append or create a new extracted data Excel file
-        file_exists = os.path.exists(EXTRACT_OUTPUT_FILE)
+        all_data = {}
+        for sheet_name, dfs in collected_data.items():
+            combined = pd.concat(dfs, ignore_index=True)
+            all_data.setdefault(sheet_name, []).append(combined)
+        
+        # Combine all collected data
+        final_data = {}
 
-        with pd.ExcelWriter(EXTRACT_OUTPUT_FILE, engine="openpyxl", mode="a" if file_exists else "w", if_sheet_exists="overlay" if file_exists else None) as writer:
-            for sheet_name, dfs in collected_data.items():
-                combined = pd.concat(dfs, ignore_index=True)
+        for sheet_name, dfs in all_data.items():
+            final_data[sheet_name] = pd.concat(dfs, ignore_index=True)
 
-                if file_exists:
-                    try:
-                        existing = pd.read_excel(EXTRACT_OUTPUT_FILE, sheet_name=sheet_name)
-                        combined = pd.concat([existing, combined], ignore_index=True)
-                    except Exception:
-                        pass  # Sheet doesn't exist, just write new
+        # ✅ Safe write (ONLY ONCE)
+        temp_file = EXTRACT_OUTPUT_FILE.replace(".xlsx", "_temp.xlsx")
 
-                combined.to_excel(writer, sheet_name=sheet_name, index=False)
+        with pd.ExcelWriter(temp_file, engine='openpyxl', mode='w') as writer:
+            for sheet_name, df in final_data.items():
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-print(f"\n   ✅ Data Extracted and stored in {EXTRACT_OUTPUT_FILE}:")
+        # Replace original file safely
+        os.replace(temp_file, EXTRACT_OUTPUT_FILE)
+
+        print(f"\n   ✅ Data Extracted and stored in {EXTRACT_OUTPUT_FILE}:")
 
 # ============================
 # Trim whitespace in all cells and column names
