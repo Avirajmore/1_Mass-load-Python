@@ -1277,34 +1277,34 @@ while True:
 
     print("\n\n🔍 Step 3: Verifying opportunities in the 'Opportunity' sheet...")
     
-    def verify_opportunity(df, sheet_name, opportunity_id_col='opportunityid'):
+    def verify_opportunity(df,sheet_name):
         try:
-            # Check master opportunity sheet column
+            # opportunity_df = pd.read_excel(file_path, sheet_name=opportunity_sheet_name)
+
+            # Validate the required columns
             if 'opportunity_legacy_id__c' not in opportunity_df.columns:
-                print(f"\n    ❌ Column 'opportunity_legacy_id__c' not found in the opportunity sheet.")
+                print(f"\n    ❌ Column 'opportunity_legacy_id__c' not found in the '{opportunity_sheet_name}' sheet. ")
+                sys.exit()
+            elif 'opportunityid' not in df.columns:
+                print(f"\n    ❌ Column 'opportunityid' not found in the '{sheet_name}' sheet. ")
                 sys.exit()
 
-            # Check the column in the current sheet
-            if opportunity_id_col not in df.columns:
-                print(f"\n    ❌ Column '{opportunity_id_col}' not found in the '{sheet_name}' sheet.")
-                sys.exit()
+            # Perform the comparison
+            df['existing'] = df['opportunityid'].isin(opportunity_df['opportunity_legacy_id__c'])
 
-            # Compare
-            df['existing'] = df[opportunity_id_col].isin(opportunity_df['opportunity_legacy_id__c'])
-
-            # Count missing opportunities
+            # Calculate the number of false values
             false_count = (~df['existing']).sum()
-
+        
             if false_count > 0:
-                print(f"\n    ❗️ Number of missing opportunities in '{sheet_name}': {false_count}")
+                print(f"\n    ❗️ Number of False values in 'existing' column: {false_count}")
             else:
-                print(f"\n    ✅ All opportunities exist in the opportunity sheet")
-
+                print(f"\n    ✅ All Opportunities Exist In Opportunity Sheet")
+        
         except Exception as e:
             print(f"\n    ❌ Error: An unexpected error occurred. Details: {e}")
             sys.exit()
-
         return df
+
     # Call the function to verify opportunities
     product_df = verify_opportunity(product_df,product_sheet_name) 
     
@@ -2493,87 +2493,6 @@ while True:
             else:
                 print("\n        ❗️ Invalid input. Please enter 'yes' or 'no'.\n")
 
-
-    # ==========================================================================
-                        # Feed Item Sheet Execution
-    # ==========================================================================
-
-    # Display the header once
-    print("\n\n📄 Execute Next Sheet:")
-    required_columns = {'parentid/opportunitylegacyid','type','visibility'}
-    FeedItem_sheet = 'FeedItem'
-
-    wb = load_workbook(file_path)
-    if FeedItem_sheet in wb.sheetnames:
-        feeditem_df = pd.read_excel(file_path, sheet_name=FeedItem_sheet)
-        is_empty, preview = is_sheet_empty(feeditem_df, FeedItem_sheet)
-        columns_to_show = ["parentid/opportunitylegacyid", "type", "visibility"]
-        print(tabulate(preview[columns_to_show], headers='keys', tablefmt='fancy_grid', showindex=False))
-
-    if FeedItem_sheet not in wb.sheetnames:
-        print(f"\n📂 The sheet '{FeedItem_sheet}' is missing.")
-        print("\n    🚫 Contact Role sheet execution skipped!")
-        Feeditem_choice = 'no'
-
-    elif is_empty:
-        print(f"\n📂 The sheet '{FeedItem_sheet}' is empty or contains only headers.")
-        print("\n    🚫 Feed item sheet execution skipped!")
-        Feeditem_choice = 'no'
-
-    elif not required_columns.issubset(preview.columns.str.lower()):
-        print(f"\n    🚫 Required columns {required_columns} not found in the sheet. Skipping execution!")
-        Feeditem_choice = 'no'
-
-    elif preview[['parentid/opportunitylegacyid','type','visibility']].isnull().all().any():
-        # Check if either column is completely NaN or blank
-        print(f"\n    🚫 One of the required columns has no data. Skipping execution!")
-        Feeditem_choice = 'no'
-
-    elif is_empty is None:
-        print("\n    ❗️ Could not process the sheet due to an error.")
-        Feeditem_choice = 'no'
-
-    else:
-        while True:
-            user_choice = input(f"\n🔹 Do you want to execute the Feed Item Sheet ? (yes/no): ").strip().lower()
-            
-            if user_choice == 'yes':
-                
-                Feeditem_choice = 'yes'
-                
-                print(f"\n        ⏳ Executing the Sheet: Feed Item")
-                
-                # ======================================================================
-                print("\n")
-                title = "📝 FEED ITEM SHEET EXECUTION 📝"
-                show_title(title)
-
-                # ======================================================================
-
-                print("\n🔍 Step 1: Processing Feed item sheet...")
-
-                FeedItem_sheet = 'FeedItem'
-                feeditem_df = verify_opportunity(feeditem_df, FeedItem_sheet, opportunity_id_col='parentid/opportunitylegacyid')
-
-                title = "📝 FEED ITEM SHEET COMPLETED 📝"
-                show_title(title)
-
-                break
-
-            elif user_choice == 'no':
-                Feeditem_choice = 'no'
-                print("\n        🚫 Feed item sheet execution skipped!\n")
-                
-                print("\n")
-                title = "📝 FEED ITEM SHEET SKIPPED 📝"
-                show_title(title)
-                break
-            else:
-                print("\n        ❗️ Invalid input. Please enter 'yes' or 'no'.\n")
-
-
-
-
     # =========================================================================================================================================
     #                                                FINAL FILE EXECUTION
     # =========================================================================================================================================
@@ -2621,8 +2540,6 @@ while True:
 
     Contact_role = "6" + '_Contact_Roles.csv'
 
-    FeedItem = "7" + '_Feeditem.csv'
-
     # Print the generated file names for confirmation
     print("\n    📄 CSV File Names Generated:")
     print(f"\n        1️⃣ {opportunity}")
@@ -2631,7 +2548,7 @@ while True:
     print(f"\n        4️⃣ {reporting_codes}")
     print(f"\n        5️⃣ {tags}")
     print(f"\n        6️⃣ {Contact_role}")
-    print(f"\n        7️⃣ {FeedItem}")
+
 
     # ======================================================================
     # Step 1: Creating Opportunity Sheet
@@ -3380,7 +3297,7 @@ while True:
     # =======================================================
     while True:
         print("\n================================================================================")
-        print(f'\n📄 Do you want to run the Contact Role Sheet? (yes/no): {contact_choice}')
+        print(f'\n📄 Do you want to run the Contact Role Sheet? (yes/no): {team_member_choice}')
         
         # Automatically using the user input captured earlier from file processing
         user_input = contact_choice 
@@ -3469,104 +3386,6 @@ while True:
             break
         else:
             print("\n    ❗️ Invalid response. Please enter 'yes' or 'no'.")
-
-
-    # =======================================================
-    # Step 6: Processing Feeditem
-    # =======================================================
-    while True:
-        print("\n================================================================================")
-        print(f'\n📄 Do you want to run the Feed Item Sheet? (yes/no): {Feeditem_choice}')
-        
-        # Automatically using the user input captured earlier from file processing
-        user_input = Feeditem_choice 
-        
-        if user_input == "yes":
-            print("\n    ⏳ Running Feed Item Sheet...")
-            print("\n================================================================================")
-
-            print("\n🔍 CREATING FEED ITEM FILE")
-            
-            # ------------------------ Define Path for Processed data and Removed Rows Data  ----------------------
-
-            sheet_name = 'FeedItem'
-            Feeditem_processed_file, removed_rows_feeditem = get_file_paths(sheet_name, output, removed_rows_dir,FeedItem,'Removed_Rows - Feed item.csv')
-
-            # Define hardcoded columns to delete from contact sheet
-
-            predefined_columns_feeditem = ['insertedby']
-            
-            excluded_columns_feeditem = ["parentid/opportunitylegacyid","type","visibility","isrichtext","linkurl","title"]
-
-            
-            try:
-                # ---------------------- Load Feed item Sheet ----------------------
-
-                feeditem_df = pd.read_excel(file_path, sheet_name=sheet_name)
-
-                # ---------------------- Clean DataFrame ----------------------
-                
-                feeditem_df = clean_dataframe(feeditem_df)
-
-                #---------------------- Initialize Removed Rows df ----------------------
-                removed_rows_feeditem_df = pd.DataFrame(columns=feeditem_df.columns.tolist() + ['Reason'])
-
-                # ---------------------- columns that are dropped ----------------------
-                
-                dropped_columns_contacts = []
-                
-                # ---------------------- Remove rows where 'existing' is False ----------------------
-
-                feeditem_df, removed_rows_feeditem_df, rows_dropped_existing_count = remove_rows_based_on_condition(feeditem_df, removed_rows_feeditem_df,'existing',False,"Opportunity Missing From Main sheet")
-
-                # ---------------------- Remove Rows Based on Removed Oppties ----------------------
-
-                feeditem_df,removed_rows_feeditem_df,rows_dropped_legacy_count = load_removed_rows_oppty(removed_rows_oppty, feeditem_df, removed_rows_feeditem_df, "parentid/opportunitylegacyid")
-
-                # ---------------------- Remove Predefined Columns ----------------------
-                
-                feeditem_df, dropped_columns_contacts = delete_predefined_columns(feeditem_df, predefined_columns_feeditem, dropped_columns_contacts)
-
-                # ---------------------- GUI: Let User Select Additional Columns to Delete ----------------------
-                
-                feeditem_df = show_column_deletion_gui(feeditem_df, excluded_columns_feeditem, dropped_columns_contacts)
-                
-                # ---------------------- Row Removal Summary ----------------------
-
-                print_removal_summary({
-                    "Due to 'existing' == False": rows_dropped_existing_count,
-                    "Due to 'Opportunity not loaded'": rows_dropped_legacy_count
-                })   
-                
-                # ---------------------- Clean Removed Rows DF ----------------------   
-
-                removed_rows_feeditem_df = drop_dropped_columns_from_removed_rows(dropped_columns_contacts,removed_rows_feeditem_df)    
-            
-                # ---------------------- Save Processed Output ----------------------
-                
-                save_dataframe(feeditem_df, Feeditem_processed_file, "FeedItem")
-
-                # ---------------------- Save Removed Rows Data ----------------------
-                
-                save_removed_rows(removed_rows_feeditem_df, removed_rows_feeditem, "Removed Rows_Feeditem")
-
-        
-            except ValueError as ve:
-                print(f"\n    ❌ ValueError: {ve}")
-        
-            except Exception as e:
-                print(f"\n    ❌ An error occurred: {e}")
-        
-            break  # Exit loop if "yes" block executed successfully
-        
-        elif user_input == "no":
-            print("\n    🛑 Skipping Contact Role Sheet...")
-            print("\n================================================================================")
-            break
-        else:
-            print("\n    ❗️ Invalid response. Please enter 'yes' or 'no'.")
-
-
 
     # ========================================================================
     # Last Step: Copy the Summary File to the Folder
