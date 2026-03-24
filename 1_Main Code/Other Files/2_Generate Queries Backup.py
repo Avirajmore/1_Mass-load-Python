@@ -25,22 +25,6 @@ def show_title(title):
 title = "📝  Extract Data and create Queries 📝"
 
 show_title(title)
-
-# ==================================================
-def classify_account(value):
-    value = str(value).strip().lower()
-
-    if not value:
-        return "invalid"
-
-    if value.startswith('db'):
-        return "valid" if re.search(r'-[a-z]{2,3}$', value) else "invalid"
-
-    if value.startswith(('dc', 'c')):
-        return "valid"
-
-    return "invalid"
-
 # ==================================================
 
 # Directory where extracted files will be saved
@@ -781,11 +765,18 @@ while True:
 
             # Check each value in the column (assuming the values are in the first column)
             for value in df.iloc[:, 0]:
-
-                if classify_account(value) == "valid":
-                    valid_values.append(str(value).strip())
+                value = str(value).strip()  # Ensure it's a string and remove leading/trailing spaces
+                if not (value.lower().startswith('db') or value.lower().startswith('dc')):
+                    # If it doesn't start with DB or DC (case insensitive), it's invalid
+                    invalid_values.append(value)
+                elif value.lower().startswith('db'):
+                    # If it starts with DB or db, it should have a country code
+                    if not re.search(country_code_pattern, value):
+                        invalid_values.append(value)
+                    else:
+                        valid_values.append(value)  # Add to valid values list
                 else:
-                    invalid_values.append(str(value).strip())
+                    valid_values.append(value)  # Add to valid values list for DC or other valid entries
 
         # Count invalid values
         invalid_count = len(invalid_values)
@@ -808,13 +799,11 @@ while True:
         
         account_list_df = pd.read_csv(csv_file_path)
         account_numbers_set = set(account_list_df['AccountNumber'].astype(str).str.strip())
+        
         # Summary stats
         total_valid = 0
         total_invalid = 0
         files_with_no_matches = []
-        # NEW: accumulators (IMPORTANT)
-        all_valid = []
-        all_invalid = []
 
         # Process each Excel file in the folder
         for file_name in os.listdir(DOWNLOAD_DIR):
@@ -823,7 +812,6 @@ while True:
                 try:
                     df = pd.read_excel(file_path, sheet_name='Opportunity')
                 except Exception as e:
-                    print(f"\n    ❌ Error in file: {file_name} → {e}")
                     continue
 
                 if 'accountid' not in df.columns:
@@ -839,28 +827,28 @@ while True:
                 file_invalid = []
 
                 for value in not_in_csv:
-                    if classify_account(value) == "valid":
-                        file_valid.append(value)
-                    else:
+                    value = str(value).strip()
+                    if not (value.lower().startswith('db') or value.lower().startswith('dc')):
                         file_invalid.append(value)
+                    elif value.lower().startswith('db'):
+                        if not re.search(country_code_pattern, value):
+                            file_invalid.append(value)
+                        else:
+                            file_valid.append(value)
+                    else:
+                        file_valid.append(value)
 
                 # Track if file had no matches
                 if not file_valid and not file_invalid:
                     files_with_no_matches.append(file_name)
-
-                # UPDATED LOGIC (REPLACES concat)
-                all_valid.extend(file_valid)
-                all_invalid.extend(file_invalid)
-
+                        # Append to cumulative DataFrames
+                valid_df = pd.concat([valid_df, pd.DataFrame(file_valid, columns=['Accounts'])], ignore_index=True)
                 if file_valid:
                     total_valid += len(file_valid)
-
+                invalid_df = pd.concat([invalid_df, pd.DataFrame(file_invalid, columns=['Invalid Accounts'])], ignore_index=True)
                 if file_invalid:
                     total_invalid += len(file_invalid)
-
-        # FINAL DATAFRAMES (after loop ends)
-        valid_df = pd.DataFrame(all_valid, columns=['Accounts'])
-        invalid_df = pd.DataFrame(all_invalid, columns=['Invalid Accounts'])
+        
         if os.path.exists(os.path.expanduser("~//Downloads/legacyid.csv")):
             LEGACY_FILE = os.path.join(DOWNLOAD_DIR, "legacyid.csv")
 

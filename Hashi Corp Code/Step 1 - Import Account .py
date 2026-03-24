@@ -2,12 +2,26 @@ import os
 import pyperclip
 import pandas as pd
 from datetime import datetime
+
+def show_title(title):
+
+    line_width = 100
+    line = "=" * line_width
+    print(f"\n{line}")
+    print(title.center(line_width))
+    print(f"{line}\n")
+
+# Display the title for the folder creation and file movement process
+title = "📂 HASHI CORP LOAD 📂"
+show_title(title)
+
 # ---------- CONFIG ----------
 DOWNLOAD_FOLDER = os.path.expanduser("~/Downloads")
 CSV_FILE_PATH = os.path.expanduser("~/Downloads/Hashi oppty.csv")
 COLUMN_NAME = "ACCOUNTID"
 NEW_FILE_NAME = os.path.expanduser("~/Downloads/Account export.csv")
 # ----------------------------
+
 def get_day_suffix(day):
     if 11 <= day <= 13:
         return "th"
@@ -30,8 +44,8 @@ unimportant_folder = os.path.join(folder_path, "Unimportant")
 os.makedirs(main_files_folder, exist_ok=True)
 os.makedirs(unimportant_folder, exist_ok=True)
 
-print(f"Folder created at: {folder_path}")
-print("Subfolders created: Main Files, Unimportant")
+print(f"\n✅Main Folder created ")
+print("\n✅Subfolders created: Main Files, Unimportant")
 
 
 # Read CSV
@@ -58,10 +72,8 @@ WHERE AccountNumber IN ({formatted_ids})
 # Copy query to clipboard
 pyperclip.copy(query)
 
-print("\n✅ Query copied to clipboard:")
-
 # ---------------- WAIT ----------------
-choice = input("\nIs the file extracted?(y/n)")
+choice = input("\n✅Query is copied to clipboard, Paste this Query in the WorkBench and download the csv file. Once done, type 'Y' !")
 
 if choice.lower() == 'y':
 

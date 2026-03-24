@@ -820,8 +820,10 @@ while True:
 
     # Define a function to process the values
     def process_value(value):
-        if isinstance(value, str) and value.startswith('DC'):
-            return value.split('-')[0]
+        if isinstance(value, str):
+            value = value.strip()
+            if value.startswith(('DC', 'C')):
+                return value.split('-')[0]
         return value
 
     # Apply the function to the accountid column and store results in the new column
@@ -2480,12 +2482,16 @@ while True:
     if FeedItem_sheet in wb.sheetnames:
         feeditem_df = pd.read_excel(file_path, sheet_name=FeedItem_sheet)
         is_empty, preview = is_sheet_empty(feeditem_df, FeedItem_sheet)
-        columns_to_show = ["parentid/opportunitylegacyid", "type", "visibility"]
-        print(tabulate(preview[columns_to_show], headers='keys', tablefmt='fancy_grid', showindex=False))
+        if preview is not None:
+            columns_to_show = ["parentid/opportunitylegacyid", "type", "visibility"]
+            print(tabulate(preview[columns_to_show], headers='keys', tablefmt='fancy_grid', showindex=False))
+        else:
+            print(f"\n    ⚠️ Sheet '{FeedItem_sheet}' is empty. No preview to show.")
+        
 
     if FeedItem_sheet not in wb.sheetnames:
         print(f"\n📂 The sheet '{FeedItem_sheet}' is missing.")
-        print("\n    🚫 Contact Role sheet execution skipped!")
+        print("\n    🚫 Feef item sheet execution skipped!")
         Feeditem_choice = 'no'
 
     elif is_empty:

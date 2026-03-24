@@ -79,5 +79,5 @@ if __name__ == "__main__":
 
 os.mkdir(os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files"))
 shutil.move(os.path.expanduser("~/Downloads/oppty_isc.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/oppty_isc.csv"))
-shutil.move(os.path.expanduser("~Downloads/oppty_isced.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/oppty_isced.csv"))
+shutil.move(os.path.expanduser("~/Downloads/oppty_isced.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/oppty_isced.csv"))
 shutil.move(os.path.expanduser("~/Downloads/oppty_Record_Mismatch.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/oppty_Record_Mismatch.csv"))

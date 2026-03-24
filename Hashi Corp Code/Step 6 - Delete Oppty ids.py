@@ -1,3 +1,4 @@
+import glob
 import os
 import pandas as pd
 import pyperclip
@@ -47,7 +48,7 @@ formatted_values = ",".join(f"'{v}'" for v in values)
 
 # Final query
 query = f"""
-SELECT Id
+SELECT Id,Source_ID__c
 FROM Opportunity
 WHERE Source_ID__c IN ({formatted_values})
 """
@@ -94,7 +95,7 @@ if choice == 'y':
     formatted_values = ",".join(f"'{v}'" for v in values)
 
     # Final query
-    query = f"select Id from OpportunityLineitem where Lineitem_Legacy_Id__c in ({formatted_values})"
+    query = f"select Id,Lineitem_Legacy_Id__c from OpportunityLineitem where Lineitem_Legacy_Id__c in ({formatted_values})"
 
     # Copy to clipboard
     pyperclip.copy(query.strip())
@@ -127,6 +128,38 @@ if choice == 'y':
 
 shutil.move(os.path.expanduser("~/Downloads/DELETE OPPTY.csv"), os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE OPPTY.csv"))
 shutil.move(os.path.expanduser("~/Downloads/DELETE PRODUCT.csv"), os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE PRODUCT.csv"))
+
+
+summary_folder = "/Users/avirajmore/Downloads/Hashi Load"   # change if needed
+
+# CSV file paths (UPDATE THESE)
+oppty_file = "/Users/avirajmore/Downloads/Hashi Load/Main Files/DELETE OPPTY.csv"
+product_file = "/Users/avirajmore/Downloads/Hashi Load/Main Files/DELETE PRODUCT.csv"
+
+summary_files = glob.glob(os.path.join(summary_folder, "SUMMARY FILE - HASHI PROD (*.xlsx)"))
+
+if not summary_files:
+    print("❌ No summary file found!")
+    exit()
+
+latest_summary = max(summary_files, key=os.path.getmtime)
+print(f"✅ Using summary file: {latest_summary}")
+
+# ============================
+# Step 3: Read CSV files
+# ============================
+df_oppty = pd.read_csv(oppty_file)
+df_product = pd.read_csv(product_file)
+
+# ============================
+# Step 4: Write to Excel
+# ============================
+with pd.ExcelWriter(latest_summary, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+    
+    df_oppty.to_excel(writer, sheet_name="DELETE OPPTY", index=False)
+    df_product.to_excel(writer, sheet_name="DELETE PRODUCT", index=False)
+
+print("✅ Delete Data successfully copied to summary file!")
 
 import os
 from datetime import datetime

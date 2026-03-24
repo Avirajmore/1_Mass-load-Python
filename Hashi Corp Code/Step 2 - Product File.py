@@ -12,7 +12,7 @@ OUTPUT_FILE = os.path.expanduser("~/Downloads/Hashi Load/Main Files/Hashi lineit
 # ----------------------------
 
 # -------- STEP 1: WAIT & RENAME --------
-choice =input("\n⚠️ Did you extract the file❓ (y/n)")
+choice =input("\n⚠️Run the Source id query in workbench and Extract the file. Type 'y' once done!")
 
 if choice.lower()=='y':
     pass
