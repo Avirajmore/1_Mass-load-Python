@@ -130,11 +130,11 @@ shutil.move(os.path.expanduser("~/Downloads/DELETE OPPTY.csv"), os.path.expandus
 shutil.move(os.path.expanduser("~/Downloads/DELETE PRODUCT.csv"), os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE PRODUCT.csv"))
 
 
-summary_folder = "/Users/avirajmore/Downloads/Hashi Load"   # change if needed
+summary_folder = os.path.expanduser("~/Downloads/Hashi Load")   # change if needed
 
 # CSV file paths (UPDATE THESE)
-oppty_file = "/Users/avirajmore/Downloads/Hashi Load/Main Files/DELETE OPPTY.csv"
-product_file = "/Users/avirajmore/Downloads/Hashi Load/Main Files/DELETE PRODUCT.csv"
+oppty_file = os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE OPPTY.csv")
+product_file = os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE PRODUCT.csv")
 
 summary_files = glob.glob(os.path.join(summary_folder, "SUMMARY FILE - HASHI PROD (*.xlsx)"))
 
