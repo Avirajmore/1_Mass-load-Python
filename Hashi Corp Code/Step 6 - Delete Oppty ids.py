@@ -1,5 +1,5 @@
-import glob
 import os
+from datetime import datetime
 import pandas as pd
 import pyperclip
 from tkinter import filedialog, Tk
@@ -48,7 +48,7 @@ formatted_values = ",".join(f"'{v}'" for v in values)
 
 # Final query
 query = f"""
-SELECT Id,Source_ID__c
+SELECT Id
 FROM Opportunity
 WHERE Source_ID__c IN ({formatted_values})
 """
@@ -95,7 +95,7 @@ if choice == 'y':
     formatted_values = ",".join(f"'{v}'" for v in values)
 
     # Final query
-    query = f"select Id,Lineitem_Legacy_Id__c from OpportunityLineitem where Lineitem_Legacy_Id__c in ({formatted_values})"
+    query = f"select Id from OpportunityLineitem where Lineitem_Legacy_Id__c in ({formatted_values})"
 
     # Copy to clipboard
     pyperclip.copy(query.strip())
@@ -136,7 +136,7 @@ summary_folder = os.path.expanduser("~/Downloads/Hashi Load")   # change if need
 oppty_file = os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE OPPTY.csv")
 product_file = os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE PRODUCT.csv")
 
-summary_files = glob.glob(os.path.join(summary_folder, "SUMMARY FILE - HASHI PROD (*.xlsx)"))
+summary_files = os.path.join(summary_folder, "SUMMARY FILE - HASHI PROD.xlsx")
 
 if not summary_files:
     print("❌ No summary file found!")
@@ -161,8 +161,34 @@ with pd.ExcelWriter(latest_summary, engine='openpyxl', mode='a', if_sheet_exists
 
 print("✅ Delete Data successfully copied to summary file!")
 
-import os
-from datetime import datetime
+
+
+# Folder where your file exists
+folder_path = summary_folder
+
+# Original file name
+old_filename = "SUMMARY FILE - HASHI PROD.xlsx"
+
+# Full old path
+old_file_path = os.path.join(folder_path, old_filename)
+
+# Get today's date in YYYY-MM-DD format
+today_date = datetime.today().strftime("%Y-%m-%d")
+
+# Split filename and extension
+name, ext = os.path.splitext(old_filename)
+
+# Create new filename with date
+new_filename = f"{name} ({today_date}){ext}"
+
+# Full new path
+new_file_path = os.path.join(folder_path, new_filename)
+
+# Rename the file
+os.rename(old_file_path, new_file_path)
+
+print(f"Renamed to: {new_filename}")
+
 
 def get_day_suffix(day):
     if 11 <= day <= 13:

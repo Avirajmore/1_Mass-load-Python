@@ -14,7 +14,7 @@ TEMPLATE_FILE = os.path.expanduser("~/Documents/Office Docs/Massload Files/Refer
 # ----------------------------
 
 today = date.today().strftime("%Y-%m-%d")
-OUTPUT_FILE = os.path.expanduser(f"~/Downloads/Hashi Load/SUMMARY FILE - HASHI PROD ({today}).xlsx")
+OUTPUT_FILE = os.path.expanduser(f"~/Downloads/Hashi Load/SUMMARY FILE - HASHI PROD.xlsx")
 
 # ---------- COPY TEMPLATE ----------
 shutil.copy(TEMPLATE_FILE, OUTPUT_FILE)
