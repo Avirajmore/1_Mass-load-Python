@@ -4,6 +4,20 @@ import pandas as pd
 import pyperclip
 from tkinter import filedialog, Tk
 import shutil
+
+
+def show_title(title):
+
+    line_width = 100
+    line = "=" * line_width
+    print(f"\n{line}")
+    print(title.center(line_width))
+    print(f"{line}\n")
+
+# Display the title for the folder creation and file movement process
+title = "📂 Create delete Files 📂"
+show_title(title)
+
 # ---------- PRODUCT ----------
 DOWNLOAD_FOLDER = os.path.expanduser("~/Downloads")
 product_df = pd.read_csv(os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/product_Record_Mismatch.csv"))
@@ -15,7 +29,7 @@ product_delete = (
 
 product_delete.to_csv(os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/PreDelete_Product.csv"), index=False)
 
-print("✅ Delete_Product.csv created")
+
 
 
 # ---------- OPPORTUNITY ----------
@@ -28,7 +42,7 @@ oppty_delete = (
 
 oppty_delete.to_csv(os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/PreDelete_Oppty.csv"), index=False)
 
-print("✅ Delete_Oppty.csv created")
+
 
 
 
@@ -56,13 +70,12 @@ WHERE Source_ID__c IN ({formatted_values})
 # Copy to clipboard
 pyperclip.copy(query.strip())
 
-print("✅ Oppty query copied to clipboard:\n")
+print("\n✅ Oppty query copied to clipboard, Paste it in workbench and download:\n")
 
 
 choice = input("Do you want to Proceed further? (y/n)")
 
 if choice == 'y':
-    print("\n🔍 Looking for bulkQuery_result_ CSV file...")
     DOWNLOAD_FOLDER = os.path.expanduser("~/Downloads")                # change if needed (e.g. Downloads)
     NEW_FILE_NAME = "DELETE OPPTY.csv"
     matching_files = [
@@ -100,7 +113,7 @@ if choice == 'y':
     # Copy to clipboard
     pyperclip.copy(query.strip())
 
-    print("✅ Product query copied to clipboard:\n")
+    print("\n✅ Product query copied to clipboard,Paste it in workbench abd download:\n")
 
     choice = input("Do you want to Proceed further? (y/n)")
 
@@ -131,19 +144,21 @@ shutil.move(os.path.expanduser("~/Downloads/DELETE PRODUCT.csv"), os.path.expand
 
 
 summary_folder = os.path.expanduser("~/Downloads/Hashi Load")   # change if needed
-
+print (f"\n\n SUMMARY FOLDER:-{summary_folder}\n\n")
 # CSV file paths (UPDATE THESE)
 oppty_file = os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE OPPTY.csv")
 product_file = os.path.expanduser("~/Downloads/Hashi Load/Main Files/DELETE PRODUCT.csv")
 
-summary_files = os.path.join(summary_folder, "SUMMARY FILE - HASHI PROD.xlsx")
+summary_file = os.path.join(summary_folder, "SUMMARY FILE - HASHI PROD.xlsx")
 
-if not summary_files:
-    print("❌ No summary file found!")
+
+
+if not os.path.exists(summary_file):
+    print("❌ Summary file not found!")
     exit()
 
-latest_summary = max(summary_files, key=os.path.getmtime)
-print(f"✅ Using summary file: {latest_summary}")
+latest_summary = summary_file
+
 
 # ============================
 # Step 3: Read CSV files
@@ -158,10 +173,6 @@ with pd.ExcelWriter(latest_summary, engine='openpyxl', mode='a', if_sheet_exists
     
     df_oppty.to_excel(writer, sheet_name="DELETE OPPTY", index=False)
     df_product.to_excel(writer, sheet_name="DELETE PRODUCT", index=False)
-
-print("✅ Delete Data successfully copied to summary file!")
-
-
 
 # Folder where your file exists
 folder_path = summary_folder
@@ -186,8 +197,6 @@ new_file_path = os.path.join(folder_path, new_filename)
 
 # Rename the file
 os.rename(old_file_path, new_file_path)
-
-print(f"Renamed to: {new_filename}")
 
 
 def get_day_suffix(day):
@@ -217,6 +226,9 @@ new_path = os.path.join(base_path, new_folder_name)
 # Rename folder
 if os.path.exists(old_path):
     os.rename(old_path, new_path)
-    print(f"Folder renamed to: {new_folder_name}")
+
 else:
-    print("Folder not found!")
+    print("\n❌ Folder not found!")
+
+title = "📂 Hashi Load Done 📂"
+show_title(title)

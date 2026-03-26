@@ -44,9 +44,6 @@ unimportant_folder = os.path.join(folder_path, "Unimportant")
 os.makedirs(main_files_folder, exist_ok=True)
 os.makedirs(unimportant_folder, exist_ok=True)
 
-print(f"\n✅Main Folder created ")
-print("\n✅Subfolders created: Main Files, Unimportant")
-
 
 # Read CSV
 df = pd.read_csv(CSV_FILE_PATH)
@@ -73,12 +70,11 @@ WHERE AccountNumber IN ({formatted_ids})
 pyperclip.copy(query)
 
 # ---------------- WAIT ----------------
-choice = input("\n✅Query is copied to clipboard, Paste this Query in the WorkBench and download the csv file. Once done, type 'Y' !")
+choice = input("\n✅ Account Query is copied, Paste this Query in the WorkBench and download the csv file. \n\nOnce done, type 'Y' !")
 
 if choice.lower() == 'y':
 
     # ---------------- FILE RENAME ----------------
-    print("\n🔍 Looking for bulkQuery_result_ CSV file...")
 
     matching_files = [
         f for f in os.listdir(DOWNLOAD_FOLDER)
@@ -98,8 +94,6 @@ if choice.lower() == 'y':
         new_path = os.path.join(DOWNLOAD_FOLDER, NEW_FILE_NAME)
 
         os.rename(old_path, new_path)
-
-        print(f"\n✅ Renamed file:\n{NEW_FILE_NAME}")
 
         # ---------- CONFIG ----------
         HASHI_FILE = os.path.expanduser("~/Downloads/Hashi oppty.csv")
@@ -145,9 +139,8 @@ if choice.lower() == 'y':
         # Write to Excel
         output_df.to_excel(OUTPUT_FILE, index=False)
 
-        print("\n✅ Comparison completed")
-        print(f"\n📄 Missing accounts saved to: {OUTPUT_FILE}")
-        print(f"\n🔢 Total missing accounts: {len(missing_accounts)}")
+        print(f"\n📄 Missing accounts saved to: Accounts to import.xlsx")
+        print(f"\n🔢 Total missing accounts: {len(missing_accounts)}\n")
 else:
     print("\nSkipped")
 
@@ -160,7 +153,6 @@ def move_file(file_name, source_dir, destination_dir):
 
     if os.path.exists(src):
         shutil.move(src, dst)
-        print(f"Moved: {file_name} → {destination_dir}")
     else:
         print(f"File not found: {file_name} (skipping)")
 
@@ -170,3 +162,8 @@ for file in ["hashi oppty.csv"]:
 
 for file in ["Account export.csv", "Accounts to import.xlsx"]:
     move_file(file, DOWNLOAD_FOLDER, unimportant_folder)
+
+print(f"\n🚨 CHECK IF YOU NEED TO IMPORT ACCOUNTS, AFTER THAT LOAD THE OPPTY FILE")
+
+title = "Step 1 Done"
+show_title(title)

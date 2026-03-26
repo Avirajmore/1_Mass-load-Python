@@ -4,6 +4,17 @@ import shutil
 from datetime import date
 from openpyxl import load_workbook
 
+def show_title(title):
+
+    line_width = 100
+    line = "=" * line_width
+    print(f"\n{line}")
+    print(title.center(line_width))
+    print(f"{line}\n")
+
+# Display the title for the folder creation and file movement process
+title = "📂 CREATE SUMMARY FILE 📂"
+show_title(title)
 # ---------- CONFIG ----------
 # Folder to move processed CSV files
 PROCESSED_FOLDER = os.path.expanduser("~/Downloads/Hashi Load/Success and Error files")
@@ -18,7 +29,7 @@ OUTPUT_FILE = os.path.expanduser(f"~/Downloads/Hashi Load/SUMMARY FILE - HASHI P
 
 # ---------- COPY TEMPLATE ----------
 shutil.copy(TEMPLATE_FILE, OUTPUT_FILE)
-print(f"📄 Template copied → {OUTPUT_FILE}")
+
 
 # ---------- FILE DEFINITIONS ----------
 FILES = {
@@ -83,17 +94,16 @@ with pd.ExcelWriter(
             df.to_excel(writer, sheet_name=info["sheet"], index=False)
            
             row_counts[key] = len(df)
-            print(f"✅ {info['sheet']} → {len(df)} rows")
+            print(f"\n✅ {info['sheet']} → {len(df)} rows")
 
             # Move processed file
             destination_path = os.path.join(PROCESSED_FOLDER, os.path.basename(csv_path))
             shutil.move(csv_path, destination_path)
-            print(f"📂 Moved → {destination_path}")
         else:
             # Empty sheet if missing
             pd.DataFrame().to_excel(writer, sheet_name=info["sheet"], index=False)
             row_counts[key] = 0
-            print(f"⚠️ {info['sheet']} missing → count 0")
+            print(f"\n⚠️ {info['sheet']} missing → count 0")
 
 # ---------- UPDATE SUMMARY ----------
 workbook = load_workbook(OUTPUT_FILE)
@@ -114,3 +124,7 @@ summary[SUMMARY_CELLS["prod_total"]] = (
 workbook.save(OUTPUT_FILE)
 
 print("\n🎯 Summary file generated successfully")
+
+
+title = "📂 CREATE SUMMARY FILE 📂"
+show_title(title)

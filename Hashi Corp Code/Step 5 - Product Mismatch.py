@@ -2,6 +2,53 @@ import pandas as pd
 import os
 import shutil
 dir_path = os.path.expanduser("~/Downloads/Hashi Load/Unimportant")
+import pyperclip
+
+
+
+def show_title(title):
+
+    line_width = 100
+    line = "=" * line_width
+    print(f"\n{line}")
+    print(title.center(line_width))
+    print(f"{line}\n")
+
+# Display the title for the folder creation and file movement process
+title = "📂 Product Dupliate Files process 📂"
+show_title(title)
+print("\n❗️ Download product_ised file from Database first and rename it.")
+
+
+query = "select Lineitem_Legacy_id__c,LastModifiedDate from OpportunityLineitem where Opportunity.Acquisition_Name__c ='HashiCorp' and Opportunity.RecordTypeId='012Ka0000015C9sIAE'"
+pyperclip.copy(query.strip())
+DOWNLOAD_FOLDER = os.path.expanduser("~/Downloads")                # change if needed (e.g. Downloads)
+NEW_FILE_NAME = 'product_isc.csv'
+choice = input("\n✅ product_isc query is copied to clipboard, Paste this Query in the WorkBench and download the csv file. Once done, type 'y' !")
+
+if choice.lower() == 'y':
+
+    # ---------------- FILE RENAME ----------------
+
+    matching_files = [
+        f for f in os.listdir(DOWNLOAD_FOLDER)
+        if f.lower().endswith(".csv") and "bulkquery_result_" in f.lower()
+    ]
+
+    if not matching_files:
+        print("\n❌ No matching bulkQuery_result_ CSV file found.\n")
+    else:
+        # Pick latest modified file
+        latest_file = max(
+            matching_files,
+            key=lambda f: os.path.getmtime(os.path.join(DOWNLOAD_FOLDER, f))
+        )
+
+        old_path = os.path.join(DOWNLOAD_FOLDER, latest_file)
+        new_path = os.path.join(DOWNLOAD_FOLDER, NEW_FILE_NAME)
+
+        os.rename(old_path, new_path)
+
 
 class CompareCsv():
     def csv_compare(self):
@@ -38,7 +85,7 @@ class CompareCsv():
         })
         record_mismatch.to_csv(output_path1, index=False)
         record_mismatch_count = record_mismatch.shape[0]
-        print("Record mismatch file generated.")
+
         #isc_only = outer_join[outer_join['_merge'] == 'left_only']
         #isced_only = outer_join[outer_join['_merge'] == 'right_only']
 
@@ -53,8 +100,6 @@ class CompareCsv():
         lmd_mismatched_records = merged_df[merged_df['LastModifiedDate_isc_data'] != merged_df['LastModifiedDate_isced_data']]
         lmd_mismatch_count = lmd_mismatched_records.shape[0]
         lmd_mismatched_records.to_csv(output_path2, index=False)
-        print("Last Modified date mismatch file generated.")
-
 
         # Write run stat
         csv_file_path = os.path.expanduser("~/Downloads/Hashi Load/Unimportant/Run_Stat.csv")
@@ -65,11 +110,10 @@ class CompareCsv():
                 'LastModifiedDate_Mismatch_Count': [lmd_mismatch_count]
                 }
         df_new = pd.DataFrame(data)
-        print("Stat:")
-        print(df_new.to_string())
+        print("\nStat:")
+        print(df_new.to_markdown(index=False))
         df_new.to_csv(csv_file_path, mode='a', header=False, index=False)
-        print("Run stat appended to the CSV file.")
-
+        print("\n")
 
 if __name__ == "__main__":
     class_instance = CompareCsv()
@@ -79,3 +123,6 @@ if __name__ == "__main__":
 shutil.move(os.path.expanduser("~/Downloads/product_isc.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/product_isc.csv"))
 shutil.move(os.path.expanduser("~/Downloads/product_isced.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/product_isced.csv"))
 shutil.move(os.path.expanduser("~/Downloads/product_Record_Mismatch.csv"), os.path.expanduser("~/Downloads/Hashi Load/Duplicate Files/product_Record_Mismatch.csv"))
+
+title = "📂 Product Dupliate Files Done 📂"
+show_title(title)
