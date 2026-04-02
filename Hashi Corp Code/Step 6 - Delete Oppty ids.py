@@ -62,7 +62,7 @@ formatted_values = ",".join(f"'{v}'" for v in values)
 
 # Final query
 query = f"""
-SELECT Id
+SELECT Id,Source_ID__c
 FROM Opportunity
 WHERE Source_ID__c IN ({formatted_values})
 """
@@ -108,7 +108,7 @@ if choice == 'y':
     formatted_values = ",".join(f"'{v}'" for v in values)
 
     # Final query
-    query = f"select Id from OpportunityLineitem where Lineitem_Legacy_Id__c in ({formatted_values})"
+    query = f"select Id,Lineitem_Legacy_Id__c from OpportunityLineitem where Lineitem_Legacy_Id__c in ({formatted_values})"
 
     # Copy to clipboard
     pyperclip.copy(query.strip())
@@ -118,7 +118,7 @@ if choice == 'y':
     choice = input("Do you want to Proceed further? (y/n)")
 
     if choice == 'y':
-        print("\n🔍 Looking for bulkQuery_result_ CSV file...")
+
         DOWNLOAD_FOLDER = os.path.expanduser("~/Downloads")                # change if needed (e.g. Downloads)
         NEW_FILE_NAME = "DELETE PRODUCT.csv"
         matching_files = [
@@ -232,3 +232,5 @@ else:
 
 title = "📂 Hashi Load Done 📂"
 show_title(title)
+
+#hi
