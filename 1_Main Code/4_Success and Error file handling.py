@@ -93,36 +93,36 @@ print(title.center(line_width))
 print(f"{line}\n")
 # =======================================================================================================
 
-print("\n🔔 Is this the FINAL summary file for this batch?")
-print("1) No (Intermediate run)")
-print("2) Yes (Final run - MPP must be completed)")
+# print("\n🔔 Is this the FINAL summary file for this batch?")
+# print("1) No (Intermediate run)")
+# print("2) Yes (Final run - MPP must be completed)")
 
-while True:
-    final_run = input("\nEnter choice (yes/no): ").strip()
-    if final_run in ["yes", "no"]:
-        break
-    print("Invalid input. Please enter yes or no.")
+# while True:
+#     final_run = input("\nEnter choice (yes/no): ").strip()
+#     if final_run in ["yes", "no"]:
+#         break
+#     print("Invalid input. Please enter yes or no.")
 
-# ============================================================
-# MPP Mandatory Confirmation (Final Run Only)
-# ============================================================
+# # ============================================================
+# # MPP Mandatory Confirmation (Final Run Only)
+# # ============================================================
 
-if final_run == "yes":
-    print("\n⚠️ FINAL SUMMARY CHECK ⚠️")
+# if final_run == "yes":
+#     print("\n⚠️ FINAL SUMMARY CHECK ⚠️")
     
-    while True:
-        mpp_check = input(
-            "\nHave all MPP post-load steps been completed in ISC? (yes/no): "
-        ).strip().lower()
+#     while True:
+#         mpp_check = input(
+#             "\nHave all MPP post-load steps been completed in ISC? (yes/no): "
+#         ).strip().lower()
 
-        if mpp_check == "yes":
-            print("\n✅ MPP confirmation recorded. Proceeding with final summary...")
-            break
-        elif mpp_check == "no":
-            print("\n❌ Please complete the MPP steps before generating the final summary.")
-            exit()
-        else:
-            print("Invalid input. Please enter 'yes' or 'no'.")
+#         if mpp_check == "yes":
+#             print("\n✅ MPP confirmation recorded. Proceeding with final summary...")
+#             break
+#         elif mpp_check == "no":
+#             print("\n❌ Please complete the MPP steps before generating the final summary.")
+#             exit()
+#         else:
+#             print("Invalid input. Please enter 'yes' or 'no'.")
 
 
 # Copying all the success and error files as backup
@@ -445,7 +445,9 @@ sheet_to_cell_mapping = {
     "Tag Success": "E9",
     "Tag Failure": "F9",
     "Contact Success":"E10",
-    "Contact Failure":"F10"
+    "Contact Failure":"F10",
+    "Feed Item Success":"E11",
+    "Feed Item Failure":"F11"
 }
 
 # Define the cell ranges for summation in the "Summary" sheet
@@ -456,6 +458,7 @@ sum_mappings = {
     ("E8", "F8"): "G8",
     ("E9", "F9"): "G9",
     ("E10", "F10"): "G10",
+    ("E11", "F11"): "G11",
 
 }
 
