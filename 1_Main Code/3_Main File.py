@@ -1737,7 +1737,7 @@ while True:
 
 
     # =========================================================================================================================================
-    #                                                TEAM MEMBER SHEET EXECUTION
+    #                                                OPPORTUNITY TEAM MEMBER SHEET EXECUTION
     # =========================================================================================================================================
     
     
@@ -1746,7 +1746,18 @@ while True:
 
     original_team_sheet = 'Opportunity_Team '
     
-    team_df = pd.read_excel(file_path, sheet_name=original_team_sheet)
+    try:
+        team_df = pd.read_excel(file_path, sheet_name=original_team_sheet)
+
+    except ValueError:
+        print(f"\n❌ Sheet '{original_team_sheet}' not found in the Excel file.")
+        choice = 'no'
+        team_df = pd.DataFrame()
+
+    except Exception as e:
+        print(f"\n❌ Error reading sheet '{original_team_sheet}': {e}")
+        choice = 'no'
+        team_df = pd.DataFrame()
     
     def is_sheet_empty(df, original_team_sheet):
         """

@@ -72,7 +72,7 @@ for file in os.listdir(folder_path):
             'FINCASH',	'CUSSTATU',	'COMPEXP',	'COMPINC',	'COMPTRMS',	'COMPSOLN',	'FINREJECT', 'FINCUST',	'COMPSAT',	'FIND',	'IBMDUP',	
             'IBMERR',	'CUSSPONS',	'FINGOE',	'FINIBM',	'COMPREL',	'COMPPART',	'IBMBUDG',	'FINK',	'IBMSUPP',	'FINCOMP',	'CUSTBUDG',	
             'IBMLOW',	'CUSTRISK',	'COMPMOVE',	'CUSTACT',	'FINNH',	'FINNONF',	'COMPPRCE',	'RNL_COMP_PRICE',	'RNL_CNTR_EARLY',	'RNL_CNTR_MOVE',	
-            'RNL_CUST_NOBDGT',	'RNL_CUST_NORESP',	'RNL_CUST_OUTOFBUS',	'RNL_CUST_PROJEND',	'RNL_CUST_TEMP',	'RNL_IBM_PRODCHNG',	'RNL_IBM_NOPROD',	
+            'RNL_CUST_NOBDGT',	'RNL_CUST_NORESP',	'RNL_CUST_OUTOFBUS','TYPEPSP',	'RNL_CUST_PROJEND',	'RNL_CUST_TEMP',	'RNL_IBM_PRODCHNG',	'RNL_IBM_NOPROD',	
             'RNL_PROD_NOSUPP',	'RNL_PROD_NOTRELB',	'RNL_PROD_NOSOLN',	'RNL_REVN_MOVESAAS',	'RNL_REVN_MOVETERM',	'RNL_REVN_MOVEPERP',	'RNL_REVN_MOVESUBS',	
             'RNL_REVN_MOVEPERS',	'RNL_REVN_MOVETYPE',	'RNL_REVN_MOVESALE',	'IBMUNDES',	'IBMUNRSP',	'TLSTRIBM',	'TLSTRNON',	'TLSCLOUD',	'TLSOTHER',	'TLSSELFP',	
             'TLSSELFE',	'TLSSELFO',	'TLSTPMP',	'TLSTPME',	'TLSTPMSD',	'TLSMVS',	'TLSIBMNA',	'TLSNORES',	'TLSBUDG',	'TLSDUPE',	'TLSNONE',	'BPDREXP',	'BPSUPP',	
@@ -228,6 +228,198 @@ for file in os.listdir(folder_path):
         except Exception as e:
             print("Error:", e)    
         # ----------------------  Check for Columns with Invalid API names ---------------------
+
+        
+        print(f"\nConverting Names to API Names using Reference Files:")
+
+        # Define reference file paths
+        product_ref_file = os.path.expanduser("~/Documents/Office Docs/Massload Files/Reference File/Product Fields API Name.xlsx")
+        opportunity_ref_file = os.path.expanduser("~/Documents/Office Docs/Massload Files/Reference File/Opportunity Fields API.xlsx")
+
+        def load_api_mappings(ref_file_path):
+            """Load all sheet mappings from reference file into a dictionary"""
+            mappings = {}
+            try:
+                xls_ref = pd.ExcelFile(ref_file_path)
+                for sheet_name in xls_ref.sheet_names:
+                    df_ref = pd.read_excel(xls_ref, sheet_name=sheet_name)
+                    if 'Values' in df_ref.columns and 'API Name' in df_ref.columns:
+                        # Create mapping: strip whitespace and convert to uppercase for matching
+                        sheet_mapping = {}
+                        for _, row in df_ref.iterrows():
+                            if pd.notna(row['Values']) and pd.notna(row['API Name']):
+                                value = str(row['Values']).strip()
+                                api_name = str(row['API Name']).strip()
+                                # Store with uppercase key for case-insensitive matching
+                                sheet_mapping[value.upper()] = api_name
+                        mappings[sheet_name] = sheet_mapping
+                return mappings
+            except Exception as e:
+                print(f"    ⚠️  Error loading reference file {ref_file_path}: {e}")
+                return {}
+
+        def convert_to_api_names(df, sheet_name, field_mappings):
+            """Convert non-API names to API names for all columns in dataframe"""
+            conversions_made = []
+            
+            for column in df.columns:
+                # Check if this column name matches any sheet name in field_mappings
+                # The sheet names in reference files represent the field names
+                if column in field_mappings:
+                    mapping = field_mappings[column]
+                    
+                    # Track changes for this column
+                    changes_count = 0
+                    
+                    for idx, value in df[column].items():
+                        if pd.notna(value):
+                            value_str = str(value).strip()
+                            value_upper = value_str.upper()
+                            
+                            # Check if value needs conversion (not already an API name)
+                            if value_upper in mapping:
+                                api_name = mapping[value_upper]
+                                # Only update if it's different (case-sensitive check)
+                                if value_str != api_name:
+                                    df.at[idx, column] = api_name
+                                    changes_count += 1
+                    
+                    if changes_count > 0:
+                        conversions_made.append(f"{column}: {changes_count} values converted")
+            
+            return conversions_made
+
+        # Load mappings from both reference files
+        print(f"\n    📖 Loading reference files...")
+        product_mappings = load_api_mappings(product_ref_file)
+        opportunity_mappings = load_api_mappings(opportunity_ref_file)
+
+        if not product_mappings and not opportunity_mappings:
+            print(f"    ❌ Could not load reference files. Skipping conversion.")
+        else:
+            print(f"\n    ✅ Loaded {len(product_mappings)} product field mappings")
+            print(f"\n    ✅ Loaded {len(opportunity_mappings)} opportunity field mappings")
+            
+            # Process the data file
+            file_path = os.path.join(folder_path, file)
+            xls = pd.ExcelFile(file_path)
+            
+            file_modified = False
+            
+            # Process Opportunity_product sheet with product mappings
+            if 'Opportunity_product' in xls.sheet_names and product_mappings:
+                print(f"\n    🔍 Processing Opportunity_product sheet...")
+                df_product = pd.read_excel(xls, sheet_name='Opportunity_product')
+                conversions = convert_to_api_names(df_product, 'Opportunity_product', product_mappings)
+                
+                if conversions:
+                    print(f"    ✅ Conversions in Opportunity_product:")
+                    for conv in conversions:
+                        print(f"\n        🔸 {conv}")
+                    
+                    # Save changes
+                    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+                        # Read all sheets to preserve them
+                        for sheet in xls.sheet_names:
+                            if sheet == 'Opportunity_product':
+                                df_product.to_excel(writer, sheet_name=sheet, index=False)
+                            else:
+                                df_temp = pd.read_excel(xls, sheet_name=sheet)
+                                df_temp.to_excel(writer, sheet_name=sheet, index=False)
+                    
+                    file_modified = True
+
+            
+            # Process Opportunity sheet with opportunity mappings
+            if 'Opportunity' in xls.sheet_names and opportunity_mappings:
+                print(f"\n    🔍 Processing Opportunity sheet...")
+                # Reload file if it was modified
+                if file_modified:
+                    xls = pd.ExcelFile(file_path)
+                
+                df_opportunity = pd.read_excel(xls, sheet_name='Opportunity')
+                conversions = convert_to_api_names(df_opportunity, 'Opportunity', opportunity_mappings)
+                
+                if conversions:
+                    print(f"\n    ✅ Conversions in Opportunity:")
+                    for conv in conversions:
+                        print(f"\n        🔸 {conv}")
+                    
+                    # Save changes
+                    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+                        # Read all sheets to preserve them
+                        xls_reload = pd.ExcelFile(file_path)
+                        for sheet in xls_reload.sheet_names:
+                            if sheet == 'Opportunity':
+                                df_opportunity.to_excel(writer, sheet_name=sheet, index=False)
+                            else:
+                                df_temp = pd.read_excel(xls_reload, sheet_name=sheet)
+                                df_temp.to_excel(writer, sheet_name=sheet, index=False)
+                    
+                    file_modified = True
+            
+            if file_modified:
+                print(f"\n    ✅ File updated successfully with API names.")
+
+        print(f"\n🔧 Step 2.6: Correcting Common API Name Typos:")
+
+        # Define common typos and their corrections
+        api_name_corrections = {
+            'AUTOREN_SUBUPGR': 'AUTOREN_SUBUPG',
+            'TERMINATE_SUBUPGR': 'TERMINATE_SUBUPG'
+        }
+
+        file_path = os.path.join(folder_path, file)
+        xls = pd.ExcelFile(file_path)
+
+        correction_made = False
+
+        # Process both sheets
+        for sheet_name in ['Opportunity', 'Opportunity_product']:
+            if sheet_name in xls.sheet_names:
+                df = pd.read_excel(xls, sheet_name=sheet_name)
+                sheet_corrections = []
+                
+                # Check all columns for typos
+                for column in df.columns:
+                    corrections_in_column = 0
+                    
+                    for idx, value in df[column].items():
+                        if pd.notna(value):
+                            value_str = str(value).strip()
+                            
+                            # Check if this value is a known typo
+                            if value_str in api_name_corrections:
+                                correct_value = api_name_corrections[value_str]
+                                df.at[idx, column] = correct_value
+                                corrections_in_column += 1
+                    
+                    if corrections_in_column > 0:
+                        sheet_corrections.append(f"{column}: {corrections_in_column} corrections")
+                
+                if sheet_corrections:
+                    print(f"\n    ✅ Corrections in {sheet_name}:")
+                    for corr in sheet_corrections:
+                        print(f"        🔸 {corr}")
+                    
+                    # Save the corrected sheet
+                    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+                        xls_reload = pd.ExcelFile(file_path)
+                        for sheet in xls_reload.sheet_names:
+                            if sheet == sheet_name:
+                                df.to_excel(writer, sheet_name=sheet, index=False)
+                            else:
+                                df_temp = pd.read_excel(xls_reload, sheet_name=sheet)
+                                df_temp.to_excel(writer, sheet_name=sheet, index=False)
+                    
+                    correction_made = True
+
+        if correction_made:
+            print(f"\n    ✅ File updated with corrected API names.")
+            # Reload the file for next validation step
+            xls = pd.ExcelFile(file_path)
+        else:
+            print(f"\n    ✅  All API names are correct.")
 
         print(f"\n🔍 Step 3: Checking for Invalid API names:")
         file_path = os.path.join(folder_path, file)
@@ -455,3 +647,4 @@ title = "📊 Final Summary 📊"
 show_title(title)
 
 print(tabulate(summary_list, headers="keys", tablefmt="fancy_grid"))
+
