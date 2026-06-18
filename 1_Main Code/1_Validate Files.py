@@ -313,7 +313,7 @@ for file in os.listdir(folder_path):
                 conversions = convert_to_api_names(df_product, 'Opportunity_product', product_mappings)
                 
                 if conversions:
-                    print(f"    ✅ Conversions in Opportunity_product:")
+                    print(f"\n    ✅ Conversions in Opportunity_product:")
                     for conv in conversions:
                         print(f"\n        🔸 {conv}")
                     
@@ -421,6 +421,94 @@ for file in os.listdir(folder_path):
         else:
             print(f"\n    ✅  All API names are correct.")
 
+        # ----------------------  Auto-Cleanup Invalid Won/Lost Reason Fields and (blank) Values ---------------------
+
+        print(f"\n🧹 Step 2.7: Auto-Cleanup '(blank)' Values and Invalid Won/Lost Reason Fields")
+        if "Opportunity" in xls.sheet_names:
+            try:
+                # Reload the file to get fresh data
+                xls = pd.ExcelFile(file_path)
+                df = pd.read_excel(xls, sheet_name='Opportunity')
+                
+                # Normalize sales_stage for comparison
+                df['sales_stage'] = df['sales_stage'].str.lower()
+                
+                # Track cleanup statistics
+                total_cleaned = 0
+                cleanup_details = []
+                
+                # Check if columns exist before processing
+                has_won_reason = 'Won Reason' in df.columns
+                has_lost_category = 'Lost Category' in df.columns
+                has_lost_reason = 'Lost Reason' in df.columns
+                
+                # Step 1: Clear "(blank)" text values from ALL rows in these columns
+                blank_cleared = 0
+                for col in ['Won Reason', 'Lost Category', 'Lost Reason']:
+                    if col in df.columns:
+                        # Find rows with "(blank)" text (case-insensitive)
+                        blank_mask = df[col].astype(str).str.strip().str.lower() == '(blank)'
+                        count = blank_mask.sum()
+                        if count > 0:
+                            df.loc[blank_mask, col] = ''
+                            blank_cleared += count
+                            cleanup_details.append(f"Removed '(blank)' from {count} rows in '{col}'")
+                
+                if blank_cleared > 0:
+                    print(f"\n    🧹 Cleaned {blank_cleared} '(blank)' text values")
+                    for detail in cleanup_details:
+                        print(f"        • {detail}")
+                    total_cleaned += blank_cleared
+                
+                # Step 2: Clear Lost fields for Won opportunities
+                won_cleared = 0
+                if has_lost_category or has_lost_reason:
+                    won_mask = df['sales_stage'] == 'won'
+                    if won_mask.any():
+                        if has_lost_category:
+                            df.loc[won_mask, 'Lost Category'] = ''
+                        if has_lost_reason:
+                            df.loc[won_mask, 'Lost Reason'] = ''
+                        won_cleared = won_mask.sum()
+                        print(f"\n    🧹 Cleared 'Lost Category' and 'Lost Reason' for {won_cleared} Won opportunities")
+                        total_cleaned += won_cleared
+                
+                # Step 3: Clear Won Reason for Lost opportunities
+                lost_cleared = 0
+                if has_won_reason:
+                    lost_mask = df['sales_stage'] == 'lost'
+                    if lost_mask.any():
+                        df.loc[lost_mask, 'Won Reason'] = ''
+                        lost_cleared = lost_mask.sum()
+                        print(f"\n    🧹 Cleared 'Won Reason' for {lost_cleared} Lost opportunities")
+                        total_cleaned += lost_cleared
+                
+                # Save changes if any cleanup was performed
+                if total_cleaned > 0:
+                    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+                        # Read all sheets to preserve them
+                        xls_reload = pd.ExcelFile(file_path)
+                        for sheet in xls_reload.sheet_names:
+                            if sheet == 'Opportunity':
+                                df.to_excel(writer, sheet_name=sheet, index=False)
+                            else:
+                                df_temp = pd.read_excel(xls_reload, sheet_name=sheet)
+                                df_temp.to_excel(writer, sheet_name=sheet, index=False)
+                    
+                    print(f"\n    ✅ File updated successfully with cleaned data")
+                    
+                    # Reload the file for subsequent validations
+                    xls = pd.ExcelFile(file_path)
+                else:
+                    print(f"\n    ✅ No cleanup needed - all fields are already clean")
+                    
+            except Exception as e:
+                file_status = "❌ Issues Found"
+                print(f"\n    ❗️ Error during cleanup: {e}")
+        else:
+            file_status = "❌ Issues Found"
+            print(f"\n    ❌ Sheet 'Opportunity' not found.")
+
         print(f"\n🔍 Step 3: Checking for Invalid API names:")
         file_path = os.path.join(folder_path, file)
         xls = pd.ExcelFile(file_path)
@@ -486,13 +574,13 @@ for file in os.listdir(folder_path):
                 )]
 
                 # 🔴 Check for invalid values in 'Lost' fields when stage is 'Won'
-                invalid_lost_fields_in_won = df[(df['sales_stage'] == 'Won') & (
+                invalid_lost_fields_in_won = df[(df['sales_stage'] == 'won') & (
                     (df['Lost Category'].notnull() & (df['Lost Category'].astype(str).str.strip() != '')) |
                     (df['Lost Reason'].notnull() & (df['Lost Reason'].astype(str).str.strip() != ''))
                 )]
 
                 # 🔴 Check for invalid 'Won Reason' when stage is 'Lost'
-                invalid_won_reason_in_lost = df[(df['sales_stage'] == 'Lost') & (
+                invalid_won_reason_in_lost = df[(df['sales_stage'] == 'lost') & (
                     (df['Won Reason'].notnull() & (df['Won Reason'].astype(str).str.strip() != ''))
                 )]
 
