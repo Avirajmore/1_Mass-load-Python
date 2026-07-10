@@ -486,45 +486,79 @@ file_mapping = {
 # Function to find & rename 'bulkQuery' CSV file
 # ============================
 
-def wait_and_rename_bulkquery_file(new_name, dir_path, part_number=None, timeout=60):
+def wait_and_rename_bulkquery_file(new_name, dir_path, part_number=None, timeout=300):
+    """
+    Wait for a Salesforce bulkQuery CSV to appear in dir_path, then rename it.
+
+    Improvements over the previous version:
+    - Default timeout raised from 60 s → 300 s (5 min) — Salesforce queries can be slow.
+    - Live countdown printed every 10 s so the user knows it's still waiting.
+    - When timeout is reached the user is offered: extend wait / skip / rename manually.
+    - Cancel key ('C') still works via a background thread.
+    """
     def listen_for_cancel():
         nonlocal cancel
-        cancel = input("\n   ⭕️ Press 'C' to cancel the operation: ").strip().lower() == 'c'
+        val = input("").strip().lower()
+        if val == 'c':
+            cancel = True
 
     cancel = False
-    cancel_thread = threading.Thread(target=listen_for_cancel)
-    cancel_thread.daemon = True
+    cancel_thread = threading.Thread(target=listen_for_cancel, daemon=True)
     cancel_thread.start()
 
-    # print(f"\n⏳ Waiting for 'bulkQuery' file to appear in {dir_path}... (timeout: {timeout} seconds)")
-    
-    start_time = time.time()
+    print(f"\n   ⏳ Waiting for 'bulkQuery' CSV in Downloads... (timeout: {timeout}s — type 'C' + Enter to cancel)\n")
+
+    start_time   = time.time()
+    last_print   = start_time
+
     while time.time() - start_time < timeout:
         if cancel:
             print("\n   ❌ Operation cancelled by user.")
             return False
-        
+
+        # Check for the file
         for filename in os.listdir(dir_path):
             if "bulkQuery" in filename and filename.endswith(".csv"):
-                old_path = os.path.join(dir_path, filename)
-                
-                # If part number is present, adjust new_name
+                old_path   = os.path.join(dir_path, filename)
                 final_name = new_name.replace(".csv", f"{part_number}.csv") if part_number else new_name
-                new_path = os.path.join(dir_path, final_name)
+                new_path   = os.path.join(dir_path, final_name)
 
                 if os.path.exists(new_path):
                     backup_path = new_path.replace(".csv", f"_backup_{int(time.time())}.csv")
                     os.rename(new_path, backup_path)
-                    print(f"\n   ⚠️ Existing file '{final_name}' backed up as '{os.path.basename(backup_path)}'")
+                    print(f"\n   ⚠️  Existing '{final_name}' backed up as '{os.path.basename(backup_path)}'")
 
                 shutil.move(old_path, new_path)
-                print(f"\n\n   ✅ File renamed to '{final_name}'", flush=True)
-
+                print(f"\n   ✅ File renamed to '{final_name}'", flush=True)
                 return True
+
+        # Live countdown every 10 s
+        now = time.time()
+        if now - last_print >= 10:
+            elapsed   = int(now - start_time)
+            remaining = timeout - elapsed
+            print(f"   ⏱  Still waiting... {elapsed}s elapsed, {remaining}s remaining", flush=True)
+            last_print = now
+
         time.sleep(2)
-    
-    print("\n   ❌ Timeout: No 'bulkQuery' file found. Please Rename it manually")
-    return False
+
+    # ── Timeout reached ──
+    print(f"\n   ⌛  Timeout ({timeout}s) reached — no 'bulkQuery' file appeared.")
+    while True:
+        choice = input(
+            "\n   What would you like to do?\n"
+            "     1 — Extend wait by 2 more minutes\n"
+            "     2 — Skip (rename manually later)\n"
+            "   👉 Enter 1 or 2: "
+        ).strip()
+        if choice == "1":
+            print("\n   ⏳ Extending wait by 120 seconds...")
+            timeout += 120
+        elif choice == "2":
+            print(f"\n   ⚠️  Skipped. Please rename the downloaded file to '{new_name}' manually.")
+            return False
+        else:
+            print("   ❗️ Invalid input — please enter 1 or 2.")
 
 
 # ==================================================

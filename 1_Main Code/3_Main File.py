@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import shutil
+import traceback
 import openpyxl
 import pyperclip
 import numpy as np
@@ -15,14 +16,43 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.utils.exceptions import SheetTitleException
 
 # =========================================================================================================================================
-#  Custom exception used to signal a recoverable per-file error.
-#  Raise this instead of sys.exit() anywhere inside the per-file processing
-#  block so the rollback + retry menu can catch it cleanly.
+#  Custom exception — carries a human-readable summary AND the full Python
+#  traceback so you always know exactly what failed, where, and why.
 # =========================================================================================================================================
 class FileProcessingError(Exception):
-    """Raised when a per-file processing step fails and the user should be
-    given the choice to Fix & Retry, Skip, or Exit."""
-    pass
+    """
+    Raised when a per-file processing step fails.
+
+    Attributes
+    ----------
+    summary   : short description shown in the terminal menu
+    detail    : full Python traceback (captured automatically via raise_fpe())
+    """
+    def __init__(self, summary, detail=""):
+        super().__init__(summary)
+        self.summary = summary
+        self.detail  = detail   # full traceback string, filled by raise_fpe()
+
+    def __str__(self):
+        return self.summary
+
+
+def raise_fpe(summary: str) -> None:
+    """
+    Raise a FileProcessingError with the current exception's full traceback
+    automatically embedded so no information is ever lost.
+
+    Usage — replace:
+        raise FileProcessingError("Something went wrong")
+    With:
+        raise_fpe("Something went wrong")
+
+    Can also be called outside an except block; detail will be empty.
+    """
+    detail = traceback.format_exc()
+    if detail.strip() == "NoneType: None":
+        detail = ""          # no active exception — suppress the noise
+    raise FileProcessingError(summary, detail)
 
 # =========================================================================================================================================
                                                  # FOLDER CREATION & FILE MOVEMENT
@@ -628,6 +658,7 @@ while True:
         opportunity_sheet_name = "Opportunity"
 
         def clean_sheet(df, sheet_name, remove_duplicates=False):
+            import traceback
             try:
                 # Remove duplicate rows if requested
                 if remove_duplicates:
@@ -638,19 +669,35 @@ while True:
 
                 # Specific check for Opportunity sheet
                 if sheet_name == "Opportunity":
-                    df = df.dropna(subset=['opportunity_legacy_id_c'], how='all')
+                    # Use case-insensitive column lookup so casing differences don't crash here
+                    legacy_col = next(
+                        (c for c in df.columns if c.strip().lower() == 'opportunity_legacy_id_c'),
+                        None
+                    )
+                    if legacy_col:
+                        df = df.dropna(subset=[legacy_col])
+                    # If column doesn't exist yet, skip — the check below will catch it
 
-                # Trim whitespace from all string columns
-                df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+                # Trim whitespace from all string columns safely
+                # Use explicit loop instead of apply() to avoid AttributeError on mixed-type cols
+                for col in df.columns:
+                    if df[col].dtype == "object":
+                        try:
+                            df[col] = df[col].str.strip()
+                        except AttributeError:
+                            pass  # column contains non-string objects — skip silently
 
                 if remove_duplicates:
                     print(f"\n    ✅ Removed duplicate and blank rows from '{sheet_name}' sheet. ")
                 else:
                     print(f"\n    ✅ Removed blank rows from '{sheet_name}' sheet. ")
 
+            except FileProcessingError:
+                raise
             except Exception as e:
-                print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ")
-                raise FileProcessingError(f"Unexpected error cleaning sheet '{sheet_name}': {e}")
+                print(f"\n    ❌ Error: An unexpected error occurred. Details: {e}")
+                print(f"\n    🔍 Full traceback:\n{traceback.format_exc()}")
+                raise_fpe(f"Unexpected error cleaning sheet '{sheet_name}': {e}")
             return df
 
         opportunity_df = clean_sheet(opportunity_df, opportunity_sheet_name, remove_duplicates=True)
@@ -1206,7 +1253,7 @@ while True:
                 raise
             except Exception as e:
                 print(f"\n    ❌ An unexpected error occurred while renaming columns in {e}")
-                raise FileProcessingError(f"Unexpected error renaming columns: {e}")
+                raise_fpe(f"Unexpected error renaming columns: {e}")
             return df
 
         # Dictionary mapping old column names to new column names
@@ -1267,7 +1314,7 @@ while True:
 
             except FileNotFoundError:
                 print(f"\n    ❌ File '{file_path}' not found.")
-                raise FileProcessingError(f"File not found while rearranging columns: {file_path}")
+                raise_fpe(f"File not found while rearranging columns: {file_path}")
 
             return df  # Return in case you want to use it afterward
 
@@ -1381,7 +1428,7 @@ while True:
                 raise
             except Exception as e:
                 print(f"\n    ❌ Error: An unexpected error occurred. Details: {e}")
-                raise FileProcessingError(f"Unexpected error in verify_opportunity for '{sheet_name}': {e}")
+                raise_fpe(f"Unexpected error in verify_opportunity for '{sheet_name}': {e}")
 
             return df
         # Call the function to verify opportunities
@@ -1412,10 +1459,10 @@ while True:
             raise
         except FileNotFoundError:
             print(f"\n    ❌ Error: File '{file_path}' not found. ")
-            raise FileProcessingError(f"File not found: {file_path}")
+            raise_fpe(f"File not found: {file_path}")
         except Exception as e:
             print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ")
-            raise FileProcessingError(f"Unexpected error formatting date in '{product_sheet_name}': {e}")
+            raise_fpe(f"Unexpected error formatting date in '{product_sheet_name}': {e}")
 
         # ======================================================================
         # Step 5: Adding Quantity Columns
@@ -1462,13 +1509,13 @@ while True:
             raise
         except FileNotFoundError:
             print(f"\n    ❌ Error: File '{file_path}' not found.")
-            raise FileProcessingError(f"File not found while creating opportunity currency column: {file_path}")
+            raise_fpe(f"File not found while creating opportunity currency column: {file_path}")
         except KeyError as e:
             print(f"\n    ❌ Error: The required column '{e.args[0]}' is missing.")
-            raise FileProcessingError(f"Missing column '{e.args[0]}' while creating opportunity currency column.")
+            raise_fpe(f"Missing column '{e.args[0]}' while creating opportunity currency column.")
         except Exception as e:
             print(f"\n    ❌ Error: An unexpected error occurred. Details: {e}")
-            raise FileProcessingError(f"Unexpected error creating opportunity currency column: {e}")
+            raise_fpe(f"Unexpected error creating opportunity currency column: {e}")
 
 
         # ======================================================================
@@ -1511,13 +1558,13 @@ while True:
             raise
         except FileNotFoundError:
             print(f"\n    ❌ Error: File '{file_path}' not found. ")
-            raise FileProcessingError(f"File not found while deleting unwanted columns: {file_path}")
+            raise_fpe(f"File not found while deleting unwanted columns: {file_path}")
         except KeyError:
             print(f"\n    ❌ Error: Sheet '{product_sheet_name}' not found in the file. ")
-            raise FileProcessingError(f"Sheet '{product_sheet_name}' not found while deleting columns.")
+            raise_fpe(f"Sheet '{product_sheet_name}' not found while deleting columns.")
         except Exception as e:
             print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ")
-            raise FileProcessingError(f"Unexpected error deleting unwanted columns: {e}")
+            raise_fpe(f"Unexpected error deleting unwanted columns: {e}")
 
 
 
@@ -1550,13 +1597,13 @@ while True:
             raise
         except FileNotFoundError:
             print(f"\n    ❌ Error: File '{file_path}' not found. ")
-            raise FileProcessingError(f"File not found while creating Product_Code_Family: {file_path}")
+            raise_fpe(f"File not found while creating Product_Code_Family: {file_path}")
         except KeyError:
             print(f"\n    ❌ Error: Sheet '{product_sheet_name}' not found in the file. ")
-            raise FileProcessingError(f"Sheet '{product_sheet_name}' not found while creating Product_Code_Family.")
+            raise_fpe(f"Sheet '{product_sheet_name}' not found while creating Product_Code_Family.")
         except Exception as e:
             print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ")
-            raise FileProcessingError(f"Unexpected error creating Product_Code_Family: {e}")
+            raise_fpe(f"Unexpected error creating Product_Code_Family: {e}")
 
 
 
@@ -1591,13 +1638,13 @@ while True:
             raise
         except FileNotFoundError:
             print(f"\n    ❌ Error: File '{file_path}' not found. ")
-            raise FileProcessingError(f"File not found while creating Practise_Multiple country: {file_path}")
+            raise_fpe(f"File not found while creating Practise_Multiple country: {file_path}")
         except KeyError:
             print(f"\n    ❌ Error: Sheet '{product_sheet_name}' not found in the file. ")
-            raise FileProcessingError(f"Sheet '{product_sheet_name}' not found while creating Practise_Multiple country.")
+            raise_fpe(f"Sheet '{product_sheet_name}' not found while creating Practise_Multiple country.")
         except Exception as e:
             print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ")
-            raise FileProcessingError(f"Unexpected error creating Practise_Multiple country: {e}")
+            raise_fpe(f"Unexpected error creating Practise_Multiple country: {e}")
 
 
         # ======================================================================
@@ -1620,13 +1667,13 @@ while True:
             raise
         except FileNotFoundError:
             print(f"\n    ❌ Error: File '{file_path}' not found. ")
-            raise FileProcessingError(f"File not found while formatting decimal values: {file_path}")
+            raise_fpe(f"File not found while formatting decimal values: {file_path}")
         except KeyError:
             print(f"\n    ❌ Error: Sheet '{product_sheet_name}' not found in the file. ")
-            raise FileProcessingError(f"Sheet '{product_sheet_name}' not found while formatting decimal values.")
+            raise_fpe(f"Sheet '{product_sheet_name}' not found while formatting decimal values.")
         except Exception as e:
             print(f"\n    ❌ Error: An unexpected error occurred. Details: {e} ")
-            raise FileProcessingError(f"Unexpected error formatting decimal values: {e}")
+            raise_fpe(f"Unexpected error formatting decimal values: {e}")
 
         # ======================================================================
         # Step 12:- To copy the data from CSV file
@@ -2408,13 +2455,13 @@ while True:
                             raise
                         except FileNotFoundError:
                             print(f"\n    ❌ Error: Required file not found.")
-                            raise FileProcessingError("Required file not found while merging strategy IDs.")
+                            raise_fpe("Required file not found while merging strategy IDs.")
                         except KeyError as e:
                             print(f"\n    ❌ KeyError: {str(e)}")
-                            raise FileProcessingError(f"Missing key while merging strategy IDs: {e}")
+                            raise_fpe(f"Missing key while merging strategy IDs: {e}")
                         except Exception as e:
                             print(f"\n    ❌ An unexpected error occurred: {str(e)}")
-                            raise FileProcessingError(f"Unexpected error merging strategy IDs: {e}")
+                            raise_fpe(f"Unexpected error merging strategy IDs: {e}")
                 
                     # Get Ids for Reporting Codes
                     codes_df = merge_strategy_ids(codes_df, code_copy_df, base_key='reporting_codes', label='Codes')
@@ -3718,16 +3765,34 @@ while True:
       except FileProcessingError as _fpe:
         # ──────────────────────────────────────────────────────────
         # A recoverable per-file error was raised somewhere above.
-        # 1. Roll back partial outputs.
-        # 2. Show the Fix & Retry / Skip / Exit menu.
+        # 1. Show full detail.
+        # 2. Roll back partial outputs.
+        # 3. Show the Fix & Retry / Skip / Exit menu.
         # ──────────────────────────────────────────────────────────
-        _error_msg = str(_fpe)
+        _error_msg  = _fpe.summary
+        _detail_msg = _fpe.detail   # full Python traceback if available
+
         print(f"\n\n{'='*70}")
         print(f"  ❌  ERROR PROCESSING FILE: {os.path.basename(file_path)}")
         print(f"{'='*70}")
-        print(f"\n  Reason: {_error_msg}\n")
+        print(f"\n  ┌─ What failed ────────────────────────────────────────")
+        print(f"  │  {_error_msg}")
+        print(f"  └───────────────────────────────────────────────────────")
 
-        _rollback_file(file_path, csv_file_dir, output, _error_msg)
+        if _detail_msg:
+            print(f"\n  ┌─ Full traceback (exact line that caused the error) ──")
+            for _line in _detail_msg.strip().splitlines():
+                print(f"  │  {_line}")
+            print(f"  └───────────────────────────────────────────────────────")
+
+        print()
+
+        # Write both summary and full traceback to failure_log.txt
+        _full_log = _error_msg
+        if _detail_msg:
+            _full_log += "\n\nFull traceback:\n" + _detail_msg
+
+        _rollback_file(file_path, csv_file_dir, output, _full_log)
 
         # Derive the original file path (strip _Copy suffix)
         _original_name = re.sub(r'_Copy(\.[^.]+)$', r'\1', os.path.basename(file_path))
