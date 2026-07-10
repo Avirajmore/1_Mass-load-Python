@@ -6,106 +6,11 @@ from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from tabulate import tabulate
 
+import os
+
 # -------- CONFIG --------
-FOLDER_PATH = os.path.expanduser("~/Documents/Office docs/Massload Files/2026")   # <-- change this
-# BASE_DIR must match the BASE_DIR in 3_Main File.py — used for auto-detecting the latest iteration folder
-BASE_DIR = os.path.expanduser("~/Documents/Office Docs/Massload Files/2026")
+FOLDER_PATH = os.path.expanduser("~/Downloads")   # <-- change this
 # ------------------------
-
-
-# =========================================================================================================================================
-#  Auto-detect helpers for Q5
-# =========================================================================================================================================
-
-def _find_latest_iteration_folder(base_dir):
-    """
-    Scan BASE_DIR for the most recently modified iteration folder.
-    An iteration folder is any direct subfolder of BASE_DIR that itself
-    contains a 'Final iteration files' subdirectory.
-
-    Returns the full path of the most recently modified matching folder,
-    or None if nothing is found.
-    """
-    if not os.path.isdir(base_dir):
-        return None
-
-    candidates = []
-    for name in os.listdir(base_dir):
-        full = os.path.join(base_dir, name)
-        if os.path.isdir(full) and os.path.isdir(os.path.join(full, "Final iteration files")):
-            candidates.append((os.path.getmtime(full), full))
-
-    if not candidates:
-        return None
-
-    candidates.sort(reverse=True)   # most recently modified first
-    return candidates[0][1]
-
-
-def _find_summary_file(iteration_folder):
-    """
-    Walk every subfolder of 'Final iteration files' inside the given
-    iteration folder and return the most recently modified *_summary file.xlsx.
-    Returns None if none is found.
-    """
-    final_dir = os.path.join(iteration_folder, "Final iteration files")
-    if not os.path.isdir(final_dir):
-        return None
-
-    matches = []
-    for root, dirs, files in os.walk(final_dir):
-        for f in files:
-            if f.endswith("_summary file.xlsx"):
-                full = os.path.join(root, f)
-                matches.append((os.path.getmtime(full), full))
-
-    if not matches:
-        return None
-
-    matches.sort(reverse=True)
-    return matches[0][1]
-
-
-def _auto_detect_paths():
-    """
-    Try to auto-detect the iteration folder and summary file.
-    Shows the detected paths and asks the user to confirm.
-
-    Returns summary_file_path (str) or None if the user declines or
-    nothing is found.
-    """
-    print("\n\n🔍 Auto-detecting latest iteration folder...")
-
-    iteration_folder = _find_latest_iteration_folder(BASE_DIR)
-    if not iteration_folder:
-        print(f"\n    ❗️ No iteration folder found in: {BASE_DIR}")
-        print("       Falling back to manual selection.\n")
-        return None
-
-    summary_file = _find_summary_file(iteration_folder)
-    if not summary_file:
-        print(f"\n    ❗️ No summary file found inside: {iteration_folder}")
-        print("       Falling back to manual selection.\n")
-        return None
-
-    # Show detected paths
-    short_iter   = os.path.sep.join(iteration_folder.split(os.path.sep)[-3:])
-    short_sum    = os.path.sep.join(summary_file.split(os.path.sep)[-4:])
-    success_error_path = os.path.join(os.path.dirname(summary_file), "Success and error files")
-
-    print(f"\n    📂 Detected iteration folder : …/{short_iter}")
-    print(f"    📄 Detected summary file     : …/{short_sum}")
-    print(f"    📁 Success & error files in  : …/Success and error files")
-
-    while True:
-        confirm = input("\n    👉 Is this the correct folder? (yes / no — 'no' opens manual picker): ").strip().lower()
-        if confirm == "yes":
-            return summary_file
-        elif confirm == "no":
-            print("\n    Opening manual file picker...")
-            return None
-        else:
-            print("    ❗️ Please enter 'yes' or 'no'.")
 
 # -------- RENAME RULES --------
 RENAME_RULES = {
@@ -220,79 +125,70 @@ print(f"{line}\n")
 #             print("Invalid input. Please enter 'yes' or 'no'.")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Step 1 — Select the success/error CSVs from Downloads and move them.
-#           The CSV picker stays manual (files come from Salesforce).
-#           But the destination folder is now auto-detected (Q5).
-# ─────────────────────────────────────────────────────────────────────────────
-print("\n\n🔍 Step 1: Select success/error CSV files from Downloads.")
-
-# ── Auto-detect summary file first (used to derive the destination folder) ──
-summary_file_path = _auto_detect_paths()
-
-# ── Fall back to manual picker if auto-detect declined or failed ──
-if not summary_file_path:
-    root = Tk()
-    root.withdraw()
-    root.attributes('-topmost', True)
-    summary_file_path = filedialog.askopenfilename(
-        title="📂 Select the Summary File for this iteration"
-    )
-    if not summary_file_path:
-        print("\n\n    ❌ No summary file selected. Operation canceled.")
-        exit()
-
-print(f"\n    ✅ Summary file:")
-shortened_path = "/".join(summary_file_path.split("/")[-5:])
-print(f"\n         📂 {shortened_path}")
-
-# Derive the Success and error files destination automatically from the summary file
-_summary_parent     = os.path.dirname(summary_file_path)
-destination_folder  = os.path.join(_summary_parent, "Success and error files")
-os.makedirs(destination_folder, exist_ok=True)
-print(f"\n    📁 Destination: …/{'/'.join(destination_folder.split('/')[-4:])}")
-
-# ── Now pick the CSVs from Downloads (always manual — they come from Salesforce) ──
+# Copying all the success and error files as backup
+print("\n\n🔍 Step 1: Select CSV files and a destination folder to copy.")
 try:
     root = Tk()
-    root.withdraw()
-    root.attributes('-topmost', True)
+    root.withdraw()  # Hide the root window
+    root.attributes('-topmost', True)  # Bring dialog to front
 
+    # Select CSV files
     csv_files = root.tk.splitlist(filedialog.askopenfilenames(
-        title="📂 Select Success/Error CSV files from Downloads",
+        title="📂 Select CSV Files to Copy",
         filetypes=[("CSV Files", "*.csv")],
         initialdir=os.path.expanduser("~/Downloads")
     ))
 
+    # Handle no files selected
     if not csv_files:
-        print("\n    ❗️ No CSV files selected. Skipping file move.")
+        print("\n    ❗️ No files selected. Skipping to the next step.")
     else:
-        success_files = []
-        failed_files  = []
+        # Select destination folder
+        destination_folder = filedialog.askdirectory(
+            title="📁 Select Destination Folder to Paste Success/Error Files"
+        )
 
-        for file in csv_files:
-            try:
-                shutil.move(file, destination_folder)
-                success_files.append(os.path.basename(file))
-            except Exception:
-                failed_files.append(os.path.basename(file))
+        # Handle no destination folder selected
+        if not destination_folder:
+            print("\n    ❗️ No destination folder selected. Skipping file copy.")
+        else:
+            success_files = []
+            failed_files = []
 
-        if success_files:
-            print("\n    ✅ Successfully moved files:")
-            for f in success_files:
-                print(f"\n        📄 {f}")
+            # Copy each CSV file to the selected folder
+            for file in csv_files:
+                try:
+                    shutil.move(file, destination_folder)
+                    success_files.append(os.path.basename(file))
+                except Exception:
+                    failed_files.append(os.path.basename(file))
 
-        if failed_files:
-            print("\n    ❌ Failed to move files:")
-            for f in failed_files:
-                print(f"\n        ❗️ {f}")
+            # Print results for copied files
+            if success_files:
+                print("\n    ✅ Successfully Copied Files:")
+                for file in success_files:
+                    print(f"\n        📄 {file}")
 
+            if failed_files:
+                print("\n    ❌ Failed to Copy Files:")
+                for file in failed_files:
+                    print(f"\n        ❗️ {file}")
 except Exception as e:
-    print(f"Error: {e}")
+    print(f"Error:{e}")
 
 # =======================================================================================================
-# Step 2 — summary file already selected above (auto-detected or manual).
-print("\n\n🔍 Step 2: Summary file already selected ✅")
+# Selecting a summary file and adding CSV data
+print("\n\n🔍 Step 2: Select a summary file where you want to copy the CSV data.")
+
+# Select summary file
+summary_file_path = filedialog.askopenfilename(
+    title="📂 Select a Summary File"
+)
+
+# Handle no file selected
+if not summary_file_path:
+    print("\n\n    ❌ No file selected. Operation canceled.")
+    exit()
 
 print(f"\n    ✅ Selected file:")
 shortened_path = "/".join(summary_file_path.split("/")[-5:])
